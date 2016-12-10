@@ -1,0 +1,25 @@
+//qcf files specify Qtables in terms of valid connections
+//heirarchy of states
+heirarchy:
+HEALTH
+MOVEMENT
+endHeirarchy;
+//states within lowest layer Q table
+states HEALTH:
+WOUNDED
+FULLHEALTH
+states MOVEMENT:
+00
+01
+02
+10
+11
+12
+20
+21
+22
+endStates;
+transitions:
+GLOBAL HEALTH MOVEMENT 01 01 3
+LOCAL FULLHEALTH 01 02 4
+endTransitions;
