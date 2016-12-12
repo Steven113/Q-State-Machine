@@ -28,8 +28,8 @@ public class AIGrid : MonoBehaviour
 	{
 		//useful to keep for testing equations
 //		for (int i = 0; i<20; ++i) {
-//			Vector3 vect1 = UnityEngine.Random.insideUnitSphere*i;
-//			Vector3 vect2 = UnityEngine.Random.insideUnitSphere*i;
+//			Vector3 vect1 = UnityEngine.Random.insideUnitSphere*(i+1);
+//			Vector3 vect2 = UnityEngine.Random.insideUnitSphere*(i+1);
 //			Debug.Log("Magnitude from vector3" + (vect1-vect2).magnitude);
 //			Debug.Log("Magnitude from appoximation" + GetSquareDistanceEstimate(vect1,vect2));
 //		}
@@ -433,6 +433,29 @@ public class AIGrid : MonoBehaviour
 //		float displacement_x = start.x > end.x ? (start.x - end.x) : (end.x - start.x);
 //		float displacement_y = start.y > end.y ? (start.y - end.y) : (end.y - start.y);
 //		float displacement_z = start.z > end.z ? (start.z - end.z) : (end.z - start.z);
-//		return ((displacement_x*displacement_x + displacement_y*displacement_y + displacement_z*displacement_z)/(displacement_x+displacement_y+displacement_z))+((displacement_x*displacement_x*displacement_x + displacement_y*displacement_y*displacement_y + displacement_z*displacement_z*displacement_z)/(displacement_x+displacement_y+displacement_z));
-//	}
+//		float max_displacement = 0;
+//		max_displacement = displacement_x > max_displacement ? displacement_x : max_displacement;
+//		max_displacement = displacement_y > max_displacement ? displacement_y : max_displacement;
+//		max_displacement = displacement_z > max_displacement ? displacement_z : max_displacement;
+//		float averageDisplacement = (displacement_x + displacement_y + displacement_z) * (1f / 3f);
+//		return (max_displacement-averageDisplacement)*(displacement_x+displacement_y+displacement_z);
+	//}
+
+	public static float GetDeltaMax(Vector3 start, Vector3 end, float diagonalCost, float nonDiagonalCost){
+		float displacement_x = start.x > end.x ? (start.x - end.x) : (end.x - start.x);
+		float displacement_y = start.y > end.y ? (start.y - end.y) : (end.y - start.y);
+		float displacement_z = start.z > end.z ? (start.z - end.z) : (end.z - start.z);
+
+		float max_displacement = 0;
+		max_displacement = displacement_x > max_displacement ? displacement_x : max_displacement;
+		max_displacement = displacement_y > max_displacement ? displacement_y : max_displacement;
+		max_displacement = displacement_z > max_displacement ? displacement_z : max_displacement;
+
+		float min_displacement = 0;
+		min_displacement = displacement_x < max_displacement ? displacement_x : max_displacement;
+		min_displacement = displacement_y < max_displacement ? displacement_y : max_displacement;
+		min_displacement = displacement_z < max_displacement ? displacement_z : max_displacement;
+
+		return diagonalCost * min_displacement + nonDiagonalCost * max_displacement;
+	}
 }
