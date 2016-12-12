@@ -76,14 +76,14 @@ public class AIGrid : MonoBehaviour
 		rhsValues = new float[worldWidth, worldHeight, 2];
 		for (int i = 0; i<worldWidth; ++i) {
 			for (int j = 0; j<worldHeight; ++j) {
-				fValues [i, j, 0] = float.PositiveInfinity/100;
-				fValues [i, j, 1] = float.PositiveInfinity/100;
+				fValues [i, j, 0] = float.PositiveInfinity / 100;
+				fValues [i, j, 1] = float.PositiveInfinity / 100;
 
-				gValues [i, j, 0] = float.PositiveInfinity/100;
-				gValues [i, j, 1] = float.PositiveInfinity/100;
+				gValues [i, j, 0] = float.PositiveInfinity / 100;
+				gValues [i, j, 1] = float.PositiveInfinity / 100;
 
-				rhsValues [i, j, 0] = float.PositiveInfinity/100;
-				rhsValues [i, j, 1] = float.PositiveInfinity/100;
+				rhsValues [i, j, 0] = float.PositiveInfinity / 100;
+				rhsValues [i, j, 1] = float.PositiveInfinity / 100;
 
 				cellCanBeMovedThrough [i, j] = true;
 			}
@@ -104,7 +104,7 @@ public class AIGrid : MonoBehaviour
 						Vector3 losPos = new Vector3 (i, 0, j);
 						losPos += LOSDirections [k];
 						while (((int)losPos.x>=0 && (int)losPos.x<AIGrid.cellCanBeMovedThrough.GetLength(0) && (int)losPos.z>=0 && (int)losPos.z<AIGrid.cellCanBeMovedThrough.GetLength(1)) && AIGrid.cellCanBeMovedThrough[(int)losPos.x,(int)losPos.z]) {
-							visibilityDistances [i, j, k] += SearchDirectionDistances[k];
+							visibilityDistances [i, j, k] += SearchDirectionDistances [k];
 							losPos += LOSDirections [k];
 						}
 						//visibilityDistances [i, j, k] = visibilityDistances [i, j, k] > 0 ? visibilityDistances [i, j, k] : cellWidth;
@@ -146,7 +146,7 @@ public class AIGrid : MonoBehaviour
 
 				NodeList<PathFindingNode> openList = new NodeList<PathFindingNode> ();
 				bool reachedEnd = false;
-				openList.Add (new PathFindingNode (null, start, start, end, ref reachedEnd, useStandardAStar,false));
+				openList.Add (new PathFindingNode (null, start, start, end, ref reachedEnd, useStandardAStar, false));
 
 				int numIter = 0;
 				int maxNumIter = cellCanBeMovedThrough.GetLength (0) * cellCanBeMovedThrough.GetLength (1);
@@ -162,7 +162,7 @@ public class AIGrid : MonoBehaviour
 						if ((int)newPos.x == (int)end.x && (int)newPos.z == (int)end.z)
 							return true;
 						if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
-							PathFindingNode node = new PathFindingNode (temp, newPos, start, end, ref reachedEnd, useStandardAStar,false);
+							PathFindingNode node = new PathFindingNode (temp, newPos, start, end, ref reachedEnd, useStandardAStar, false);
 							if (numUses [(int)newPos.x, (int)newPos.z] < numPathFindingSearches || fValues [(int)newPos.x, (int)newPos.z, (useStandardAStar ? 0 : 1)] > node.f) {
 								numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
 								fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.f;
@@ -184,8 +184,13 @@ public class AIGrid : MonoBehaviour
 		}
 	}
 
-	public static IEnumerator findPathCoroutine (Vector3 start, Vector3 end, bool useStandardAStar = false)
+	public static IEnumerator findPathCoroutine (Vector3 start, Vector3 end, bool useStandardAStar, bool useLPA)
 	{
+		if (useLPA) {
+			Vector3 temp = start;
+			start = end;
+			end = temp;
+		}
 		debugSearchActive = true;
 		++AIGrid.numPathFindingSearches;
 		//path = new Collection<Vector3> ();
@@ -211,13 +216,13 @@ public class AIGrid : MonoBehaviour
 				
 				NodeList<PathFindingNode> openList = new NodeList<PathFindingNode> ();
 				bool reachedEnd = false;
-				openList.Add (new PathFindingNode (null, start, start, end, ref reachedEnd, useStandardAStar,false));
+				openList.Add (new PathFindingNode (null, start, start, end, ref reachedEnd, useStandardAStar, false));
 				
 				int numIter = 0;
 				int maxNumIter = cellCanBeMovedThrough.GetLength (0) * cellCanBeMovedThrough.GetLength (1);
 				int numExpansions = 0;
 				PathFindingNode temp = openList [0];
-				gValues[(int)(temp.pos.x), (int)(temp.pos.z),useStandardAStar ? 0 : 1] = 0;
+				gValues [(int)(temp.pos.x), (int)(temp.pos.z), useStandardAStar ? 0 : 1] = 0;
 				while (openList.Count>0 && !reachedEnd) {
 					++numIter;
 					if (numIter > maxNumIter) {
@@ -301,93 +306,173 @@ public class AIGrid : MonoBehaviour
 //					}
 
 					if (!consistent) {
-					for (int i = 0; i< SearchDirectionOffsets.Length; ++i) {
-						//if (i == index)
-						//	continue;
-						//newPos = temp.pos + SearchDirectionOffsets [i];
-						//Debug.Log("Exploring "+newPos + (useStandardAStar?"AStar":"LOS*"));
-						if ((int)newPos.x == (int)end.x && (int)newPos.z == (int)end.z) {
-							reachedEnd = true;
-							break;
-						}
-						bool validPos = false;
-						//if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
-						PathFindingNode node = null;
-						bool foundShortCutExpansion = false;
-						//jump search when using LOS*. We attempt to exponentially increase the jump distance, to reduce the expansion amount
+						for (int i = 0; i< SearchDirectionOffsets.Length; ++i) {
+							//if (i == index)
+							//	continue;
+							//newPos = temp.pos + SearchDirectionOffsets [i];
+							//Debug.Log("Exploring "+newPos + (useStandardAStar?"AStar":"LOS*"));
+							if ((int)newPos.x == (int)end.x && (int)newPos.z == (int)end.z) {
+								reachedEnd = true;
+								break;
+							}
 
+							//if ((int)newPos.x == (int)end.x && (int)newPos.z == (int)end.z) {
+							bool validPos = false;
+							//if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
+							PathFindingNode node = null;
+							bool foundShortCutExpansion = false;
+							//jump search when using LOS*. We attempt to exponentially increase the jump distance, to reduce the expansion amount
 
-							float dotTemp = Vector3.Dot (newPos - temp.pos, end - temp.pos);
-							float dotTemp2 = Vector3.Dot (newPos - temp.pos, end - (temp.previous!=null?temp.previous.pos:start));
-							if (openList.Count > 1 && !useStandardAStar && dotTemp>-0.5f && dotTemp2>=-0.5f &&  temp.deltaLosDistance > 1 && visibilityDistances [(int)temp.pos.x, (int)temp.pos.z, i] > (temp.deltaLosDistance * temp.deltaLosDistance)) {
-							float dist = (temp.deltaLosDistance * temp.deltaLosDistance);
-							newPos = temp.pos + SearchDirectionOffsets [i] * dist;
-							if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
-								foundShortCutExpansion = true;	
-								validPos = true;
-								node = new PathFindingNode (temp, newPos, start, end, ref reachedEnd, useStandardAStar,true);
-								for (float k = 1; k<dist-1; ++k) {
-									fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1] = (((k - 1) / dist) * node.f) < fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1] ? (((k - 1) / dist) * node.f) : fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1];
-									numUses[(int)(temp.pos.x+k*SearchDirectionOffsets[i].x),(int)(temp.pos.z+k*SearchDirectionOffsets[i].z)] = numPathFindingSearches;
+							if (!useStandardAStar && numIter > 1) {
+								float dotTemp = Vector3.Dot (newPos - temp.pos, end - temp.pos);
+								//float dotTemp = Vector3.Dot (LOSDirections[i],  (temp.previous != null ? temp.pos - temp.previous.pos : LOSDirections[i])); //we try to eliminate expansions by avoiding expanding back the direction we came. So we check the dot product of the expansion direction vs expansion direction of predecessor
+								//float dotTemp2 = Vector3.Dot (newPos - temp.pos, end - (temp.previous != null ? temp.previous.pos : start));
+
+								//if (dotTemp>-0.9f){
+								//	break;
+								//}
+
+								float [] distances = new float[8];
+								//newPos = temp.pos + SearchDirectionOffsets [i];
+								newPos = temp.pos;
+
+								Vector3 averageExpansionDirection = ((LOSDirections [i] + (temp.pos - (temp.previous != null ? temp.previous.pos : start))) * 0.5f).normalized;
+								float dotProductToCheckForForcedNeighbour = -1;
+								int dirToCheck = 0;
+
+								for (int k = 0; k<8; ++k) {
+									float temp_d = Vector3.Dot (LOSDirections [k], averageExpansionDirection);
+									if (temp_d < dotProductToCheckForForcedNeighbour) {
+										dotProductToCheckForForcedNeighbour = temp_d;
+										dirToCheck = k;
+									}
 								}
 
-										if (numUses [(int)newPos.x, (int)newPos.z] < numPathFindingSearches || fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] > node.f) {
-											numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
-											fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.f;
-											gValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.g;
-											openList.Add (node);
-											++numExpansions;
+								//if (dotTemp<-0.9f){
+								//	break;
+								//}
+
+								for (int k = 0; k<8; ++k) {
+									distances [k] = visibilityDistances [(int)temp.pos.x, (int)temp.pos.z, k];
+								}
+
+								bool obstacleDistributionHasChanged = false; //has the relative presence of obstacles next to the jump point changed?
+								if ((int)(newPos.x + SearchDirectionOffsets [i].x) >= 0 && (int)(newPos.x + SearchDirectionOffsets [i].x) < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)(newPos.z + SearchDirectionOffsets [i].z) >= 0 && (int)(newPos.z + SearchDirectionOffsets [i].z) < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)(newPos.x + SearchDirectionOffsets [i].x), (int)(newPos.z + SearchDirectionOffsets [i].z)] && visibilityDistances [(int)temp.pos.x, (int)temp.pos.z, dirToCheck] != 0) {
+									foundShortCutExpansion = true;
+									int numExpanded = 0;
+									bool terminateAfterNextIteration = false;
+									while ((int)(newPos.x+ SearchDirectionOffsets [i].x) >= 0 && (int)(newPos.x+ SearchDirectionOffsets [i].x) < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)(newPos.z+ SearchDirectionOffsets [i].z) >= 0 && (int)(newPos.z+ SearchDirectionOffsets [i].z) < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)(newPos.x+ SearchDirectionOffsets [i].x), (int)(newPos.z+ SearchDirectionOffsets [i].z)]) {
+										newPos = newPos + SearchDirectionOffsets [i];
+										++numExpanded;
+										//numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
+										//if ((temp.f+numExpanded * SearchDirectionDistances[i])<(fValues [(int)newPos.x, (int)newPos.z,useStandardAStar?0:1])) fValues [(int)newPos.x, (int)newPos.z,useStandardAStar?0:1] = temp.f+numExpanded * SearchDirectionDistances[i];
+										if ((int)newPos.x == (int)end.x && (int)newPos.z == (int)end.z) {
+											reachedEnd = true;
+											break;
 										}
 
-							}
-						} 
+//										if (visibilityDistances[(int)temp.pos.x,(int)temp.pos.z,(int)(3f + 2*Vector3.Dot((end-newPos).normalized,Vector3.left))]>GetManhattanDistance(newPos,end)){
+//											break;
+//										}
 
-						if (!foundShortCutExpansion) {
-							newPos = temp.pos + SearchDirectionOffsets [i];
-							if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
-								validPos = true;
-									node = new PathFindingNode (temp, newPos, start, end, ref reachedEnd, useStandardAStar,false);
-							}
 
-						}
-						if (reachedEnd) { //adding to the openlist is expensive, and we've found the end, so we break now
-							break;
-						}
+										obstacleDistributionHasChanged = false;
+										if (numExpanded > 1) {
+											for (int k = 0; k<8 && !obstacleDistributionHasChanged; ++k) {
+												if ((!((visibilityDistances [(int)newPos.x, (int)newPos.z, k] == 0) == (distances [k] == 0)) /*|| ((visibilityDistances [(int)newPos.x, (int)newPos.z, k]-2)>(distances[k]))*/) && Vector3.Dot (LOSDirections [i], LOSDirections [k]) > (dotTemp*0.5f-0.5f)) {
+													obstacleDistributionHasChanged = true;
+												}
+											}
 
-							consistent= false;
-							if (true){
-							float minG = float.PositiveInfinity;
-							for (int j = 0; j< SearchDirectionOffsets.Length; ++j) {
-									if ((int)(newPos.x+SearchDirectionOffsets[i].x) >= 0 && (int)(newPos.x+SearchDirectionOffsets[i].x) < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)(newPos.z+SearchDirectionOffsets[i].z) >= 0 && (int)(newPos.z+SearchDirectionOffsets[i].z) < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)(newPos.x+SearchDirectionOffsets[i].x), (int)(newPos.z+SearchDirectionOffsets[i].z)]) {
-									float tempG = gValues[(int)(temp.pos.x+SearchDirectionOffsets[i].x), (int)(temp.pos.z+SearchDirectionOffsets[i].z),useStandardAStar ? 0 : 1] + SearchDirectionDistances[j];
-									minG = minG>tempG?tempG:minG;
+										}
+										if (obstacleDistributionHasChanged) {
+											break;
+										}
+										//if (visibilityDistances[(int)newPos.x, (int)newPos.z,(int)(3f+(Vector3.Dot((end-newPos).normalized,Vector3.left)*4f))]>GetManhattanDistance(end,newPos)){
+										//	break;
+										//}
+									}
+
+									node = new PathFindingNode (temp, newPos, start, end, ref reachedEnd, useStandardAStar, true);
+									if (numUses [(int)newPos.x, (int)newPos.z] < numPathFindingSearches || fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] > node.f) {
+										numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
+										fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.f;
+										gValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.g;
+										openList.Add (node);
+										++numExpansions;
+									}
 								}
+
 							}
+//							if (openList.Count > 1 && !useStandardAStar && dotTemp>-0.5f && dotTemp2>=-0.5f &&  temp.deltaLosDistance > 1 && visibilityDistances [(int)temp.pos.x, (int)temp.pos.z, i] > (temp.deltaLosDistance * temp.deltaLosDistance)) {
+//							float dist = (temp.deltaLosDistance * temp.deltaLosDistance);
+//							newPos = temp.pos + SearchDirectionOffsets [i] * dist;
+//							if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
+//								foundShortCutExpansion = true;	
+//								validPos = true;
+//								node = new PathFindingNode (temp, newPos, start, end, ref reachedEnd, useStandardAStar,true);
+//								for (float k = 1; k<dist-1; ++k) {
+//									fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1] = (((k - 1) / dist) * node.f) < fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1] ? (((k - 1) / dist) * node.f) : fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1];
+//									numUses[(int)(temp.pos.x+k*SearchDirectionOffsets[i].x),(int)(temp.pos.z+k*SearchDirectionOffsets[i].z)] = numPathFindingSearches;
+//								}
+//
+//										if (numUses [(int)newPos.x, (int)newPos.z] < numPathFindingSearches || fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] > node.f) {
+//											numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
+//											fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.f;
+//											gValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.g;
+//											openList.Add (node);
+//											++numExpansions;
+//										}
+
+							//}
+							//} 
+
+							if (!foundShortCutExpansion) {
+								newPos = temp.pos + SearchDirectionOffsets [i];
+								if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
+									validPos = true;
+									node = new PathFindingNode (temp, newPos, start, end, ref reachedEnd, useStandardAStar, false);
+								}
+
+							}
+							if (reachedEnd) { //adding to the openlist is expensive, and we've found the end, so we break now
+								break;
+							}
+
+							consistent = false;
+							if (useLPA) {
+								float minG = float.PositiveInfinity;
+								for (int j = 0; j< SearchDirectionOffsets.Length; ++j) {
+									if ((int)(newPos.x + SearchDirectionOffsets [i].x) >= 0 && (int)(newPos.x + SearchDirectionOffsets [i].x) < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)(newPos.z + SearchDirectionOffsets [i].z) >= 0 && (int)(newPos.z + SearchDirectionOffsets [i].z) < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)(newPos.x + SearchDirectionOffsets [i].x), (int)(newPos.z + SearchDirectionOffsets [i].z)]) {
+										float tempG = gValues [(int)(temp.pos.x + SearchDirectionOffsets [i].x), (int)(temp.pos.z + SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1] + SearchDirectionDistances [j];
+										minG = minG > tempG ? tempG : minG;
+									}
+								}
 							
-							//					if (minG==gValues[(int)temp.pos.x, (int)temp.pos.z,useStandardAStar ? 0 : 1]){
-							//						//gValues[(int)temp.pos.x, (int)temp.pos.z,useStandardAStar ? 0 : 1]= minG;
-							//						consistent= true;
-							//					} else
-							if (numIter>2){
-								if (minG>gValues[(int)temp.pos.x, (int)temp.pos.z,useStandardAStar ? 0 : 1]){
-									gValues[(int)temp.pos.x, (int)temp.pos.z,useStandardAStar ? 0 : 1]= minG;
-									consistent= true;
-								} else {
-									gValues[(int)temp.pos.x, (int)temp.pos.z,useStandardAStar ? 0 : 1]= float.PositiveInfinity/100;
+								//					if (minG==gValues[(int)temp.pos.x, (int)temp.pos.z,useStandardAStar ? 0 : 1]){
+								//						//gValues[(int)temp.pos.x, (int)temp.pos.z,useStandardAStar ? 0 : 1]= minG;
+								//						consistent= true;
+								//					} else
+								if (numIter > 2) {
+									if (minG > gValues [(int)temp.pos.x, (int)temp.pos.z, useStandardAStar ? 0 : 1]) {
+										gValues [(int)temp.pos.x, (int)temp.pos.z, useStandardAStar ? 0 : 1] = minG;
+										consistent = true;
+									} else {
+										gValues [(int)temp.pos.x, (int)temp.pos.z, useStandardAStar ? 0 : 1] = float.PositiveInfinity / 100;
+									}
 								}
 							}
-						}
-						if (validPos && !consistent) {
-							if (numUses [(int)newPos.x, (int)newPos.z] < numPathFindingSearches || fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] > node.f) {
-								numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
-								fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.f;
-								gValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.g;
-								openList.Add (node);
-								++numExpansions;
+							if (validPos && !consistent) {
+								if (numUses [(int)newPos.x, (int)newPos.z] < numPathFindingSearches || fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] > node.f) {
+									numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
+									fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.f;
+									gValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.g;
+									openList.Add (node);
+									++numExpansions;
+								}
 							}
+							//}
 						}
-						//}
-					}
 					}
 					openList.Remove (temp);
 					yield return new WaitForSeconds (0.01f);
@@ -441,7 +526,8 @@ public class AIGrid : MonoBehaviour
 //		return (max_displacement-averageDisplacement)*(displacement_x+displacement_y+displacement_z);
 	//}
 
-	public static float GetDeltaMax(Vector3 start, Vector3 end, float diagonalCost, float nonDiagonalCost){
+	public static float GetDeltaMax (Vector3 start, Vector3 end, float diagonalCost, float nonDiagonalCost)
+	{
 		float displacement_x = start.x > end.x ? (start.x - end.x) : (end.x - start.x);
 		float displacement_y = start.y > end.y ? (start.y - end.y) : (end.y - start.y);
 		float displacement_z = start.z > end.z ? (start.z - end.z) : (end.z - start.z);
@@ -455,7 +541,7 @@ public class AIGrid : MonoBehaviour
 		min_displacement = displacement_x < max_displacement ? displacement_x : max_displacement;
 		min_displacement = displacement_y < max_displacement ? displacement_y : max_displacement;
 		min_displacement = displacement_z < max_displacement ? displacement_z : max_displacement;
-
-		return diagonalCost * min_displacement + nonDiagonalCost * max_displacement;
+		//return max_displacement;
+		return diagonalCost * (min_displacement) + nonDiagonalCost * (max_displacement - min_displacement);
 	}
 }

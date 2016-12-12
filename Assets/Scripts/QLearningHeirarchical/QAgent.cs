@@ -28,7 +28,13 @@ public class QAgent : MonoBehaviour {
 			Collection<Vector3> path = new Collection<Vector3> ();
 			AIGrid.debugSearchActive = true;
 
-			StartCoroutine(AIGrid.findPathCoroutine(gameObject.transform.position,end,useStandarAStar));
+			//if (useStandarAStar){
+			StartCoroutine(AIGrid.findPathCoroutine(gameObject.transform.position,end,useStandarAStar,useStandarAStar));
+			//} else {
+				//StartCoroutine(AIGrid.findPathCoroutine(gameObject.transform.position,end,useStandarAStar));
+			//}
+
+			//StartCoroutine(AIGrid.findPathCoroutine(gameObject.transform.position,end,useStandarAStar));
 			useStandarAStar = !useStandarAStar;
 		}
 	}

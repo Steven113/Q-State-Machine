@@ -34,10 +34,16 @@ namespace AssemblyCSharp
 
 			//we calculate h first, because we can determine when calculating h whether the end is visible, and therefore jump to it
 			Vector3 startEndDir = (end - pos);
-			
-			h = startEndDir.sqrMagnitude;
+			//if (useStandardAStar) {
+				h = startEndDir.sqrMagnitude;
+			//} else {
+				//h = AIGrid.GetDeltaMax (end, pos,1.44f,1f);
+			//}
 			//h = h*(h/AIGrid.GetManhattanDistance (end, pos));
+			h = h*(h*AIGrid.GetManhattanDistance (end, pos));
 			//h = AIGrid.GetDeltaMax (start, end, 1.44f, 1f);
+			//h = h*(h/ AIGrid.GetDeltaMax (start, end, 1.44f, 1f));
+			//h = h * h;
 
 			startEndDir = startEndDir.normalized;
 			
@@ -77,9 +83,9 @@ namespace AssemblyCSharp
 					//losDistance-=previous.losDistance;
 				}
 
-				if (!useStandardAStar){
-
-				}
+//				if (!useStandardAStar){
+//
+//				}
 
 
 
