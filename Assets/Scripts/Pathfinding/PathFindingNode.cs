@@ -23,10 +23,11 @@ namespace AssemblyCSharp
 		public float losDistance = 0;
 		public float deltaLosDistance = 0;
 		public float deltaH = 0;
-
+		public bool isJumpPoint = false;
 
 		public PathFindingNode (PathFindingNode previous, Vector3 pos, Vector3 start, Vector3 end, ref bool reachedEnd, bool useStandardAStar, bool isJumpPoint)
 		{
+			this.isJumpPoint = isJumpPoint;
 			reachedEnd = false;
 			this.previous = previous;
 			this.pos = pos;
@@ -34,8 +35,8 @@ namespace AssemblyCSharp
 			//we calculate h first, because we can determine when calculating h whether the end is visible, and therefore jump to it
 			Vector3 startEndDir = (end - pos);
 			
-			float h = startEndDir.magnitude;
-			h = AIGrid.GetManhattanDistance (end, pos);
+			h = startEndDir.sqrMagnitude;
+			h = h*(h/AIGrid.GetManhattanDistance (end, pos));
 
 			startEndDir = startEndDir.normalized;
 			

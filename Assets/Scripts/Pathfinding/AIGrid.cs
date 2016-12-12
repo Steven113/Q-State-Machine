@@ -26,6 +26,14 @@ public class AIGrid : MonoBehaviour
 	// Use this for initialization
 	void Awake ()
 	{
+		//useful to keep for testing equations
+//		for (int i = 0; i<20; ++i) {
+//			Vector3 vect1 = UnityEngine.Random.insideUnitSphere*i;
+//			Vector3 vect2 = UnityEngine.Random.insideUnitSphere*i;
+//			Debug.Log("Magnitude from vector3" + (vect1-vect2).magnitude);
+//			Debug.Log("Magnitude from appoximation" + GetSquareDistanceEstimate(vect1,vect2));
+//		}
+
 		s_cellWidth = cellWidth;
 		Debug.Assert (s_cellWidth > 0);
 		LOSDirections = new Vector3[] {
@@ -322,6 +330,15 @@ public class AIGrid : MonoBehaviour
 									fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1] = (((k - 1) / dist) * node.f) < fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1] ? (((k - 1) / dist) * node.f) : fValues [(int)(temp.pos.x + k * SearchDirectionOffsets [i].x), (int)(temp.pos.z + k * SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1];
 									numUses[(int)(temp.pos.x+k*SearchDirectionOffsets[i].x),(int)(temp.pos.z+k*SearchDirectionOffsets[i].z)] = numPathFindingSearches;
 								}
+
+										if (numUses [(int)newPos.x, (int)newPos.z] < numPathFindingSearches || fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] > node.f) {
+											numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
+											fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.f;
+											gValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.g;
+											openList.Add (node);
+											++numExpansions;
+										}
+
 							}
 						} 
 
@@ -338,10 +355,10 @@ public class AIGrid : MonoBehaviour
 						}
 
 							consistent= false;
-							if (useStandardAStar){
+							if (true){
 							float minG = float.PositiveInfinity;
 							for (int j = 0; j< SearchDirectionOffsets.Length; ++j) {
-									if (visibilityDistances [(int)temp.pos.x, (int)temp.pos.z, j]>=SearchDirectionDistances[i]){
+									if ((int)(newPos.x+SearchDirectionOffsets[i].x) >= 0 && (int)(newPos.x+SearchDirectionOffsets[i].x) < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)(newPos.z+SearchDirectionOffsets[i].z) >= 0 && (int)(newPos.z+SearchDirectionOffsets[i].z) < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)(newPos.x+SearchDirectionOffsets[i].x), (int)(newPos.z+SearchDirectionOffsets[i].z)]) {
 									float tempG = gValues[(int)(temp.pos.x+SearchDirectionOffsets[i].x), (int)(temp.pos.z+SearchDirectionOffsets[i].z),useStandardAStar ? 0 : 1] + SearchDirectionDistances[j];
 									minG = minG>tempG?tempG:minG;
 								}
@@ -411,4 +428,11 @@ public class AIGrid : MonoBehaviour
 	{
 		return Mathf.Abs (start.x - end.x) + Mathf.Abs (start.y - end.y) + Mathf.Abs (start.z - end.z);
 	}
+
+//	public static float GetSquareDistanceEstimate(Vector3 start, Vector3 end){
+//		float displacement_x = start.x > end.x ? (start.x - end.x) : (end.x - start.x);
+//		float displacement_y = start.y > end.y ? (start.y - end.y) : (end.y - start.y);
+//		float displacement_z = start.z > end.z ? (start.z - end.z) : (end.z - start.z);
+//		return ((displacement_x*displacement_x + displacement_y*displacement_y + displacement_z*displacement_z)/(displacement_x+displacement_y+displacement_z))+((displacement_x*displacement_x*displacement_x + displacement_y*displacement_y*displacement_y + displacement_z*displacement_z*displacement_z)/(displacement_x+displacement_y+displacement_z));
+//	}
 }
