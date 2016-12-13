@@ -40,7 +40,7 @@ namespace AssemblyCSharp
 				//h = AIGrid.GetDeltaMax (end, pos,1.44f,1f);
 			//}
 			//h = h*(h/AIGrid.GetManhattanDistance (end, pos));
-			h = h*(h*AIGrid.GetManhattanDistance (end, pos));
+			//h = h*(h*AIGrid.GetManhattanDistance (end, pos));
 			//h = AIGrid.GetDeltaMax (start, end, 1.44f, 1f);
 			//h = h*(h/ AIGrid.GetDeltaMax (start, end, 1.44f, 1f));
 			//h = h * h;
