@@ -18,14 +18,20 @@ public class AIGrid : MonoBehaviour
 	public static float[,,] gValues = new float[0, 0, 0];
 	public static float[,,] rhsValues = new float[0, 0, 0];
 	public static double[,] numUses = new double[0, 0];
+	public static float[,,] hMulipliers = new double[0, 0,0];
+	public float hMultiplierArrayResolution = 0.1f; // how many cells vertically and horizintally a hmultiplier array cell should refer to
 	public static int s_cellWidth = 0;
 	public int cellWidth = 1;
+	public float t_heuristicMultiplierAdaptionRate = 0.1f;
+	public float [] t_heuristicMultiplier = new float[2];
+
 	public static double numPathFindingSearches = 0;
 	public static bool debugSearchActive = false;
 
 	// Use this for initialization
 	void Awake ()
 	{
+		PathFindingNode.heuristicMultiplierAdaptionRate = t_heuristicMultiplierAdaptionRate;
 		//useful to keep for testing equations
 //		for (int i = 0; i<20; ++i) {
 //			Vector3 vect1 = UnityEngine.Random.insideUnitSphere*(i+1);
@@ -117,9 +123,10 @@ public class AIGrid : MonoBehaviour
 		}
 	}
 	// Update is called once per frame
-	//void Update () {
-	//
-	//}
+	void Update () {
+		//t_heuristicMultiplierAdaptionRate = PathFindingNode.heuristicMultiplier;
+		t_heuristicMultiplier = PathFindingNode.heuristicMultiplier;
+	}
 
 	public static bool findPath (Vector3 start, Vector3 end, out Collection<Vector3> path, bool useStandardAStar = false)
 	{
@@ -383,14 +390,14 @@ public class AIGrid : MonoBehaviour
 											for (int n = 2; n<=2 && noForcedNeighbours; ++n){
 												if (AIGrid.visibilityDistances[(int)(newPos.x+ SearchDirectionOffsets [nextDirectionIndex].x*expansionDistance),(int)(newPos.z+ SearchDirectionOffsets [nextDirectionIndex].z*expansionDistance),(nextDirectionIndex+n)%8] ==0 && AIGrid.visibilityDistances[(int)(temp.pos.x),(int)(temp.pos.z),(nextDirectionIndex+n)%8] >0){
 													noForcedNeighbours = false;
-													Debug.Log("Forced Neighbours! 1 "+SearchDirectionOffsets[i]);
+													Debug.Log("Forced Neighbours! 1 "+SearchDirectionOffsets[i]+ " " + n + " " + numIter);
 												}
 											}
 
-											for (int n = 6; n<=6 && noForcedNeighbours; ++n){
+											for (int n = 7; n<=6 && noForcedNeighbours; ++n){
 												if (AIGrid.visibilityDistances[(int)(newPos.x+ SearchDirectionOffsets [nextDirectionIndex].x*expansionDistance),(int)(newPos.z+ SearchDirectionOffsets [nextDirectionIndex].z*expansionDistance),(nextDirectionIndex+n)%8] ==0 && AIGrid.visibilityDistances[(int)(temp.pos.x),(int)(temp.pos.z),(nextDirectionIndex+n)%8] >0){
 													noForcedNeighbours = false;
-													Debug.Log("Forced Neighbours! 2 "+SearchDirectionOffsets[i]);
+													Debug.Log("Forced Neighbours! 2 "+SearchDirectionOffsets[i]+ " " + n + " " + numIter);
 												}
 											}
 											expansionDistance+=1;
@@ -405,7 +412,7 @@ public class AIGrid : MonoBehaviour
 												//Debug.DrawRay(newPos+ SearchDirectionOffsets [nextDirectionIndex]*expansionDistance,visibilityDistances[(int)(newPos.x+ SearchDirectionOffsets [nextDirectionIndex].x*expansionDistance), (int)(newPos.z+ SearchDirectionOffsets [nextDirectionIndex].z*expansionDistance),n]*LOSDirections[n],Color.yellow);
 												if (AIGrid.visibilityDistances[(int)(newPos.x+ SearchDirectionOffsets [nextDirectionIndex].x*expansionDistance),(int)(newPos.z+ SearchDirectionOffsets [nextDirectionIndex].z*expansionDistance),(nextDirectionIndex+n)%8] ==0 && AIGrid.visibilityDistances[(int)(temp.pos.x),(int)(temp.pos.z),(nextDirectionIndex+n)%8] >0){
 													noForcedNeighbours = false;
-													Debug.Log("Forced Neighbours! 3 "+SearchDirectionOffsets[i]);
+													Debug.Log("Forced Neighbours! 3 "+SearchDirectionOffsets[i]+ " " + n + " " + numIter);
 												}
 											}
 											
@@ -413,7 +420,7 @@ public class AIGrid : MonoBehaviour
 												//Debug.DrawRay(newPos+ SearchDirectionOffsets [nextDirectionIndex]*expansionDistance,visibilityDistances[(int)(newPos.x+ SearchDirectionOffsets [nextDirectionIndex].x*expansionDistance), (int)(newPos.z+ SearchDirectionOffsets [nextDirectionIndex].z*expansionDistance),n]*LOSDirections[n],Color.yellow);
 												if (AIGrid.visibilityDistances[(int)(newPos.x+ SearchDirectionOffsets [nextDirectionIndex].x*expansionDistance),(int)(newPos.z+ SearchDirectionOffsets [nextDirectionIndex].z*expansionDistance),(nextDirectionIndex+n)%8] ==0 && AIGrid.visibilityDistances[(int)(temp.pos.x),(int)(temp.pos.z),(nextDirectionIndex+n)%8] >0){
 													noForcedNeighbours = false;
-													Debug.Log("Forced Neighbours! 4 "+SearchDirectionOffsets[i]);
+													Debug.Log("Forced Neighbours! 4 "+SearchDirectionOffsets[i]+ " " + n + " " + numIter);
 												}
 											}
 											expansionDistance+=1;
@@ -434,7 +441,7 @@ public class AIGrid : MonoBehaviour
 //										if (visibilityDistances[(int)temp.pos.x,(int)temp.pos.z,(int)(3f + 2*Vector3.Dot((end-newPos).normalized,Vector3.left))]>GetManhattanDistance(newPos,end)){
 //											break;
 //										}
-
+										//numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
 //
 //										obstacleDistributionHasChanged = false;
 //										if (numExpanded > 1) {
@@ -544,7 +551,7 @@ public class AIGrid : MonoBehaviour
 				}
 				Collection<Vector3> path = new Collection<Vector3> ();
 				if (temp != null) {
-					CreatePath (temp, ref path, start, end, true, useStandardAStar ? Color.green : Color.magenta, 30f);
+					CreatePath (temp, ref path, start, end, true, useStandardAStar, useStandardAStar ? Color.green : Color.magenta, 30f);
 				}
 
 				Debug.Log ((useStandardAStar ? "AStar" : "LOS*") + " Expansions: " + numExpansions + " " + reachedEnd + " " + timeToRun);
@@ -562,11 +569,15 @@ public class AIGrid : MonoBehaviour
 		//MonoBehaviour.StartCoroutine (start, end, !useStandardAStar);
 	}
 
-	public static void CreatePath (PathFindingNode node, ref Collection<Vector3> path, Vector3 start, Vector3 end, bool visualizePath, Color pathCol = default(Color), float pathDrawTime = 0f)
+	public static void CreatePath (PathFindingNode node, ref Collection<Vector3> path, Vector3 start, Vector3 end, bool visualizePath, bool useStandardAStar, Color pathCol = default(Color), float pathDrawTime = 0f)
 	{
 		PathFindingNode temp = node;
 		path.Add (end);
 		while (temp.previous!=null) {
+			PathFindingNode.heuristicMultiplier[useStandardAStar?0:1] = PathFindingNode.heuristicMultiplierAdaptionRate*(temp.g/temp.previous.h)+ (1-PathFindingNode.heuristicMultiplierAdaptionRate)*PathFindingNode.heuristicMultiplier[useStandardAStar?0:1];
+			if (PathFindingNode.heuristicMultiplier[useStandardAStar?0:1]<0){
+				PathFindingNode.heuristicMultiplier[useStandardAStar?0:1] = 1;
+			}
 			path.Insert (0, temp.pos);
 			if (visualizePath) {
 				Debug.DrawRay (temp.pos, temp.previous.pos - temp.pos, pathCol, pathDrawTime);

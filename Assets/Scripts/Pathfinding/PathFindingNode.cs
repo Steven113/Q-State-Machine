@@ -25,6 +25,10 @@ namespace AssemblyCSharp
 		public float deltaH = 0;
 		public bool isJumpPoint = false;
 
+		public static float [] heuristicMultiplier = new float[]{1,1};
+
+		public static float heuristicMultiplierAdaptionRate = 0.1f;
+
 		public PathFindingNode (PathFindingNode previous, Vector3 pos, Vector3 start, Vector3 end, ref bool reachedEnd, bool useStandardAStar, bool isJumpPoint)
 		{
 			this.isJumpPoint = isJumpPoint;
@@ -36,6 +40,7 @@ namespace AssemblyCSharp
 			Vector3 startEndDir = (end - pos);
 			//if (useStandardAStar) {
 				h = startEndDir.sqrMagnitude;
+			h *= heuristicMultiplier[useStandardAStar?0:1];
 			//} else {
 				//h = AIGrid.GetDeltaMax (end, pos,1.44f,1f);
 			//}
