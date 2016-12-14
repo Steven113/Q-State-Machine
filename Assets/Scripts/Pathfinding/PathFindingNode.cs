@@ -24,8 +24,9 @@ namespace AssemblyCSharp
 		public float deltaLosDistance = 0;
 		public float deltaH = 0;
 		public bool isJumpPoint = false;
+		//public int directionIndex = 0;
 
-		public static float [] heuristicMultiplier = new float[]{1,1};
+		//public static float [] heuristicMultiplier = new float[]{1,1};
 
 		public static float heuristicMultiplierAdaptionRate = 0.1f;
 
@@ -35,12 +36,12 @@ namespace AssemblyCSharp
 			reachedEnd = false;
 			this.previous = previous;
 			this.pos = pos;
-
+			//this.directionIndex = directionIndex;
 			//we calculate h first, because we can determine when calculating h whether the end is visible, and therefore jump to it
 			Vector3 startEndDir = (end - pos);
 			//if (useStandardAStar) {
 				h = startEndDir.sqrMagnitude;
-			h *= heuristicMultiplier[useStandardAStar?0:1];
+			//h *= AIGrid.hMulipliers[(int)(pos.x*AIGrid.hMultiplierArrayResolution),(int)(pos.z*AIGrid.hMultiplierArrayResolution),useStandardAStar?0:1];
 			//} else {
 				//h = AIGrid.GetDeltaMax (end, pos,1.44f,1f);
 			//}
@@ -73,8 +74,8 @@ namespace AssemblyCSharp
 
 			//if the direction to the dest is exactly parallel to a cardinal direction and we have LOS to the dest, we can skip to the dest
 			if (dot==1 && losDistance[0] >= h*dot) {
-				Debug.DrawRay(pos,AIGrid.LOSDirections[dirToUse]*losDistance[0],Color.black,30f);
-				Debug.DrawRay(pos,startEndDir*losDistance[0],Color.magenta,30f);
+				//Debug.DrawRay(pos,AIGrid.LOSDirections[dirToUse]*losDistance[0],Color.black,30f);
+				//Debug.DrawRay(pos,startEndDir*losDistance[0],Color.magenta,30f);
 				Debug.Log("Found jump point!");
 				pos = end;
 				reachedEnd = true;
@@ -83,7 +84,7 @@ namespace AssemblyCSharp
 			if (!reachedEnd) {
 
 				if (previous != null) {
-					Debug.DrawRay(pos,previous.pos-pos, useStandardAStar?Color.blue:Color.red,10f);
+					//Debug.DrawRay(pos,previous.pos-pos, useStandardAStar?Color.blue:Color.red,10f);
 					g = Vector2.Distance (previous.pos, pos) + previous.g;
 					//losDistance-=previous.losDistance;
 				}

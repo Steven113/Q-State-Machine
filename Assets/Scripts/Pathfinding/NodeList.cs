@@ -452,6 +452,17 @@ namespace AssemblyCSharp
 			tail = null;
 			numItems = 0;
 		}
+
+		public T[] toArray(){
+			T[] result = new T[numItems];
+			NodeListItem<T> temp = head;
+			for (int i = 0; i<result.Length; ++i) {
+				result[i] = temp.value;
+				temp = temp.next;
+			}
+			return result;
+
+		}
 	}
 }
 

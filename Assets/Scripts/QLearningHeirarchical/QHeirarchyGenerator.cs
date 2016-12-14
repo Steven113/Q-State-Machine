@@ -47,29 +47,17 @@ namespace AssemblyCSharp
 			fileToSaveTreeTo = EditorGUILayout.TextField ("Save: Q Tree File Location", fileToSaveTreeTo);
 			
 			if (GUILayout.Button("Save QTree")){
-				using (Stream stream = File.OpenWrite(fileToSaveTreeTo /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))*/+ ".qsf") ) //ensure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
-				{
-					Debug.Log("Serializing tree!");
-					BinaryFormatter formatter = new BinaryFormatter();
-					formatter.Serialize(stream, qTree);
-				}
+				Utils.SerializeFile(fileToSaveTreeTo,ref qTree);
 			}
 			
 			fileToLoadTreeFrom = EditorGUILayout.TextField ("Load: Q Tree File Location", fileToLoadTreeFrom);
 			
 			if (GUILayout.Button("Load QTree")){
-				if (File.Exists (fileToLoadTreeFrom)) {//first confirm that the navmesh file exists
-					using (Stream navmeshStream = File.OpenRead(fileToLoadTreeFrom)){ //File.OpenRead opens the file with the read flag, rather than us having to set it. The using statement ensures that the created stream is cleaned up at the end of the block
-						BinaryFormatter formatterForNavMesh = new BinaryFormatter();
-						QTree tempQ = ((formatterForNavMesh.Deserialize(navmeshStream) as QTree));
-						if (tempQ !=null){
-							qTree = tempQ;
-						}
-					}
-					//return true;
+				QTree tempQ = null;
+				if (Utils.DeserializeFile<QTree>(fileToLoadTreeFrom,ref tempQ) && tempQ != null){
+					qTree = tempQ;
 				} else {
-					Debug.Log ("Could not load tree!");
-					//return false;
+					Debug.Log("File could not load!");
 				}
 			}
 

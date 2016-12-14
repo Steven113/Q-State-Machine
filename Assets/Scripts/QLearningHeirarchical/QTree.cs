@@ -149,7 +149,9 @@ namespace AssemblyCSharp
 				previousState[i] = EditorGUILayout.TextField(previousState[i]);
 			}
 			EditorGUI.indentLevel-=3;
-			treeNodes [0].ToEditorView ();
+			if (treeNodes.Count > 0) {
+				treeNodes [0].ToEditorView ();
+			}
 		}
 
 		public int StateLength {
