@@ -135,7 +135,7 @@ namespace AssemblyCSharp
 			timeSinceLastActionUpdate += Time.deltaTime;
 
 			reward += (healthController.health / healthController.maxhealth) * (Time.deltaTime);
-			float scoreDiff = ((GameData.scores[(int)thisEntity.faction] - GameData.scores[((int)thisEntity.faction+1)%GameData.scores.Length])*Time.deltaTime)*0.1f;
+			float scoreDiff = ((GameData.scores[(int)thisEntity.faction] - GameData.scores[((int)thisEntity.faction+1)%GameData.scores.Length])*Time.deltaTime)*0.01f;
 			//if (scoreDiff<0){
 				reward += scoreDiff;
 			//}

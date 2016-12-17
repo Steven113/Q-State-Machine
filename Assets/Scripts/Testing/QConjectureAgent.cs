@@ -19,7 +19,7 @@ namespace AssemblyCSharp
 
 		//public float breedingInterval = 0f;
 
-		QConjectureLearner learner = null;
+		public QConjectureLearner learner = null;
 		//get the action(s) a agent should perform given it's current state
 		// we use the list of strings rather than one string as a return parameter as we want to facilitate concept-action-mapping
 

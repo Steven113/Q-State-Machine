@@ -122,10 +122,10 @@ namespace AssemblyCSharp
 			return result;
 		}
 
-		public void GenerateBaseConjectures(){
+		public void GenerateBaseConjectures(bool resetGeneration = true){
 			previousState = new int[possibleStates.Count / 32 + 1];
 			conjectures.Clear ();
-			currentGeneration = 0;
+			if (resetGeneration) currentGeneration = 0;
 			for (int i = 0; i<possibleActions.Count; ++i) {
 				List<string> actionsToSelect = new List<string>(possibleActions.Count);
 				actionsToSelect.Add(possibleActions[i]);
