@@ -135,6 +135,10 @@ namespace AssemblyCSharp
 			timeSinceLastActionUpdate += Time.deltaTime;
 
 			reward += (healthController.health / healthController.maxhealth) * (Time.deltaTime);
+			float scoreDiff = ((GameData.scores[(int)thisEntity.faction] - GameData.scores[((int)thisEntity.faction+1)%GameData.scores.Length])*Time.deltaTime)*0.1f;
+			//if (scoreDiff<0){
+				reward += scoreDiff;
+			//}
 
 			if (currentTarget != null && currentTarget.mainLOSCollider != null) {
 				if (currentTarget.controlHealth.health==previousTargetHealth){
@@ -581,7 +585,9 @@ namespace AssemblyCSharp
 		}
 
 		public void Respawn(){
-			qAgent.RewardAgent (-10);
+			//qAgent.RewardAgent (-10);
+			//reward = 0f;
+			reward -= 10;
 			Vector3 spawnPoint = new Vector3(1,0,1);
 			++GameData.scores [((int)(thisEntity.faction)+1) % GameData.scores.Length];
 			Debug.Log (thisEntity.faction.ToString () + " " + (((int)(thisEntity.faction) + 1) % GameData.scores.Length));

@@ -29,7 +29,7 @@ namespace AssemblyCSharp
 		string nextAction = "";
 		int offset = 0;
 		int currentGeneration = 0;
-		int numExamplesRun = 0;
+		public int numExamplesRun = 0;
 		int numExamplesBeforeEvolving = 600;
 
 		bool useDeltaStateLearning = false;
@@ -122,7 +122,7 @@ namespace AssemblyCSharp
 			return result;
 		}
 
-		void GenerateBaseConjectures(){
+		public void GenerateBaseConjectures(){
 			previousState = new int[possibleStates.Count / 32 + 1];
 			conjectures.Clear ();
 			currentGeneration = 0;
@@ -160,19 +160,19 @@ namespace AssemblyCSharp
 			for (int i = 0; i<conjectureCount; ++i) {
 				if (conjectures[(i+offset)%conjectureCount].StatesCorrespond(binaryStateString)){ //we need a offset to stop the same conjecture from being chosen every time, so that all conjectures get a chance to be rewarded
 					conjectures[(i+offset)%conjectureCount].timeWhenConjectureWasLastSelected = Time.time; //update time when string was last used
-					//if (conjectures[(i+offset)%conjectureCount].generation == 0){
-						
-					//} else {
-					//	offset = 0;
-					//}
+
 
 					if (numExamplesRun>numExamplesBeforeEvolving){
 						numExamplesRun%=numExamplesBeforeEvolving;
-						Evolve();
+						//Evolve();
 					}
 					previousState = binaryStateString;
 					List<string> actions = toStringList(conjectures[(i+offset)%conjectureCount].actionBinaryString,possibleActions);
+					//if (conjectures[(i+offset)%conjectureCount].generation == 0){
 					offset = (i+offset+1)%conjectureCount;
+					//} else {
+					//	offset = 0;
+					//}
 					//actions = Utils.ShuffleList(actions);
 					return actions;
 
@@ -306,6 +306,30 @@ namespace AssemblyCSharp
 
 		public bool ValidateGeneration(QConjectureMap map){
 			return map.generation == 0 || map.generation >= currentGeneration - 1;
+		}
+
+		public float TotalFitness {
+			get{
+				float val = 0;
+				int l = conjectures.Count;
+				for (int i= 0;i<l; ++i){
+					val+=conjectures[i].fitness;
+				}
+				return val;
+			}
+
+		}
+
+		public void ResetTimers(){
+			for (int i = 0; i<conjectures.Count; ++i) {
+				conjectures[i].timeWhenConjectureWasLastSelected = 0;
+			}
+		}
+
+		public void ResetFitness(){
+			for (int i = 0; i<conjectures.Count; ++i) {
+				conjectures[i].fitness = 0;
+			}
 		}
 
 		public void ToEditorView (){
