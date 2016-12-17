@@ -38,6 +38,9 @@ namespace AssemblyCSharp
 		public int smallFoodCount = 2; //for small heals
 		public int bigFoundCount =1; //for big heals
 
+		public float ActionUpdateInterval = 0.5f;
+		public float timeSinceLastActionUpdate = 1000f;
+
 		//Data for controlling update rate
 		public float AIUpdateInterval = 0.1f;
 		public float timeSinceLastUpdate = 1000f;
@@ -129,11 +132,13 @@ namespace AssemblyCSharp
 			UpdateFriendlyFireFlag ();
 			timeSinceLastUpdatingCurrentPath += Time.deltaTime;
 			timeSinceLastUpdate += Time.deltaTime;
+			timeSinceLastActionUpdate += Time.deltaTime;
 
 			reward += (healthController.health / healthController.maxhealth) * (Time.deltaTime);
 
 			if (currentTarget != null && currentTarget.mainLOSCollider != null) {
 				if (currentTarget.controlHealth.health==previousTargetHealth){
+					qAgent.RewardAgent(10);
 					previousTargetHealth = currentTarget.controlHealth.maxhealth;
 				}
 				if (currentTarget.controlHealth.health<previousTargetHealth){
@@ -146,6 +151,11 @@ namespace AssemblyCSharp
 			if (timeSinceLastUpdate > AIUpdateInterval) {
 				timeSinceLastUpdate %= AIUpdateInterval;
 				UpdateLOSInfo ();
+
+			}
+
+			if (timeSinceLastActionUpdate > ActionUpdateInterval) {
+				timeSinceLastActionUpdate %= ActionUpdateInterval;
 				qAgent.RewardAgent(reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
 				reward = 0;
 				currentActionSet = qAgent.GetAction (getState ());

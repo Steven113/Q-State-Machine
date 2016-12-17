@@ -75,6 +75,20 @@ namespace AssemblyCSharp
 			
 		}
 
+		public static int GetNumberOfOnesInBinaryString(int[] str) 
+		{
+			int result = 0;
+			
+			for (int i = 0; i<str.Length; ++i) {
+				for (int j = 0; j<32; j++){
+					if (0<(str[i] & (1<<j))) ++result;
+				}
+			}
+			
+			return result;
+			
+		}
+
 		public static List<T> ShuffleList<T>(List<T> input){
 			List<T> result = new List<T> ();
 			result.AddRange (input);

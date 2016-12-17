@@ -467,9 +467,56 @@ namespace AssemblyCSharp
 
 		}
 
+		public List<T> toList(){
+			List<T> result = new List<T>(Count);
+			NodeListItem<T> temp = head;
+			for (int i = 0; i<result.Count; ++i) {
+				result.Add(temp.value);
+				temp = temp.next;
+			}
+			return result;
+			
+		}
+
+		public List<T> toList(Func<T,bool> predicate){
+			List<T> result = new List<T>(Count);
+			NodeListItem<T> temp = head;
+			for (int i = 0; i<Count; ++i) {
+				if (predicate(temp.value)){
+					result.Add(temp.value);
+				}
+				temp = temp.next;
+			}
+			result.TrimExcess ();
+			return result;
+			
+		}
+
 		public void AddAll(List<T> list){
 			for (int i = 0; i<list.Count; ++i) {
 				Add(list[i]);
+			}
+		}
+
+		public void AddAll(T [] list){
+			for (int i = 0; i<list.Length; ++i) {
+				Add(list[i]);
+			}
+		}
+
+		public void AddAll(List<T> list, Func<T,bool> predicate){
+			for (int i = 0; i<list.Count; ++i) {
+				if(predicate(list[i])){
+					Add(list[i]);
+				}
+			}
+		}
+		
+		public void AddAll(T [] list, Func<T,bool> predicate){
+			for (int i = 0; i<list.Length; ++i) {
+				if (predicate(list[i])){
+				Add(list[i]);
+				}
 			}
 		}
 	}

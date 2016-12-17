@@ -40,6 +40,8 @@ namespace AssemblyCSharp
 
 		public List<QConjectureMap> conjectures = new List<QConjectureMap> (possibleStates.Count);
 
+		//Func<QConjectureLearner,bool> generationValidator = map => map
+
 		public QConjectureLearner(List<string> possibleStates, List<string> possibleActions, float learningRate, float discountFactor){
 			this.possibleStates = possibleStates;
 			this.possibleActions = possibleActions;
@@ -128,9 +130,18 @@ namespace AssemblyCSharp
 				List<string> actionsToSelect = new List<string>(possibleActions.Count);
 				actionsToSelect.Add(possibleActions[i]);
 				for (int j = i+1; j<possibleActions.Count; ++j) {
-					if (actionCombinationConstraints[i,j]){
-						actionsToSelect.Add(possibleActions[j]);
+					bool noConstraints = true;
+					for (int k = 0; k<actionsToSelect.Count; ++k){
+						if (!actionCombinationConstraints[possibleActions.IndexOf(actionsToSelect[k]),(j)]){
+							noConstraints = false;
+							break;
+						}
 					}
+					//if (actionCombinationConstraints[i,j]){
+						if (noConstraints){
+							actionsToSelect.Add(possibleActions[j]);
+						}
+					//}
 				}
 				actionsToSelect.TrimExcess();
 				int [] tempBitMask_A = toBinaryString(actionsToSelect,possibleActions);
@@ -149,11 +160,11 @@ namespace AssemblyCSharp
 			for (int i = 0; i<conjectureCount; ++i) {
 				if (conjectures[(i+offset)%conjectureCount].StatesCorrespond(binaryStateString)){ //we need a offset to stop the same conjecture from being chosen every time, so that all conjectures get a chance to be rewarded
 					conjectures[(i+offset)%conjectureCount].timeWhenConjectureWasLastSelected = Time.time; //update time when string was last used
-					if (currentGeneration == 0){
-						offset = (i+offset+1)%conjectureCount;
-					} else {
-						offset = 0;
-					}
+					//if (conjectures[(i+offset)%conjectureCount].generation == 0){
+						
+					//} else {
+					//	offset = 0;
+					//}
 
 					if (numExamplesRun>numExamplesBeforeEvolving){
 						numExamplesRun%=numExamplesBeforeEvolving;
@@ -161,6 +172,7 @@ namespace AssemblyCSharp
 					}
 					previousState = binaryStateString;
 					List<string> actions = toStringList(conjectures[(i+offset)%conjectureCount].actionBinaryString,possibleActions);
+					offset = (i+offset+1)%conjectureCount;
 					//actions = Utils.ShuffleList(actions);
 					return actions;
 
@@ -175,17 +187,39 @@ namespace AssemblyCSharp
 			}
 			return true;
 		}
-
+		//the evolve method simply breeds the top two conjectures, but these connjectures may not create specialized state-action mappings, and even when the mappings are specialized we are not necessarily doing the right specializations
+		// the advantage of this method is that it does not exponentially expand the conjecture space
 		public void Evolve(){
+			++currentGeneration;
 			NodeList<QConjectureMap> orderedConjectures = new NodeList<QConjectureMap> ();
 			for (int i = 0; i<conjectures.Count; ++i) {
 				orderedConjectures.Add(conjectures[i]);
 			}
 			//orderedConjectures.Remove (orderedConjectures [orderedConjectures.Count - 1]);
 			//orderedConjectures.Remove (orderedConjectures [orderedConjectures.Count - 1]);
-			orderedConjectures.AddAll (BreedConjectures (orderedConjectures [0], orderedConjectures [1]));
 
-			conjectures = new List<QConjectureMap>(orderedConjectures.toArray ());
+			//NodeList<QConjectureMap> newOrderedConjectures = new NodeList<QConjectureMap> ();
+
+			//newOrderedConjectures.AddAll((orderedConjectures.toArray()));
+			QConjectureMap [] conjectureArr = orderedConjectures.toArray ();
+
+			for (int i = 1; i<conjectureArr.Length; ++i) {
+				if (orderedConjectures.Count>2000){
+					Debug.Log("Too many conjectures!");
+					break;
+				}
+				if (conjectureArr [i].generation == currentGeneration - 1){
+					orderedConjectures.AddAll(BreedConjectures (conjectureArr [0], conjectureArr [i]));
+				}
+			}
+
+
+			//orderedConjectures.AddAll (BreedConjectures (orderedConjectures [0], orderedConjectures [1]));
+			//orderedConjectures.AddAll (SpecializeConjecture (orderedConjectures [0]));
+
+
+
+			conjectures = new List<QConjectureMap>(orderedConjectures.toList (ValidateGeneration));
 
 			for (int i = 0; i<conjectures.Count; ++i) {
 				conjectures[i].timeWhenConjectureWasLastSelected = 0; //we want to reset the timers to give the new conjectures a fair chance to gain rewards
@@ -193,6 +227,45 @@ namespace AssemblyCSharp
 			}
 
 			offset = 0;
+		}
+
+
+		/*
+		 * Takes a given conjecture and produces conjectures with one state constraint turned off and/or one action removed from the original
+		 */
+		public List<QConjectureMap> SpecializeConjecture(QConjectureMap original){
+			int numSpecialisations = Utils.GetNumberOfOnesInBinaryString (original.stateBinaryString)*Utils.GetNumberOfOnesInBinaryString (original.actionBinaryString);
+			List<QConjectureMap> children = new List<QConjectureMap> (numSpecialisations);
+			//Debug.Log("Specializing:");
+			//Debug.Log (original.ToString ());
+			for (int i = 0; i<possibleStates.Count; ++i) {
+				if (0<(original.stateBinaryString[i/32] & (1<<(i%32)))){
+				//Debug.Log("Specializing bit "+i);
+					int [] tempStateString = new int[original.stateBinaryString.Length];
+					for (int j = 0; j<tempStateString.Length; j++){
+						tempStateString[j] = original.stateBinaryString[j];
+					}
+					tempStateString[i/32] = tempStateString[i/32] ^ (1<<(i%32));
+
+					children.Add(new QConjectureMap(tempStateString,original.actionBinaryString,learningRate,discountFactor,currentGeneration));
+					children[children.Count-1].fitness = original.fitness + 10;
+					//Debug.Log(children[children.Count-1].ToString());
+
+					for (int j = 0; j<possibleActions.Count; ++j){
+						if (0<(original.actionBinaryString[j/32] & (1<<(j%32)))){
+							int [] tempActionString = new int[original.actionBinaryString.Length];
+							for (int k = 0; k<tempActionString.Length; k++){
+								tempActionString[k] = original.actionBinaryString[k];
+							}
+							tempActionString[j/32] = tempActionString[j/32] ^ (1<<(j%32));
+							children.Add(new QConjectureMap(tempStateString,tempActionString,learningRate,discountFactor,currentGeneration));
+							children[children.Count-1].fitness = original.fitness + 10;
+							//Debug.Log(children[children.Count-1].ToString());
+						}
+					}
+				}
+			}
+			return children;
 		}
 
 		public List<QConjectureMap> BreedConjectures(QConjectureMap first, QConjectureMap second){
@@ -229,6 +302,10 @@ namespace AssemblyCSharp
 			children.Add (new QConjectureMap (stateString,Utils.XOR_Integer(first.actionBinaryString, second.actionBinaryString),learningRate,discountFactor,currentGeneration));
 			children [1].fitness = children [0].fitness;
 			return children;
+		}
+
+		public bool ValidateGeneration(QConjectureMap map){
+			return map.generation == 0 || map.generation >= currentGeneration - 1;
 		}
 
 		public void ToEditorView (){

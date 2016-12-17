@@ -71,7 +71,21 @@ namespace AssemblyCSharp
 			}
 		}
 
+		public string ToString(){
+			string result = "State String ";
+			for (int i = 0; i<stateBinaryString.Length; ++i) {
+				result += Convert.ToString(stateBinaryString[i], 2).PadLeft(32, '0');
+				result += " ";
+			}
+			//result += Environment.NewLine;
+			result += " Action String: ";
 
+			for (int i = 0; i<actionBinaryString.Length; ++i) {
+				result += Convert.ToString(actionBinaryString[i], 2).PadLeft(32, '0');
+				result += " ";
+			}
+			return result;
+		}
 	}
 }
 
