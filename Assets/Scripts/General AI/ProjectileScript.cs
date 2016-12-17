@@ -30,6 +30,7 @@ public class ProjectileScript : MonoBehaviour {
 		if (audioClipToPlayOnSpawn != null) {
 			AudioSource.PlayClipAtPoint(audioClipToPlayOnSpawn,gameObject.transform.position);
 		}
+		timeSinceLastUpdate = projectileUpdateInterval * 2;
 	}
 	
 	// Update is called once per frame

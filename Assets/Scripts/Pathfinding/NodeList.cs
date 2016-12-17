@@ -8,6 +8,9 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
+
+
 namespace AssemblyCSharp
 {
 	[Serializable]
@@ -462,6 +465,12 @@ namespace AssemblyCSharp
 			}
 			return result;
 
+		}
+
+		public void AddAll(List<T> list){
+			for (int i = 0; i<list.Count; ++i) {
+				Add(list[i]);
+			}
 		}
 	}
 }

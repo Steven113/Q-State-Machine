@@ -8,22 +8,15 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-
 namespace AssemblyCSharp
 {
-
-
-	//Base class for all agents that can provide their state to a q learner
-	public abstract class QSensor : MonoBehaviour
+	public interface Genome<T>
 	{
+		float Fitness{ get; set;}
+		float CrossoverRate{ get; set;}
+		float MutationRate{ get; set;}
+		T breedGenomes(T first, T second, bool [,] genomeConstraints);
 
-
-		public abstract List<string> getState();
-
-		public abstract void Reward(float reward); //need this method to support manual rewards and punishments by the user
 	}
 }
 

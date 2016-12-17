@@ -10,6 +10,7 @@
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Collections.Generic;
 
 
 namespace AssemblyCSharp
@@ -36,6 +37,54 @@ namespace AssemblyCSharp
 				BinaryFormatter formatter = new BinaryFormatter();
 				formatter.Serialize(stream, objectToLoadDataInto);
 			}
+		}
+
+		public static int[] XOR_Integer(int[] first, int[] second) 
+		{
+			int [] result = new int[first.Length];
+
+			for (int i = 0; i<result.Length; ++i) {
+				result[i] = first[i] ^ second[i];
+			}
+
+			return result;
+
+		}
+
+		public static int[] AND_Integer(int[] first, int[] second) 
+		{
+			int [] result = new int[first.Length];
+			
+			for (int i = 0; i<result.Length; ++i) {
+				result[i] = first[i] & second[i];
+			}
+			
+			return result;
+			
+		}
+
+		public static int[] OR_Integer(int[] first, int[] second) 
+		{
+			int [] result = new int[first.Length];
+			
+			for (int i = 0; i<result.Length; ++i) {
+				result[i] = first[i] | second[i];
+			}
+			
+			return result;
+			
+		}
+
+		public static List<T> ShuffleList<T>(List<T> input){
+			List<T> result = new List<T> ();
+			result.AddRange (input);
+			for (int i = 0; i<result.Count; ++i) {
+				int randomIndex = UnityEngine.Random.Range(0,result.Count-1);
+				T temp = result [randomIndex];
+				result[randomIndex] = result[i];
+				result[i] = temp;
+			}
+			return result;
 		}
 	}
 }

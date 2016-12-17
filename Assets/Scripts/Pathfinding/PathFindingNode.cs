@@ -51,14 +51,18 @@ namespace AssemblyCSharp
 			//h = h*(h/ AIGrid.GetDeltaMax (start, end, 1.44f, 1f));
 			//h = h * h;
 
-			startEndDir = startEndDir.normalized;
+			//startEndDir = startEndDir.normalized;
 			
 			float dot = -1;
 			int dirToUse = -1;
 
 			//get which cardinal direction best matches direction from node to dest
-			for (int i = 0; i<AIGrid.LOSDirections.Length; ++i) {
-				float temp = Vector3.Dot(startEndDir,AIGrid.LOSDirections[i]);
+		
+			for (int i = 0; i<8; ++i) {
+				float temp = 0;
+				temp += startEndDir.x*AIGrid.LOSDirections[i].x;
+				temp += startEndDir.y*AIGrid.LOSDirections[i].y;
+				temp += startEndDir.z*AIGrid.LOSDirections[i].z;
 				if (temp>dot){
 					dot = temp;
 					dirToUse = i;
@@ -85,8 +89,13 @@ namespace AssemblyCSharp
 
 				if (previous != null) {
 					//Debug.DrawRay(pos,previous.pos-pos, useStandardAStar?Color.blue:Color.red,10f);
-					g = Vector2.Distance (previous.pos, pos) + previous.g;
+					//g = Vector2.Distance (previous.pos, pos) + previous.g;
 					//losDistance-=previous.losDistance;
+					if (previous.pos.x == pos.x || previous.pos.z == pos.z){
+						g = AIGrid.s_cellWidth + previous.g;
+					} else {
+						g = 1.44f*AIGrid.s_cellWidth + previous.g;
+					}
 				}
 
 //				if (!useStandardAStar){
@@ -107,7 +116,7 @@ namespace AssemblyCSharp
 		}
 
 		public int CompareTo(PathFindingNode other){
-			if (Mathf.Approximately (this.f, other.f)) {
+			if ((this.f == other.f)) {
 				return 0;
 			} else if (this.f < other.f) {
 				return -1;

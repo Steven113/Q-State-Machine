@@ -8,22 +8,20 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 namespace AssemblyCSharp
 {
-
-
-	//Base class for all agents that can provide their state to a q learner
-	public abstract class QSensor : MonoBehaviour
+	public class ScoreDisplay : MonoBehaviour
 	{
-
-
-		public abstract List<string> getState();
-
-		public abstract void Reward(float reward); //need this method to support manual rewards and punishments by the user
+		public Text text;
+		public string sideOneName;
+		public string sideTwoName;
+		void Update(){
+			text.text = sideOneName + " " + GameData.scores [0] + " " + sideTwoName + " " + GameData.scores [1]; 
+		}
 	}
 }
 

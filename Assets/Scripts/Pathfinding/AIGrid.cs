@@ -13,6 +13,10 @@ public class AIGrid : MonoBehaviour
 	public static Vector3[] SearchDirectionOffsets = null; //to make the code more reusable, when expanding in the 8 cardinal directions we just add these values to the current node position
 	public static float[] SearchDirectionDistances = null;
 	public static Vector3 worldCentre = Vector3.zero;
+
+	public static Vector3[] corners = new Vector3[4];
+	public static Vector3[] directionToSearchForNewCorner = new Vector3[4]; //if the corner is blocked, when finding a fleeing path, the pathfinder looks in this direction for a node near the corner that is unblocked
+
 	public static bool[,] cellCanBeMovedThrough = new bool[0, 0];
 	public static float[,,] visibilityDistances = new float[0, 0, 0];
 	public static float[,,] fValues = new float[0, 0, 0];
@@ -41,6 +45,7 @@ public class AIGrid : MonoBehaviour
 	// Use this for initialization
 	void Awake ()
 	{
+		//++numPathFindingSearches;
 		//hMultiplierArrayResolution = t_hMultiplierArrayResolution;
 		//PathFindingNode.heuristicMultiplierAdaptionRate = t_heuristicMultiplierAdaptionRate;
 		//useful to keep for testing equations
@@ -91,6 +96,7 @@ public class AIGrid : MonoBehaviour
 		fValues = new float[worldWidth, worldHeight, 2];
 		gValues = new float[worldWidth, worldHeight, 2];
 		rhsValues = new float[worldWidth, worldHeight, 2];
+		numUses = new double[worldWidth, worldHeight];
 		for (int i = 0; i<worldWidth; ++i) {
 			for (int j = 0; j<worldHeight; ++j) {
 				fValues [i, j, 0] = float.PositiveInfinity / 100;
@@ -102,9 +108,22 @@ public class AIGrid : MonoBehaviour
 				rhsValues [i, j, 0] = float.PositiveInfinity / 100;
 				rhsValues [i, j, 1] = float.PositiveInfinity / 100;
 
+				//Debug.Log(i + " " + j);
+				numUses[i,j] = (double)UnityEngine.Random.Range(0f,1f);
+
 				cellCanBeMovedThrough [i, j] = true;
 			}
 		}
+
+		corners [0] = Vector3.zero;
+		corners [1] = new Vector3 (1, 0, worldHeight-2);
+		corners [2] = new Vector3 (worldWidth-2, 0, 1);
+		corners [3] = new Vector3 (worldWidth-2, 0, worldHeight-2);
+
+		directionToSearchForNewCorner [0] = Vector3.right;
+		directionToSearchForNewCorner [1] = Vector3.back;
+		directionToSearchForNewCorner [2] = Vector3.left;
+		directionToSearchForNewCorner [3] = Vector3.back;
 
 		//hMulipliers = new float[(int)(worldWidth * t_hMultiplierArrayResolution), (int)(worldHeight * t_hMultiplierArrayResolution), 2];
 
@@ -118,7 +137,7 @@ public class AIGrid : MonoBehaviour
 //			}
 //		}
 
-		numUses = new double[worldWidth, worldHeight];
+
 	}
 
 	void Start ()
@@ -188,7 +207,7 @@ public class AIGrid : MonoBehaviour
 		if (start.x >= 0 && start.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && start.z >= 0 && start.z < AIGrid.cellCanBeMovedThrough.GetLength (1)) {
 			if (end.x >= 0 && end.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && end.z >= 0 && end.z < AIGrid.cellCanBeMovedThrough.GetLength (1)) {
 				if (!AIGrid.cellCanBeMovedThrough [(int)end.x, (int)end.z]) {
-					Debug.Log ("Cannot move to destination cell");
+					//Debug.Log ("Cannot move to destination cell");
 					return false;
 				} else if (pathFindingRecord.destination.x != float.PositiveInfinity && (int)pathFindingRecord.destination.x == (int)end.x && (int)pathFindingRecord.destination.z == (int)end.z){
 					return true;
@@ -213,7 +232,7 @@ public class AIGrid : MonoBehaviour
 				openList.Add (new PathFindingNode (null, start, start, end, ref reachedEnd, useStandardAStar, false));
 				
 				int numIter = 0;
-				int maxNumIter = cellCanBeMovedThrough.GetLength (0) * cellCanBeMovedThrough.GetLength (1);
+				int maxNumIter = 100;
 				int numExpansions = 0;
 				PathFindingNode temp = openList [0];
 				gValues [(int)(temp.pos.x), (int)(temp.pos.z), useStandardAStar ? 0 : 1] = 0;
@@ -221,7 +240,7 @@ public class AIGrid : MonoBehaviour
 					float startTime = Time.realtimeSinceStartup;
 					++numIter;
 					if (numIter > maxNumIter) {
-						Debug.Log ("Num iterations max exceeded");
+						//Debug.Log ("Num iterations max exceeded");
 						break;
 					}
 					temp = openList [0];
@@ -301,7 +320,7 @@ public class AIGrid : MonoBehaviour
 					//					}
 					
 					if (!consistent) {
-						for (int i = 0; i< SearchDirectionOffsets.Length; ++i) {
+						for (int i = 0; i< 8; ++i) {
 							//if (i == index)
 							//	continue;
 							//newPos = temp.pos + SearchDirectionOffsets [i];
@@ -335,12 +354,18 @@ public class AIGrid : MonoBehaviour
 								//newPos = temp.pos + SearchDirectionOffsets [i];
 								newPos = temp.pos;
 								
-								Vector3 averageExpansionDirection = ((LOSDirections [i] + (temp.pos - (temp.previous != null ? temp.previous.pos : start))) * 0.5f).normalized;
+								Vector3 averageExpansionDirection = Vector3.zero;
+								averageExpansionDirection.x = ((LOSDirections [i].x + (temp.pos.x - (temp.previous != null ? temp.previous.pos.x : start.x))) * 0.5f);
+								averageExpansionDirection.y = ((LOSDirections [i].y + (temp.pos.x - (temp.previous != null ? temp.previous.pos.x : start.y))) * 0.5f);
+								averageExpansionDirection.z = ((LOSDirections [i].z + (temp.pos.x - (temp.previous != null ? temp.previous.pos.x : start.z))) * 0.5f);
 								float dotProductToCheckForForcedNeighbour = -1;
 								int dirToCheck = 0;
 								
 								for (int k = 0; k<8; ++k) {
-									float temp_d = Vector3.Dot (LOSDirections [k], averageExpansionDirection);
+									float temp_d = 0;
+									temp_d += (LOSDirections [k].x*averageExpansionDirection.x);
+									temp_d += (LOSDirections [k].y*averageExpansionDirection.y);
+									temp_d += (LOSDirections [k].z*averageExpansionDirection.z);
 									if (temp_d < dotProductToCheckForForcedNeighbour) {
 										dotProductToCheckForForcedNeighbour = temp_d;
 										dirToCheck = k;
@@ -497,7 +522,7 @@ public class AIGrid : MonoBehaviour
 							consistent = false;
 							if (useLPA) {
 								float minG = float.PositiveInfinity;
-								for (int j = 0; j< SearchDirectionOffsets.Length; ++j) {
+								for (int j = 0; j< 8; ++j) {
 									if ((int)(newPos.x + SearchDirectionOffsets [i].x) >= 0 && (int)(newPos.x + SearchDirectionOffsets [i].x) < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)(newPos.z + SearchDirectionOffsets [i].z) >= 0 && (int)(newPos.z + SearchDirectionOffsets [i].z) < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)(newPos.x + SearchDirectionOffsets [i].x), (int)(newPos.z + SearchDirectionOffsets [i].z)]) {
 										float tempG = gValues [(int)(temp.pos.x + SearchDirectionOffsets [i].x), (int)(temp.pos.z + SearchDirectionOffsets [i].z), useStandardAStar ? 0 : 1] + SearchDirectionDistances [j];
 										minG = minG > tempG ? tempG : minG;
@@ -536,8 +561,10 @@ public class AIGrid : MonoBehaviour
 				}
 				//path = new Collection<Vector3> ();
 
-				
-				Debug.Log ((useStandardAStar ? "AStar" : "LOS*") + " Expansions: " + numExpansions + " " + reachedEnd + " " + timeToRun);
+				if (temp != null) {
+					CreatePath (temp, ref path, start, end, true, useStandardAStar, useLPA, useStandardAStar ? Color.green : Color.magenta, 30f);
+				}
+				//Debug.Log ((useStandardAStar ? "AStar" : "LOS*") + " Expansions: " + numExpansions + " " + reachedEnd + " " + timeToRun);
 				Debug.Log ("OpenList empty");
 				return false;
 			} else {
@@ -1029,4 +1056,91 @@ public class AIGrid : MonoBehaviour
 			return false;
 		}
 	}
+
+	public static bool findExplorationPoint (object caller, Vector3 start, out Vector3 end){
+		++numPathFindingSearches;
+		//path = new Collection<Vector3> ();
+		end = new Vector3(Random.Range(0,cellCanBeMovedThrough.GetLength(0)-1),0,Random.Range(0,cellCanBeMovedThrough.GetLength(1)-1));
+		if (start.x >= 0 && start.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && start.z >= 0 && start.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough[(int)start.x,(int)start.z]) {
+			//Vector3 tempPos = start;
+			int nextNode = -1; // index of next node
+			double minDifferenceNumberUses = 0; //we need to know the difference between the number of pathfinding uses versus the last time a node was used
+
+			while (end.x >= 0 && end.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && end.z >= 0 && end.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && !AIGrid.cellCanBeMovedThrough[(int)end.x,(int)end.z]) {
+				end.x = Random.Range(0,cellCanBeMovedThrough.GetLength(0)-1);
+				end.z = Random.Range(0,cellCanBeMovedThrough.GetLength(1)-1);
+				AIGrid.numUses[(int)end.x,(int)end.z] = UnityEngine.Random.Range(0f,1f);
+			}
+			//}
+			
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static bool findFleeingPath(object caller, Vector3 start, out Collection<Vector3> path){
+		path = new Collection<Vector3> ();
+		if (start.x >= 0 && start.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && start.z >= 0 && start.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)start.x, (int)start.z]) {
+			float dist = -1;
+			int cornerIndex = -1;
+			for (int i = 0; i<corners.Length; ++i) {
+				float dist_temp = Vector3.Distance (corners [i], start);
+				if (dist_temp > dist) {
+					dist = dist_temp;
+					cornerIndex = i;
+				}
+			}
+
+			Vector3 end = corners [cornerIndex];
+
+			while (end.x >= 0 && end.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && end.z >= 0 && end.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && !AIGrid.cellCanBeMovedThrough [(int)end.x, (int)end.z]) {
+				end.x += directionToSearchForNewCorner [cornerIndex].x;
+				end.z += directionToSearchForNewCorner [cornerIndex].z;
+			}
+			return findPath (caller, start, end, out path, false, true);
+		} else {
+			return false;
+		}
+	}
+
+	public static bool findFleeingPoint(object caller, Vector3 start, out Vector3 end){
+		end = Vector3.zero;
+		if (start.x >= 0 && start.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && start.z >= 0 && start.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)start.x, (int)start.z]) {
+			float dist = -1;
+			int cornerIndex = -1;
+			for (int i = 0; i<corners.Length; ++i){
+				float dist_temp = Vector3.Distance(corners[i],start);
+				if (dist_temp>dist){
+					dist = dist_temp;
+					cornerIndex = i;
+				}
+			}
+			
+			end = corners[cornerIndex];
+			
+			while (!AIGrid.cellCanBeMovedThrough [(int)end.x, (int)end.z]){
+
+				end.x += directionToSearchForNewCorner[cornerIndex].x;
+				end.z += directionToSearchForNewCorner[cornerIndex].z;
+
+				if (!(end.x >= 0 && end.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && end.z >= 0 && end.z < AIGrid.cellCanBeMovedThrough.GetLength (1))){
+					dist = -1;
+					cornerIndex = -1;
+					for (int i = 0; i<corners.Length; ++i){
+						float dist_temp = Vector3.Distance(corners[i],start);
+						if (dist_temp>dist){
+							dist = dist_temp;
+							cornerIndex = i;
+						}
+					}
+				}
+			}
+			Debug.DrawRay(end, Vector3.up,Color.red,30f);
+			return AIGrid.cellCanBeMovedThrough [(int)end.x, (int)end.z];
+		} else {
+			return false;
+		}
+	}
+
 }
