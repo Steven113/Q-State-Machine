@@ -26,7 +26,8 @@ namespace AssemblyCSharp
 		public float weighting; //%of damage done to this obejct that the parents will recieve
         public bool isOrganic = false; //should projectiles play impact sounds when hitting a object with this script attached?
         public List<ControlHealth> children = new List<ControlHealth> ();
-
+		public float lastSuppressionTime = - 0.1f;
+		public float suppressionLevel = 0;
         /*
          * This method damages a object, then it's parents. If the health is <=0 and the object should be destroyed when it dies (runs out of health) it is destroyed and a random death sound is played
         */
@@ -61,7 +62,9 @@ namespace AssemblyCSharp
 		}
         //used by AI, so that intelligent entities can respond to near misses. Needs empty body since we can't make method abstract
         public virtual void suppress(float damage, FactionName factionThatFiredShot = FactionName.NONE, Vector3 shotDirection = default(Vector3)){
-
+			float timeRatio = 1f / (1f + Time.time - lastSuppressionTime); //must add one to ensure that ratio is <=1
+			suppressionLevel = (1f - timeRatio) * (damage/maxhealth) + timeRatio * suppressionLevel;
+			lastSuppressionTime = Time.time;
 		}
 
         //when destroyed ensure that parent ControlHealth instances no longer store reference to this, to avoid NullReferenceExceptions

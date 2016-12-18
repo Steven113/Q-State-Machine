@@ -103,6 +103,8 @@ namespace AssemblyCSharp
 		public GameObject smallHealEffect;
 		public GameObject bigHealEffect;
 
+		public Collider suppressionSphere;
+
 		double shuffleIndex = 0;
 
 		public override void Reward(float reward){
@@ -116,6 +118,7 @@ namespace AssemblyCSharp
 			agent = gameObject.GetComponent<NavMeshAgent> ();
 			agent.updateRotation = false;
 			allQSensors.Add (this);
+			GameData.SuppressionSphereDictionary.Add (suppressionSphere, healthController);
 			//GameData.addEntity(thisEntity)
 
 		}
@@ -140,6 +143,10 @@ namespace AssemblyCSharp
 				reward += scoreDiff;
 			//}
 
+			if (currentTargetIsVisible == LOSResult.Visible && weapon.stateOfWeapon == WeaponState.Reloading) {
+				reward-=(Time.deltaTime*10);
+			}
+
 			if (currentTarget != null && currentTarget.mainLOSCollider != null) {
 				if (currentTarget.controlHealth.health==previousTargetHealth){
 					qAgent.RewardAgent(10);
@@ -160,10 +167,12 @@ namespace AssemblyCSharp
 
 			if (timeSinceLastActionUpdate > ActionUpdateInterval) {
 				timeSinceLastActionUpdate %= ActionUpdateInterval;
-				qAgent.RewardAgent(reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
-				reward = 0;
-				currentActionSet = qAgent.GetAction (getState ());
-				++shuffleIndex;
+				//if (!(weapon.stateOfWeapon == WeaponState.Reloading)){
+					qAgent.RewardAgent(reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
+					reward = 0;
+					currentActionSet = qAgent.GetAction (getState ());
+					++shuffleIndex;
+				//}
 			}
 			//thisEntity.faction
 			//if (shuffleIndex % 2 == 0) {
@@ -234,7 +243,17 @@ namespace AssemblyCSharp
 			if (currentTargetIsVisible == LOSResult.Visible) {
 				result.Add("ENEMY_VISIBLE");
 			}
-			
+
+			if (weapon.stateOfWeapon == WeaponState.Reloading) {
+				result.Add("RELOADING");
+			}
+
+			if (healthController.suppressionLevel > healthController.maxhealth * 0.75f) {
+				result.Add("SUPPRESSED_HIGH");
+			} else if (healthController.suppressionLevel > healthController.maxhealth * 0.4f) {
+				result.Add("SUPPRESSED_LIGHT");
+			}
+
 			return result;
 		}
 
@@ -481,7 +500,7 @@ namespace AssemblyCSharp
 		public IEnumerator Reload ()
 		{
 			reward += (1f - (weapon.magazines.Count > 0 ? weapon.magazines [weapon.currentMag] : 0 / weapon.magSize)); // we give reward based on how many bullets are in mag, to reward reloads where the mag is empty or near empty
-			reward -= 0.5f;
+			reward -= 0.75f;
 			weapon.stateOfWeapon = WeaponState.Reloading;
 			yield return new WaitForSeconds (weapon.reloadTime);
 			weapon.stateOfWeapon = WeaponState.Ready;
@@ -582,6 +601,7 @@ namespace AssemblyCSharp
 
 		public virtual void OnDestroy(){
 			allQSensors.Remove (this); //we can be sure that this is in the list, since we add it to the list upon initialisation
+			GameData.SuppressionSphereDictionary.Remove (suppressionSphere);
 		}
 
 		public void Respawn(){

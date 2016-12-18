@@ -77,21 +77,22 @@ public class ProjectileScript : MonoBehaviour {
 
 		//Find all suppression spheres and apply suppression (currently unused)
 		RaycastHit [] suppressionSpheresHit;
-//		suppressionSpheresHit = (Physics.RaycastAll (intersectionRay, speed * Time.deltaTime, ((1 << LayerMask.NameToLayer ("Suppression")))));
-//		if (suppressionSpheresHit != null && suppressionSpheresHit.Length > 0) {
-//			for (int i = 0; i<suppressionSpheresHit.Length; i++) {
-//				if (GameData.SuppressionSphereDictionary.ContainsKey (suppressionSpheresHit [i].collider)) {
-//					if (GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider] is PlayerController) {
-//						//((PlayerController)GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider]).suppress (damage);
-//					} else if (GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider] is AIController) {
-//						((AIController)GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider]).suppress (damage,factionThatFiredShot, direction);
-//					}
-//				}
-//			}
-//		}
+		suppressionSpheresHit = (Physics.RaycastAll (intersectionRay, speed * Time.deltaTime, ((1 << LayerMask.NameToLayer ("Suppression")))));
+		if (suppressionSpheresHit != null && suppressionSpheresHit.Length > 0) {
+			for (int i = 0; i<suppressionSpheresHit.Length; i++) {
+				if (GameData.SuppressionSphereDictionary.ContainsKey (suppressionSpheresHit [i].collider)) {
+						GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider].suppress (damage,factionThatFiredShot, direction);
+					//if (GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider] is PlayerController) {
+						//((PlayerController)GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider]).suppress (damage);
+					//} else if (GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider] is AIController) {
+					//	((AIController)GameData.SuppressionSphereDictionary [suppressionSpheresHit [i].collider]).suppress (damage,factionThatFiredShot, direction);
+					//}
+				}
+			}
+		}
 		} else {
-			position = position + direction * speed * Time.deltaTime;
-			gameObject.transform.position = gameObject.transform.position + direction * speed * Time.deltaTime;
+			position = position + direction /** speed * Time.deltaTime*/;
+			gameObject.transform.position = gameObject.transform.position + direction /** speed * Time.deltaTime*/;
 			distanceCovered += speed * Time.deltaTime;
 			raycastHit.point = position;
 		}

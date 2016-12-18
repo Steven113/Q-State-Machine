@@ -38,6 +38,7 @@ namespace AssemblyCSharp
 			NodeList<QConjectureMap> []  conceptLearnerConjecturesByFitness = new NodeList<QConjectureMap>[learnersToBreed.Count];
 			float totalFitness = 0;
 			for (int i = 0; i<learnersToBreed.Count; ++i) {
+				if (learnersToBreed[i].enabled == false) continue;
 				conceptLearnerConjecturesByFitness[i] = new NodeList<QConjectureMap>();
 				conceptLearnerConjecturesByFitness[i].AddAll(learnersToBreed[i].learner.conjectures);
 				int exRunNum = learnersToBreed[i].learner.numExamplesRun;
@@ -47,7 +48,8 @@ namespace AssemblyCSharp
 			NodeList<QConjectureMap> conjecturesToBreed = new NodeList<QConjectureMap> ();
 
 			for (int i = 0; i<learnersToBreed.Count; ++i) {
-				int limit = (int)(learnersToBreed[i].learner.conjectures.Count*(fitnessValuesByLearner[i]/totalFitness));
+				if (learnersToBreed[i].enabled == false) continue;
+				int limit = Mathf.RoundToInt(learnersToBreed[i].learner.conjectures.Count*(fitnessValuesByLearner[i]/totalFitness));
 				Debug.Log("Learner "+i+ " will contribute "+limit+"conjectures");
 				for (int j = 0; j<limit; ++j){
 					conjecturesToBreed.Add(conceptLearnerConjecturesByFitness[i][j]);
@@ -57,10 +59,21 @@ namespace AssemblyCSharp
 			Debug.Log ("The conjectures were combined to yield "+conjecturesToBreed.Count+ " conjectures");
 
 			for (int i = 0; i<learnersToBreed.Count; ++i) {
+				if (learnersToBreed[i].enabled == false) continue;
+				Debug.Log("Learner: "+learnersToBreed[i].gameObject.name);
 				learnersToBreed[i].learner.GenerateBaseConjectures(false);
 				learnersToBreed[i].learner.conjectures.AddRange(conjecturesToBreed.toList());
 				learnersToBreed[i].learner.numExamplesRun = 0;
-				learnersToBreed[i].learner.Evolve();
+				learnersToBreed[i].learner.CurrentGeneration+=1;
+				//learnersToBreed[i].learner.Evolve();
+				int limit = learnersToBreed[i].learner.conjectures.Count;
+				for (int j = ((i/learnersToBreed.Count)*limit); j<(((i+1)/learnersToBreed.Count)*limit); ++j){
+					learnersToBreed[i].learner.conjectures.AddRange(learnersToBreed[i].learner.SpecializeConjecture(learnersToBreed[i].learner.conjectures[j%limit]));
+				}
+				for (int j = 0 ; j<learnersToBreed[i].learner.conjectures.Count; ++j){
+					learnersToBreed[i].learner.conjectures[j].timeWhenConjectureWasLastSelected = Time.time;
+					learnersToBreed[i].learner.conjectures[j].fitness = 0;
+				}
 				//learnersToBreed[i].learner.ResetTimers();
 				//learnersToBreed[i].learner.ResetFitness();
 			}

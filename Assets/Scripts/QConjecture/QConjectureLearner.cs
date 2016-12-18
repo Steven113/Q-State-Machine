@@ -210,19 +210,20 @@ namespace AssemblyCSharp
 				}
 				if (conjectureArr [i].generation == currentGeneration - 1){
 					orderedConjectures.AddAll(BreedConjectures (conjectureArr [0], conjectureArr [i]));
+
 				}
 			}
 
 
 			//orderedConjectures.AddAll (BreedConjectures (orderedConjectures [0], orderedConjectures [1]));
-			//orderedConjectures.AddAll (SpecializeConjecture (orderedConjectures [0]));
+			//orderedConjectures.AddAll (SpecializeConjecture (conjectureArr [0]));
 
 
 
 			conjectures = new List<QConjectureMap>(orderedConjectures.toList (ValidateGeneration));
 
 			for (int i = 0; i<conjectures.Count; ++i) {
-				conjectures[i].timeWhenConjectureWasLastSelected = 0; //we want to reset the timers to give the new conjectures a fair chance to gain rewards
+				conjectures[i].timeWhenConjectureWasLastSelected = Time.time; //we want to set the start times to be the same to give the new conjectures a fair chance to gain rewards
 				conjectures[i].fitness = 0; //experimental
 			}
 
@@ -272,12 +273,12 @@ namespace AssemblyCSharp
 			List<QConjectureMap> children = new List<QConjectureMap> (2);
 			int bitToFlip = UnityEngine.Random.Range (0, possibleStates.Count);
 			//flip a random bit of the lowest scoring conjecture. We mutate it to try and make it more competitive
-			if (first.fitness > second.fitness) {
-
-				second.stateBinaryString [bitToFlip / 32] ^= (1 << bitToFlip % 32); //use XOR to flip the bit
-			} else {
-				first.stateBinaryString [bitToFlip / 32] ^= (1 << bitToFlip % 32); //use XOR to flip the bit
-			}
+//			if (first.fitness > second.fitness) {
+//
+//				second.stateBinaryString [bitToFlip / 32] ^= (1 << bitToFlip % 32); //use XOR to flip the bit
+//			} else {
+//				first.stateBinaryString [bitToFlip / 32] ^= (1 << bitToFlip % 32); //use XOR to flip the bit
+//			}
 
 			int [] stateString = new int[(possibleStates.Count / 32) +1];
 
@@ -405,6 +406,14 @@ namespace AssemblyCSharp
 			EditorGUILayout.EndScrollView ();
 		}
 
+		public int CurrentGeneration {
+			get {
+				return currentGeneration;
+			}
+			set {
+				currentGeneration = value;
+			}
+		}
 	}
 }
 
