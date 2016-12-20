@@ -148,12 +148,13 @@ namespace AssemblyCSharp
 			}
 
 			if (currentTarget != null && currentTarget.mainLOSCollider != null) {
-				if (currentTarget.controlHealth.health==previousTargetHealth){
+				if (previousTargetHealth<currentTarget.controlHealth.health){
 					qAgent.RewardAgent(10);
 					previousTargetHealth = currentTarget.controlHealth.maxhealth;
 				}
 				if (currentTarget.controlHealth.health<previousTargetHealth){
 					reward += (previousTargetHealth-currentTarget.controlHealth.health);
+					previousTargetHealth = currentTarget.controlHealth.health;
 
 				}
 			}
@@ -610,9 +611,9 @@ namespace AssemblyCSharp
 			reward -= 10;
 			Vector3 spawnPoint = new Vector3(1,0,1);
 			++GameData.scores [((int)(thisEntity.faction)+1) % GameData.scores.Length];
-			Debug.Log (thisEntity.faction.ToString () + " " + (((int)(thisEntity.faction) + 1) % GameData.scores.Length));
+			//Debug.Log (thisEntity.faction.ToString () + " " + (((int)(thisEntity.faction) + 1) % GameData.scores.Length));
 			Debug.Assert (AIGrid.findFleeingPoint (this, gameObject.transform.position, out spawnPoint));
-			Debug.Log ("Spawning at " + spawnPoint);
+			//Debug.Log ("Spawning at " + spawnPoint);
 			agent.Warp(new Vector3 (spawnPoint.x, gameObject.transform.position.y, spawnPoint.z));
 			healthController.health = healthController.maxhealth;
 			CurrentTarget = null;

@@ -37,7 +37,8 @@ public class ProjectileScript : MonoBehaviour {
 	public void Update () {
 		timeSinceLastUpdate += Time.deltaTime;
 		//set ray to point to where bullet will be at end of current frame
-		direction = ((gameObject.transform.position + speed * direction * Time.deltaTime + Physics.gravity * airStabilisation * Time.deltaTime * Time.deltaTime) - gameObject.transform.position).normalized;
+		Vector3 deltaPos = speed * direction * Time.deltaTime + Physics.gravity * airStabilisation * Time.deltaTime * Time.deltaTime;
+		direction = ((gameObject.transform.position + deltaPos) - gameObject.transform.position).normalized;
 		intersectionRay.origin = gameObject.transform.position;
 		intersectionRay.direction = direction;
 		if (timeSinceLastUpdate>projectileUpdateInterval){
@@ -69,8 +70,8 @@ public class ProjectileScript : MonoBehaviour {
                 GameObject.Destroy (gameObject);
 			//}
 		} else { //if no hit, update projectile
-			position = position + direction * speed * Time.deltaTime;
-			gameObject.transform.position = gameObject.transform.position + direction * speed * Time.deltaTime;
+			position = position + deltaPos;
+				gameObject.transform.position = gameObject.transform.position + deltaPos;
 			distanceCovered += speed * Time.deltaTime;
 			raycastHit.point = position;
 		}
@@ -91,8 +92,8 @@ public class ProjectileScript : MonoBehaviour {
 			}
 		}
 		} else {
-			position = position + direction /** speed * Time.deltaTime*/;
-			gameObject.transform.position = gameObject.transform.position + direction /** speed * Time.deltaTime*/;
+			position = position + deltaPos;
+			gameObject.transform.position = gameObject.transform.position + deltaPos;
 			distanceCovered += speed * Time.deltaTime;
 			raycastHit.point = position;
 		}

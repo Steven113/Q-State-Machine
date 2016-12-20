@@ -29,7 +29,7 @@ namespace AssemblyCSharp
 		Vector2 scrollPos = Vector2.zero;
 
 		public void LoadWindow(){
-
+			fileToLoadTreeFrom = EditorGUILayout.TextField ("File name:", fileToLoadTreeFrom);
 			if (GUILayout.Button ("Load")) {
 				T tempCL = null;
 				if (Utils.DeserializeFile<T> (fileToLoadTreeFrom, ref tempCL) && tempCL != null) {
@@ -41,6 +41,7 @@ namespace AssemblyCSharp
 		}
 
 		public void SaveWindow(){
+			fileToSaveTreeTo = EditorGUILayout.TextField ("File name:", fileToSaveTreeTo);
 			if (GUILayout.Button ("Save")) {
 				if (instanceToEdit != null) {
 					Utils.SerializeFile (fileToSaveTreeTo, ref instanceToEdit);

@@ -32,7 +32,7 @@ public class ANNCreator : EditorWindow
 		EditorWindow.GetWindow (typeof(ANNCreator));
 	}
 		
-	LSEEditor<NeuralNet> netEditor = new LSEEditor<NeuralNet> ();
+	LSEEditor<StateFeedBackNeuralNet> netEditor = new LSEEditor<StateFeedBackNeuralNet> ();
 
 	public void OnGUI ()
 	{
@@ -44,7 +44,7 @@ public class ANNCreator : EditorWindow
 		numOutputs = EditorGUILayout.IntField ("Number of Outputs ", numOutputs);
 
 		if (GUILayout.Button ("Generate")) {
-			netEditor.InstanceToEdit = new NeuralNet (numInputs, numHiddenLayers, numOutputs);
+			netEditor.InstanceToEdit = new StateFeedBackNeuralNet (numInputs, numHiddenLayers, numOutputs);
 		}
 
 		if (GUILayout.Button ("Clear")) {

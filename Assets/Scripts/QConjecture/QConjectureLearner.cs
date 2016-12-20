@@ -164,7 +164,7 @@ namespace AssemblyCSharp
 
 					if (numExamplesRun>numExamplesBeforeEvolving){
 						numExamplesRun%=numExamplesBeforeEvolving;
-						//Evolve();
+						Evolve();
 					}
 					previousState = binaryStateString;
 					List<string> actions = toStringList(conjectures[(i+offset)%conjectureCount].actionBinaryString,possibleActions);
@@ -191,6 +191,7 @@ namespace AssemblyCSharp
 		// the advantage of this method is that it does not exponentially expand the conjecture space
 		public void Evolve(){
 			++currentGeneration;
+			Debug.Log ("Evolving");
 			NodeList<QConjectureMap> orderedConjectures = new NodeList<QConjectureMap> ();
 			for (int i = 0; i<conjectures.Count; ++i) {
 				orderedConjectures.Add(conjectures[i]);
@@ -201,22 +202,22 @@ namespace AssemblyCSharp
 			//NodeList<QConjectureMap> newOrderedConjectures = new NodeList<QConjectureMap> ();
 
 			//newOrderedConjectures.AddAll((orderedConjectures.toArray()));
-			QConjectureMap [] conjectureArr = orderedConjectures.toArray ();
-
-			for (int i = 1; i<conjectureArr.Length; ++i) {
-				if (orderedConjectures.Count>2000){
-					Debug.Log("Too many conjectures!");
-					break;
-				}
-				if (conjectureArr [i].generation == currentGeneration - 1){
-					orderedConjectures.AddAll(BreedConjectures (conjectureArr [0], conjectureArr [i]));
-
-				}
-			}
+//			QConjectureMap [] conjectureArr = orderedConjectures.toArray ();
+//
+//			for (int i = 1; i<conjectureArr.Length; ++i) {
+//				if (orderedConjectures.Count>2000){
+//					Debug.Log("Too many conjectures!");
+//					break;
+//				}
+//				if (conjectureArr [i].generation == currentGeneration - 1){
+//					orderedConjectures.AddAll(BreedConjectures (conjectureArr [0], conjectureArr [i]));
+//
+//				}
+//			}
 
 
 			//orderedConjectures.AddAll (BreedConjectures (orderedConjectures [0], orderedConjectures [1]));
-			//orderedConjectures.AddAll (SpecializeConjecture (conjectureArr [0]));
+			orderedConjectures.AddAll (SpecializeConjecture (orderedConjectures[0]));
 
 
 

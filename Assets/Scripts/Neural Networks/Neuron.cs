@@ -11,10 +11,12 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using System.Runtime.Serialization;
 
 namespace AssemblyCSharp
 {
-	public class Neuron : EditorDisplay
+	[Serializable]
+	public class Neuron : EditorDisplay,IDeserializationCallback
 	{
 
 
@@ -31,6 +33,8 @@ namespace AssemblyCSharp
 		public float summedInput;
 		public float transformedInput;
 		public ActivationFunctionType activationFunctionType = ActivationFunctionType.SIGMOID;
+		public string label = "default_label";
+		[NonSerialized]Vector2 scrollPos = Vector2.zero;
 		/*
 		 * We must not serialize the actual neurons links! We must relink them whenever we deserialize
 		 */
@@ -50,31 +54,33 @@ namespace AssemblyCSharp
 
 		public void ToEditorView ()
 		{
+			scrollPos = EditorGUILayout.BeginScrollView (scrollPos, GUILayout.Width(400));
 			EditorGUILayout.LabelField ("Neuron ID " + ID);
 			bias = EditorGUILayout.FloatField ("Bias", bias);
+			label = EditorGUILayout.TextField("Label",label);
 			activationFunctionType = (ActivationFunctionType)EditorGUILayout.EnumPopup ("Activation Function Type ", activationFunctionType);
 			//if (allowInputs) {
 			EditorGUILayout.LabelField ("Input neuron IDs");
 			//EditorGUILayout.BeginHorizontal ();
 			EditorGUI.indentLevel += 3;
 			for (int i = 0; i<inputsIDs.Count; ++i) {
-				inputsIDs [i] = EditorGUILayout.IntField ("ID",inputsIDs [i],GUILayout.MinWidth(60));
-				weights[i] = EditorGUILayout.FloatField("Weight",weights[i],GUILayout.MinWidth(60));
-				if (GUILayout.Button ("Remove", GUILayout.MaxWidth (100))) {
+				inputsIDs [i] = EditorGUILayout.IntField ("ID",inputsIDs [i],GUILayout.MinWidth(120));
+				weights[i] = EditorGUILayout.FloatField("Weight",weights[i],GUILayout.MinWidth(120));
+				if (GUILayout.Button ("Remove input weight", GUILayout.MaxWidth (150))) {
 					inputsIDs.RemoveAt (i);
 					weights.RemoveAt(i);
 					--i;
 				}
 
-				if (i>0 && i%3 == 0){
-					EditorGUILayout.EndHorizontal ();
-					EditorGUILayout.BeginVertical ();
-					EditorGUILayout.EndVertical ();
-					EditorGUILayout.BeginHorizontal ();
-				}
+//				if (i>0 && i%3 == 0){
+//					EditorGUILayout.EndHorizontal ();
+//					EditorGUILayout.BeginVertical ();
+//					EditorGUILayout.EndVertical ();
+//					EditorGUILayout.BeginHorizontal ();
+//				}
 			}
 
-			if (GUILayout.Button ("Add", GUILayout.MaxWidth (100))) {
+			if (GUILayout.Button ("Add input weight", GUILayout.MaxWidth (150))) {
 				inputsIDs.Add (0);
 				weights.Add(UnityEngine.Random.value);
 			}
@@ -90,28 +96,39 @@ namespace AssemblyCSharp
 			//EditorGUILayout.BeginHorizontal ();
 			EditorGUI.indentLevel += 3;
 			for (int i = 0; i<outputsIDs.Count; ++i) {
-				outputsIDs [i] = EditorGUILayout.IntField (outputsIDs [i],GUILayout.MinWidth(60));
-				if (GUILayout.Button ("Remove", GUILayout.MaxWidth (100))) {
+				outputsIDs [i] = EditorGUILayout.IntField (outputsIDs [i],GUILayout.MinWidth(120));
+				if (GUILayout.Button ("Remove output weight", GUILayout.MaxWidth (150))) {
 					outputsIDs.RemoveAt (i);
 					--i;
 				}
 
-				if (i>0 && i%3 == 0){
-					EditorGUILayout.EndHorizontal ();
-					EditorGUILayout.BeginVertical ();
-					EditorGUILayout.EndVertical ();
-					EditorGUILayout.BeginHorizontal ();
-				}
+//				if (i>0 && i%3 == 0){
+//					EditorGUILayout.EndHorizontal ();
+//					EditorGUILayout.BeginVertical ();
+//					EditorGUILayout.EndVertical ();
+//					EditorGUILayout.BeginHorizontal ();
+//				}
 			}
 				
-			if (GUILayout.Button ("Add", GUILayout.MaxWidth (100))) {
+			if (GUILayout.Button ("Add output weight", GUILayout.MaxWidth (150))) {
 				outputsIDs.Add (0);
 			}
 			EditorGUI.indentLevel -= 3;
+			EditorGUILayout.EndScrollView ();
 			//EditorGUILayout.EndHorizontal ();
 			//EditorGUILayout.BeginVertical ();
 			//EditorGUILayout.EndVertical ();
 			//}
+		}
+
+//		public void OnBeforeSerialize(){
+//			
+//		}
+		
+		void IDeserializationCallback.OnDeserialization(System.Object sender){
+
+			scrollPos = Vector2.zero;
+
 		}
 	}
 }
