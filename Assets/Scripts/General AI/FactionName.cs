@@ -13,7 +13,7 @@ namespace AssemblyCSharp
 	[Serializable]
 	public enum FactionName
 	{
-		QConceptArmy,QHeirarchyArmy,NONE
+		QConceptArmy,QHeirarchyArmy,NONE,SuicideFaction
 	}
 }
 

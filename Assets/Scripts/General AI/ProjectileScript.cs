@@ -43,7 +43,7 @@ public class ProjectileScript : MonoBehaviour {
 		intersectionRay.direction = direction;
 		if (timeSinceLastUpdate>projectileUpdateInterval){
 			//timeSinceLastUpdate=0;
-		if (Physics.Raycast (intersectionRay, out raycastHit, speed * Time.deltaTime, ~((1 << LayerMask.NameToLayer ("Suppression"))))) { // The projectile provides the support for influencing suppression colliders (i.e. to detect near misses), thus it ignores suppression colldiers during the first raycast since the first raycast is for direct impacts
+			if (Physics.Raycast (intersectionRay, out raycastHit, speed * timeSinceLastUpdate, ~((1 << LayerMask.NameToLayer ("Suppression"))))) { // The projectile provides the support for influencing suppression colliders (i.e. to detect near misses), thus it ignores suppression colldiers during the first raycast since the first raycast is for direct impacts
                
                 //timeSinceLastUpdate = 0f;
 			//print ("The projectile hit!" + raycastHit.collider.gameObject.name);
@@ -78,7 +78,7 @@ public class ProjectileScript : MonoBehaviour {
 
 		//Find all suppression spheres and apply suppression (currently unused)
 		RaycastHit [] suppressionSpheresHit;
-		suppressionSpheresHit = (Physics.RaycastAll (intersectionRay, speed * Time.deltaTime, ((1 << LayerMask.NameToLayer ("Suppression")))));
+			suppressionSpheresHit = (Physics.RaycastAll (intersectionRay, speed * timeSinceLastUpdate, ((1 << LayerMask.NameToLayer ("Suppression")))));
 		if (suppressionSpheresHit != null && suppressionSpheresHit.Length > 0) {
 			for (int i = 0; i<suppressionSpheresHit.Length; i++) {
 				if (GameData.SuppressionSphereDictionary.ContainsKey (suppressionSpheresHit [i].collider)) {

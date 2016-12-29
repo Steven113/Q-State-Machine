@@ -34,6 +34,7 @@ namespace AssemblyCSharp
 		public float transformedInput;
 		public ActivationFunctionType activationFunctionType = ActivationFunctionType.SIGMOID;
 		public string label = "default_label";
+		[NonSerialized]public float error = 0;
 		[NonSerialized]Vector2 scrollPos = Vector2.zero;
 		/*
 		 * We must not serialize the actual neurons links! We must relink them whenever we deserialize
@@ -50,6 +51,22 @@ namespace AssemblyCSharp
 			this.ID = ID;
 			//this.allowInputs = allowInputs;
 			//this.allowOutputs = allowOutputs;
+		}
+
+		public Neuron(ref Neuron other, int newID){
+			this.ID = newID;
+			this.activationFunctionType = other.activationFunctionType;
+			this.bias = other.bias;
+			this.label = new string (other.label.ToCharArray());
+			for (int i = 0; i<other.inputsIDs.Count; ++i) {
+				inputsIDs.Add(other.inputsIDs[i]);
+			}
+			for (int i = 0; i<other.outputsIDs.Count; ++i) {
+				outputsIDs.Add(other.outputsIDs[i]);
+			}
+			for (int i = 0; i<other.weights.Count; ++i) {
+				weights.Add(other.weights[i]);
+			}
 		}
 
 		public void ToEditorView ()
@@ -128,6 +145,8 @@ namespace AssemblyCSharp
 		void IDeserializationCallback.OnDeserialization(System.Object sender){
 
 			scrollPos = Vector2.zero;
+			outputs = new List<Neuron> ();
+			inputs = new List<Neuron>();
 
 		}
 	}

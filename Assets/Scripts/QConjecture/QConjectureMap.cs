@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 
 namespace AssemblyCSharp
@@ -35,6 +36,75 @@ namespace AssemblyCSharp
 			this.generation = generation;
 		}
 
+		/*the learning rate and discount factor are determined by the learning agent that manages this conjecture, so we can just pass it in
+		 * rather than waste CPU cycles on parsing the string to get the learning rate and discount factor
+		 */
+		public QConjectureMap(string data, float learningRate, float discountFactor){
+
+			this.discountFactor = discountFactor;
+			this.learningRate = learningRate;
+
+			List<string> splitData = new List<string>(data.Split ("|".ToCharArray ()));
+			Debug.Assert (splitData.Count == 3);
+			List<string> splitStringForStates = new List<string>(splitData [0].Split ("-".ToCharArray ()));
+			stateBinaryString = new int[splitStringForStates.Count];
+			for (int i = 0; i<stateBinaryString.Length; ++i) {
+				int temp = 0;
+				Debug.Assert(int.TryParse(splitStringForStates[i], out temp));
+				stateBinaryString[i] = temp;
+			}
+
+			List<string> splitStringForActions = new List<string>(splitData [1].Split ("-".ToCharArray ()));
+			stateBinaryString = new int[splitStringForActions.Count];
+			for (int i = 0; i<actionBinaryString.Length; ++i) {
+				int temp = 0;
+				Debug.Assert(int.TryParse(splitStringForActions[i], out temp));
+				actionBinaryString[i] = temp;
+			}
+			Debug.Assert (int.TryParse (splitData [2], out generation));
+		}
+
+		public QConjectureMap(QConjectureMap other){
+			this.stateBinaryString = new int[other.stateBinaryString.Length];
+			for (int i = 0; i<stateBinaryString.Length; ++i) {
+				stateBinaryString[i]=other.stateBinaryString[i];
+			}
+
+			this.actionBinaryString = new int[other.actionBinaryString.Length];
+			for (int i = 0; i<actionBinaryString.Length; ++i) {
+				actionBinaryString[i]=other.actionBinaryString[i];
+			}
+
+			this.timeWhenConjectureWasLastSelected = other.timeWhenConjectureWasLastSelected;
+			this.fitness = other.fitness;
+			this.learningRate = other.learningRate;
+			this.discountFactor = other.discountFactor;
+			this.generation = other.generation;
+		}
+
+		public string ToFileFormat(){
+			string result = "";
+			for (int i = 0; i<stateBinaryString.Length; ++i) {
+				result = result + stateBinaryString[i];
+				if (i<stateBinaryString.Length-1){
+					result = result + "-";
+				}
+			}
+
+			result = result + "|";
+
+			for (int i = 0; i<actionBinaryString.Length; ++i) {
+				result = result + actionBinaryString[i];
+				if (i<actionBinaryString.Length-1){
+					result = result + "-";
+				}
+			}
+
+			result = result + "|" + generation;
+
+			return result;
+		}
+
 		//the storage of states in binary form means we can test whether a QConjecture's concept contraints contains the current state using a simple AND operation.
 		public bool StatesCorrespond(int [] inputState){
 			if (inputState.Length != stateBinaryString.Length) {
@@ -54,7 +124,9 @@ namespace AssemblyCSharp
 				float adjustedTime = Mathf.Max (Time.time, 0.01f);
 				//fitness = learningRate*(reward * (((adjustedTime) - timeWhenConjectureWasLastSelected) / Time.time))+(1-learningRate)*fitness;
 				//fitness += (reward * (((adjustedTime) - timeWhenConjectureWasLastSelected) / Time.time));
-				fitness += (reward * (1f/(((1f+(adjustedTime) - timeWhenConjectureWasLastSelected)))));
+				float timeMultiplier = (1f/(((1f+(adjustedTime) - timeWhenConjectureWasLastSelected))));
+				fitness += (reward * timeMultiplier*timeMultiplier);
+				//fitness = learningRate*(reward * (1f/(((1f+(adjustedTime) - timeWhenConjectureWasLastSelected)))))+(1-learningRate)*fitness;
 			}
 		}
 

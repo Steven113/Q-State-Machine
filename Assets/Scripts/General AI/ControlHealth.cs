@@ -65,6 +65,9 @@ namespace AssemblyCSharp
 			float timeRatio = 1f / (1f + Time.time - lastSuppressionTime); //must add one to ensure that ratio is <=1
 			suppressionLevel = (1f - timeRatio) * (damage/maxhealth) + timeRatio * suppressionLevel;
 			lastSuppressionTime = Time.time;
+			if (parent != null) {
+				parent.suppress(damage*weighting,factionThatFiredShot,shotDirection);
+			}
 		}
 
         //when destroyed ensure that parent ControlHealth instances no longer store reference to this, to avoid NullReferenceExceptions

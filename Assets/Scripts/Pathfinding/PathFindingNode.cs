@@ -53,37 +53,37 @@ namespace AssemblyCSharp
 
 			//startEndDir = startEndDir.normalized;
 			
-			float dot = -1;
-			int dirToUse = -1;
-
-			//get which cardinal direction best matches direction from node to dest
-		
-			for (int i = 0; i<8; ++i) {
-				float temp = 0;
-				temp += startEndDir.x*AIGrid.LOSDirections[i].x;
-				temp += startEndDir.y*AIGrid.LOSDirections[i].y;
-				temp += startEndDir.z*AIGrid.LOSDirections[i].z;
-				if (temp>dot){
-					dot = temp;
-					dirToUse = i;
-				}
-			}
-
-			//collect LOS distance both to dest and for angles to the left and right of the direction to dest.
-			losDistance [0] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse) % AIGrid.LOSDirections.Length];
-			losDistance [1] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse+1) % AIGrid.LOSDirections.Length];// 45 deg right
-			losDistance [2] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse+7) % AIGrid.LOSDirections.Length]; //45 degrees left
-			losDistance [3] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse+2) % AIGrid.LOSDirections.Length]; //90 deg right
-			losDistance [4] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse+6) % AIGrid.LOSDirections.Length]; //90 deg left
-
-			//if the direction to the dest is exactly parallel to a cardinal direction and we have LOS to the dest, we can skip to the dest
-			if (dot==1 && losDistance[0] >= h*dot) {
-				//Debug.DrawRay(pos,AIGrid.LOSDirections[dirToUse]*losDistance[0],Color.black,30f);
-				//Debug.DrawRay(pos,startEndDir*losDistance[0],Color.magenta,30f);
-				Debug.Log("Found jump point!");
-				pos = end;
-				reachedEnd = true;
-			}
+//			float dot = -1;
+//			int dirToUse = -1;
+//
+//			//get which cardinal direction best matches direction from node to dest
+//		
+//			for (int i = 0; i<8; ++i) {
+//				float temp = 0;
+//				temp += startEndDir.x*AIGrid.LOSDirections[i].x;
+//				temp += startEndDir.y*AIGrid.LOSDirections[i].y;
+//				temp += startEndDir.z*AIGrid.LOSDirections[i].z;
+//				if (temp>dot){
+//					dot = temp;
+//					dirToUse = i;
+//				}
+//			}
+//
+//			//collect LOS distance both to dest and for angles to the left and right of the direction to dest.
+//			losDistance [0] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse) % AIGrid.LOSDirections.Length];
+//			losDistance [1] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse+1) % AIGrid.LOSDirections.Length];// 45 deg right
+//			losDistance [2] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse+7) % AIGrid.LOSDirections.Length]; //45 degrees left
+//			losDistance [3] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse+2) % AIGrid.LOSDirections.Length]; //90 deg right
+//			losDistance [4] = AIGrid.visibilityDistances [(int)pos.x, (int)pos.y, (dirToUse+6) % AIGrid.LOSDirections.Length]; //90 deg left
+//
+//			//if the direction to the dest is exactly parallel to a cardinal direction and we have LOS to the dest, we can skip to the dest
+//			if (dot==1 && losDistance[0] >= h*dot) {
+//				//Debug.DrawRay(pos,AIGrid.LOSDirections[dirToUse]*losDistance[0],Color.black,30f);
+//				//Debug.DrawRay(pos,startEndDir*losDistance[0],Color.magenta,30f);
+//				Debug.Log("Found jump point!");
+//				pos = end;
+//				reachedEnd = true;
+//			}
 
 			if (!reachedEnd) {
 
@@ -113,6 +113,10 @@ namespace AssemblyCSharp
 
 
 
+		}
+
+		public bool Equals(PathFindingNode other){
+			return other.pos == this.pos;
 		}
 
 		public int CompareTo(PathFindingNode other){

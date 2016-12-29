@@ -10,6 +10,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using UnityEngine;
 
 
 namespace AssemblyCSharp
@@ -18,8 +19,12 @@ namespace AssemblyCSharp
 	{
 
 		//public float breedingInterval = 0f;
+		public bool loadLearnerFromFile = true;
 
 		public QConjectureLearner learner = null;
+
+		public bool canPrintConjectures = false;
+
 		//get the action(s) a agent should perform given it's current state
 		// we use the list of strings rather than one string as a return parameter as we want to facilitate concept-action-mapping
 
@@ -32,7 +37,15 @@ namespace AssemblyCSharp
 		}
 
 		public void Awake(){
-			Debug.Assert (Utils.DeserializeFile<QConjectureLearner>(qFileName,ref learner));
+			if (loadLearnerFromFile) {
+				UnityEngine.Debug.Assert (Utils.DeserializeFile<QConjectureLearner> (qFileName, ref learner));
+			}
+		}
+
+		public void Update(){
+//			if (canPrintConjectures && Input.GetKeyDown (KeyCode.Q)) {
+//				learner.PrintConjectures();
+//			}
 		}
 
 

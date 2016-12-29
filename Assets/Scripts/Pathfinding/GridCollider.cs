@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using AssemblyCSharp;
 
 public class GridCollider : MonoBehaviour {
 
@@ -14,6 +15,7 @@ public class GridCollider : MonoBehaviour {
 					int z_p = (int)z;
 					if (x_p>=0 && x_p<AIGrid.cellCanBeMovedThrough.GetLength(0) && z_p>=0 && z_p<AIGrid.cellCanBeMovedThrough.GetLength(1)){
 						AIGrid.cellCanBeMovedThrough[x_p,z_p] = false;
+						BenchmarkAIGrid.cellCanBeMovedThrough[x_p][z_p] = false;
 						//Debug.DrawRay(new Vector3(x_p,0,z_p),Vector3.forward,Color.red,3f);
 						//Debug.DrawRay(new Vector3(x_p,0,z_p),Vector3.right,Color.red,3f);
 					}

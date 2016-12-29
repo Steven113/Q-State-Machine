@@ -37,6 +37,8 @@ public class AIGrid : MonoBehaviour
 	//indicates if a agent should be given pathfinding priority. The agent at the front of the queue is the only one that can request a path
 	public static Collection<object> priorityQueueByAgent = new Collection<object>();
 
+
+
 	/*for all objects searching for a path, a record is created and stored to track the object(script)'s usage of the pathfinding thead
 	 * Information such as the last start and end points are queried, to ensure that paths are not pointlessly recalculated
 	 */
@@ -164,6 +166,20 @@ public class AIGrid : MonoBehaviour
 				//}
 			}
 		}
+
+						for (int i = 0; i<cellCanBeMovedThrough.GetLength(0); ++i) {
+							for (int j = 0; j<cellCanBeMovedThrough.GetLength(1); ++j) {
+								
+								if (cellCanBeMovedThrough [i, j]) {
+									//Debug.DrawRay (new Vector3 (i * s_cellWidth, 0, j * s_cellWidth), Vector3.forward * s_cellWidth, Color.green, 100f);
+									//Debug.DrawRay (new Vector3 (i * s_cellWidth, 0, j * s_cellWidth), Vector3.right * s_cellWidth, Color.green, 100f);
+								} else {
+									//Debug.DrawRay (new Vector3 (i * s_cellWidth, 0, j * s_cellWidth), Vector3.forward * s_cellWidth, Color.black, 100f);
+									//Debug.DrawRay (new Vector3 (i * s_cellWidth, 0, j * s_cellWidth), Vector3.right * s_cellWidth, Color.black, 100f);
+								}
+								
+							}
+						}
 	}
 	// Update is called once per frame
 	void Update () {
@@ -1110,7 +1126,46 @@ public class AIGrid : MonoBehaviour
 			float dist = -1;
 			int cornerIndex = -1;
 			for (int i = 0; i<corners.Length; ++i){
-				float dist_temp = Vector3.Distance(corners[i],start);
+				float dist_temp = Vector3.Distance(corners[i],start); //dot product makes us prefer points away from the point we are fleeing from
+				if (dist_temp>dist){
+					dist = dist_temp;
+					cornerIndex = i;
+				}
+			}
+			
+			end = corners[cornerIndex];
+			
+			while (!AIGrid.cellCanBeMovedThrough [(int)end.x, (int)end.z]){
+				
+				end.x += directionToSearchForNewCorner[cornerIndex].x;
+				end.z += directionToSearchForNewCorner[cornerIndex].z;
+				
+				if (!(end.x >= 0 && end.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && end.z >= 0 && end.z < AIGrid.cellCanBeMovedThrough.GetLength (1))){
+					dist = -1;
+					cornerIndex = -1;
+					for (int i = 0; i<corners.Length; ++i){
+						float dist_temp = Vector3.Distance(corners[i],start);
+						if (dist_temp>dist){
+							dist = dist_temp;
+							cornerIndex = i;
+						}
+					}
+				}
+			}
+			Debug.DrawRay(end, Vector3.up,Color.red,30f);
+			return AIGrid.cellCanBeMovedThrough [(int)end.x, (int)end.z];
+		} else {
+			return false;
+		}
+	}
+
+	public static bool findFleeingPoint(object caller, Vector3 start, Vector3 pointToFleeFrom, out Vector3 end){
+		end = Vector3.zero;
+		if (start.x >= 0 && start.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && start.z >= 0 && start.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)start.x, (int)start.z]) {
+			float dist = -1;
+			int cornerIndex = -1;
+			for (int i = 0; i<corners.Length; ++i){
+				float dist_temp = Vector3.Dot (corners[i]-start,corners[i]-pointToFleeFrom)*Vector3.Distance(corners[i],start); //dot product makes us prefer points away from the point we are fleeing from
 				if (dist_temp>dist){
 					dist = dist_temp;
 					cornerIndex = i;
@@ -1142,5 +1197,111 @@ public class AIGrid : MonoBehaviour
 			return false;
 		}
 	}
+
+	/*for performance tests*/
+//	public static bool findPath<ClosedListType> (Vector3 start, Vector3 end, out Collection<Vector3> path, bool useStandardAStar = true)
+//	{
+//		path = new Collection<Vector3>();
+//		++AIGrid.numPathFindingSearches;
+//		float timeToRun = 0;
+//		
+//		debugSearchActive = true;
+//		++AIGrid.numPathFindingSearches;
+//		//path = new Collection<Vector3> ();
+//		//first check that start and end are within bounds
+//		bool keepSearching = true;
+//		if (start.x >= 0 && start.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && start.z >= 0 && start.z < AIGrid.cellCanBeMovedThrough.GetLength (1)) {
+//			if (end.x >= 0 && end.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && end.z >= 0 && end.z < AIGrid.cellCanBeMovedThrough.GetLength (1)) {
+//				if (!AIGrid.cellCanBeMovedThrough [(int)end.x, (int)end.z]) {
+//					//Debug.Log ("Cannot move to destination cell");
+//					return false;
+//				}
+//
+//				
+//				
+//				NodeList<PathFindingNode> openList = new NodeList<PathFindingNode> ();
+//				bool reachedEnd = false;
+//				openList.Add (new PathFindingNode (null, start, start, end, ref reachedEnd, useStandardAStar, false));
+//				
+//				int numIter = 0;
+//				int maxNumIter = 100;
+//				int numExpansions = 0;
+//				PathFindingNode temp = openList [0];
+//				gValues [(int)(temp.pos.x), (int)(temp.pos.z), useStandardAStar ? 0 : 1] = 0;
+//				while (openList.Count>0 && !reachedEnd) {
+//					float startTime = Time.realtimeSinceStartup;
+//					++numIter;
+//					if (numIter > maxNumIter) {
+//						Debug.Log ("NMMT");
+//						break;
+//					}
+//					temp = openList [0];
+//					
+//					bool consistent = false;
+//					
+//					Vector3 newPos = temp.pos;
+//
+//			
+//
+//					for (int i = 0; i<8; ++i){
+//							if ((int)newPos.x == (int)end.x && (int)newPos.z == (int)end.z) {
+//						CreatePath (temp, ref path, start, end, true, useStandardAStar, false, useStandardAStar ? Color.green : Color.magenta, 30f);
+//								reachedEnd = true;
+//						return true;
+//							}
+//							
+//							//if ((int)newPos.x == (int)end.x && (int)newPos.z == (int)end.z) {
+//							bool validPos = false;
+//							//if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
+//							PathFindingNode node = null;
+//							//jump search when using LOS*. We attempt to exponentially increase the jump distance, to reduce the expansion amount
+//
+//							
+//							
+//								newPos = temp.pos + SearchDirectionOffsets [i];
+//								if ((int)newPos.x >= 0 && (int)newPos.x < AIGrid.cellCanBeMovedThrough.GetLength (0) && (int)newPos.z >= 0 && (int)newPos.z < AIGrid.cellCanBeMovedThrough.GetLength (1) && AIGrid.cellCanBeMovedThrough [(int)newPos.x, (int)newPos.z]) {
+//									validPos = true;
+//									node = new PathFindingNode (temp, newPos, start, end, ref reachedEnd, useStandardAStar, false);
+//								}
+//								
+//
+////							if (reachedEnd) { //adding to the openlist is expensive, and we've found the end, so we break now
+////								break;
+////							}
+//							
+//								if (numUses [(int)newPos.x, (int)newPos.z] < numPathFindingSearches || fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] > node.f) {
+//									numUses [(int)newPos.x, (int)newPos.z] = numPathFindingSearches;
+//									fValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.f;
+//									gValues [(int)newPos.x, (int)newPos.z, useStandardAStar ? 0 : 1] = node.g;
+//									openList.Add (node);
+//									++numExpansions;
+//								}
+//
+//					}
+//
+//					openList.Remove (temp);
+//					float endTime = Time.realtimeSinceStartup;
+//					timeToRun += (endTime-startTime);
+//					//yield return new WaitForSeconds (0.01f);
+//				}
+//				//path = new Collection<Vector3> ();
+//				
+//				////if (temp != null) {
+//				//	CreatePath (temp, ref path, start, end, true, useStandardAStar, false, useStandardAStar ? Color.green : Color.magenta, 30f);
+//				//}
+//				//Debug.Log ((useStandardAStar ? "AStar" : "LOS*") + " Expansions: " + numExpansions + " " + reachedEnd + " " + timeToRun);
+//				Debug.Log ("OpenList empty");
+//				return false;
+//			} else {
+//				Debug.Log ("End out of bounds");
+//				return false;
+//			}
+//		} else {
+//			Debug.Log ("Start out of bounds");
+//			return false;
+//		}
+//		debugSearchActive = false;
+//		//MonoBehaviour.StartCoroutine (start, end, !useStandardAStar);
+//	}
 
 }

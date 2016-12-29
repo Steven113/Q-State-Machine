@@ -112,13 +112,13 @@ namespace AssemblyCSharp
 			}
 		}
 		
-		public bool ContainsMemberWithLowerCost (T value, int numNodesToCheckInAListBeforeStopping = 50)
+		public bool ContainsMemberWithLowerCost (T value)
 		{
 			////Debug.Log("Checking for membership! "+value.f);
 			NodeListItem<T> temp = head;
 			//NodeListItem nodeToInsert = new NodeListItem (value, null, null);
 			int numChecked = 0;
-			while (temp!=null && (value.CompareTo(temp.value)<0 ) && numChecked<numNodesToCheckInAListBeforeStopping) {
+			while (temp!=null && (value.CompareTo(temp.value)<0 )) {
 				++numChecked;
 				if (temp != null && (temp.value.Equals (value))) {
 					////Debug.Log("Found closer value!");

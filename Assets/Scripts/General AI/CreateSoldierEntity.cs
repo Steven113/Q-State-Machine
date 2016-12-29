@@ -16,7 +16,7 @@ public class CreateSoldierEntity : MonoBehaviour {
 		
 	}
 
-	void Destroy(){
+	void OnDestroy(){
 		GameData.RemoveSoldier (entity);
 	}
 }

@@ -24,6 +24,8 @@ namespace AssemblyCSharp
 
 		//public Transform transformToDoLosChecksFrom;
 
+		public bool useCheatConditions = false;
+
 		public float previousTargetHealth = 0;
 
 		public NavMeshAgent agent;
@@ -34,6 +36,7 @@ namespace AssemblyCSharp
 		public Collection<Vector3> path = new Collection<Vector3> ();
 
 		public float reward = 0;
+		public bool autoSetReward = true;
 
 		public int smallFoodCount = 2; //for small heals
 		public int bigFoundCount =1; //for big heals
@@ -119,6 +122,7 @@ namespace AssemblyCSharp
 			agent.updateRotation = false;
 			allQSensors.Add (this);
 			GameData.SuppressionSphereDictionary.Add (suppressionSphere, healthController);
+			currentActionSet = new List<string> ();
 			//GameData.addEntity(thisEntity)
 
 		}
@@ -130,57 +134,65 @@ namespace AssemblyCSharp
 
 		public virtual void Update ()
 		{
-			UpdateMovement ();
-			UpdateOrientation ();
-			UpdateFriendlyFireFlag ();
-			timeSinceLastUpdatingCurrentPath += Time.deltaTime;
-			timeSinceLastUpdate += Time.deltaTime;
-			timeSinceLastActionUpdate += Time.deltaTime;
+			//if (healthController.health > 0) {
+				UpdateMovement ();
+				UpdateOrientation ();
+				UpdateFriendlyFireFlag ();
+				timeSinceLastUpdatingCurrentPath += Time.deltaTime;
+				timeSinceLastUpdate += Time.deltaTime;
+				timeSinceLastActionUpdate += Time.deltaTime;
 
-			reward += (healthController.health / healthController.maxhealth) * (Time.deltaTime);
-			float scoreDiff = ((GameData.scores[(int)thisEntity.faction] - GameData.scores[((int)thisEntity.faction+1)%GameData.scores.Length])*Time.deltaTime)*0.01f;
-			//if (scoreDiff<0){
-				reward += scoreDiff;
-			//}
+				if (autoSetReward) {
+					reward += (healthController.health / healthController.maxhealth) * (Time.deltaTime);
+					float scoreDiff = ((GameData.scores [(int)thisEntity.faction] - GameData.scores [((int)thisEntity.faction + 1) % GameData.scores.Length]) * Time.deltaTime) * 0.01f;
+					//if (scoreDiff<0){
+					reward += scoreDiff;
+					//}
 
-			if (currentTargetIsVisible == LOSResult.Visible && weapon.stateOfWeapon == WeaponState.Reloading) {
-				reward-=(Time.deltaTime*10);
-			}
+					if (autoSetReward && currentTargetIsVisible == LOSResult.Visible && weapon.stateOfWeapon == WeaponState.Reloading) {
+						reward -= (Time.deltaTime * 10);
+					}
 
-			if (currentTarget != null && currentTarget.mainLOSCollider != null) {
-				if (previousTargetHealth<currentTarget.controlHealth.health){
-					qAgent.RewardAgent(10);
-					previousTargetHealth = currentTarget.controlHealth.maxhealth;
+					if (currentTarget != null && currentTarget.mainLOSCollider != null) {
+						if (previousTargetHealth < currentTarget.controlHealth.health) {
+							qAgent.RewardAgent (10);
+							previousTargetHealth = currentTarget.controlHealth.maxhealth;
+						}
+						if (currentTarget.controlHealth.health < previousTargetHealth) {
+							reward += (previousTargetHealth - currentTarget.controlHealth.health);
+							previousTargetHealth = currentTarget.controlHealth.health;
+
+						}
+					}
 				}
-				if (currentTarget.controlHealth.health<previousTargetHealth){
-					reward += (previousTargetHealth-currentTarget.controlHealth.health);
-					previousTargetHealth = currentTarget.controlHealth.health;
+
+				if (timeSinceLastUpdate > AIUpdateInterval) {
+					timeSinceLastUpdate %= AIUpdateInterval;
+					UpdateLOSInfo ();
 
 				}
-			}
 
+				if (timeSinceLastActionUpdate > ActionUpdateInterval) {
 
-			if (timeSinceLastUpdate > AIUpdateInterval) {
-				timeSinceLastUpdate %= AIUpdateInterval;
-				UpdateLOSInfo ();
-
-			}
-
-			if (timeSinceLastActionUpdate > ActionUpdateInterval) {
-				timeSinceLastActionUpdate %= ActionUpdateInterval;
-				//if (!(weapon.stateOfWeapon == WeaponState.Reloading)){
-					qAgent.RewardAgent(reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
-					reward = 0;
-					currentActionSet = qAgent.GetAction (getState ());
-					++shuffleIndex;
-				//}
-			}
-			//thisEntity.faction
-			//if (shuffleIndex % 2 == 0) {
-				if (currentActionSet.Contains ("RELOAD") && weapon.stateOfWeapon != WeaponState.Reloading) {
-					StartCoroutine (Reload ());
-				} else if (currentActionSet.Contains ("SHOOT") && weapon.stateOfWeapon == WeaponState.Ready) {
+					if (!(weapon.stateOfWeapon == WeaponState.Reloading)) {
+						timeSinceLastActionUpdate %= ActionUpdateInterval; // this statement gets moved here so that only if the next action is requested do we restart the timer before requesting an action
+						if (autoSetReward) {
+							qAgent.RewardAgent (reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
+							reward = 0;
+						}
+						currentActionSet = qAgent.GetAction (getState ());
+						++shuffleIndex;
+					}
+				}
+				//thisEntity.faction
+				//if (shuffleIndex % 2 == 0) {
+				if (currentActionSet.Contains ("SHOOT") && weapon.stateOfWeapon == WeaponState.Ready && (!useCheatConditions || (weapon.magazines.Count > 0 && weapon.magazines [weapon.currentMag] > 0))) {
+					if (autoSetReward && (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] == 0)) {
+						reward -= Time.deltaTime;
+					}
 					weapon.fire (weapon.barrelEnd.position, weapon.barrelStart.position, thisEntity.faction, false);
+				} else if (currentActionSet.Contains ("RELOAD") && weapon.stateOfWeapon != WeaponState.Reloading && (!useCheatConditions || (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] < weapon.magSize * 0.5f))) {
+					StartCoroutine (Reload ());
 				}
 //			} else {
 //				if (currentActionSet.Contains ("SHOOT") && weapon.stateOfWeapon == WeaponState.Ready) {
@@ -190,17 +202,17 @@ namespace AssemblyCSharp
 //				}
 //			}
 
-			if (currentActionSet.Contains ("BIG_HEAL")) {
-				heal(false);
-			} else if (currentActionSet.Contains ("HEAL")) {
-				heal(true);
-			}
+				if (currentActionSet.Contains ("BIG_HEAL")) {
+					heal (false);
+				} else if (currentActionSet.Contains ("HEAL")) {
+					heal (true);
+				}
 
-			if (healthController.health <= 0) {
-				Respawn();
-			}
+				if (healthController.health <= 0) {
+					Respawn ();
+				}
 
-			//AttackTarget ();
+				//AttackTarget ();
 
 //			List<string> state = getState ();
 //			String str = "";
@@ -208,6 +220,7 @@ namespace AssemblyCSharp
 //				str = str + state[i] +" ";
 //			}
 //			Debug.Log(str);
+			//}
 		}
 
 		public override List<string> getState ()
@@ -320,7 +333,7 @@ namespace AssemblyCSharp
 
 			Color randCol = new Color (UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
 
-			if (Vector3.Distance (entity.centreOfMass.position, transformToDoLOSChecksFrom.position) > horizontalLOSDistance || Mathf.Abs (Vector3.Angle (gameObject.transform.forward, entity.centreOfMass.position - transformToDoLOSChecksFrom.position)) > horizontalFOVAngle) {
+			if (Vector3.Distance (entity.centreOfMass.position, transformToDoLOSChecksFrom.position) > horizontalLOSDistance || Mathf.Abs (Vector3.Angle (weapon.barrelEnd.position-weapon.barrelStart.position, entity.centreOfMass.position - transformToDoLOSChecksFrom.position)) > horizontalFOVAngle) {
 				if (enableDebugPrint)
 					Debug.Log ("Not withing FOV angle!");
 				if (Vector3.Distance (entity.centreOfMass.position, transformToDoLOSChecksFrom.position) < peripheralVisionDistance) {
@@ -475,9 +488,16 @@ namespace AssemblyCSharp
 							}
 						} else if (currentActionSet.Contains ("FLEE")) {
 							Vector3 end;
-							if (AIGrid.findFleeingPoint (this, gameObject.transform.position, out end)) {
+							if (currentTarget!=null && currentTarget.mainLOSCollider!=null){
+							if (AIGrid.findFleeingPoint (this, gameObject.transform.position,currentTarget.centreOfMass.position, out end)) {
 								//AIGrid.findFleeingPath(this,gameObject.transform.position,out path);
 								agent.SetDestination (end);
+							}
+							} else {
+								if (AIGrid.findFleeingPoint (this, gameObject.transform.position, out end)) {
+									//AIGrid.findFleeingPath(this,gameObject.transform.position,out path);
+									agent.SetDestination (end);
+								}
 							}
 						} else if (currentActionSet.Contains ("TACTICAL_MOVE") && currentTarget != null && currentTarget.centreOfMass != null) {
 							agent.SetDestination (currentTarget.centreOfMass.position);
@@ -500,8 +520,10 @@ namespace AssemblyCSharp
 
 		public IEnumerator Reload ()
 		{
-			reward += (1f - (weapon.magazines.Count > 0 ? weapon.magazines [weapon.currentMag] : 0 / weapon.magSize)); // we give reward based on how many bullets are in mag, to reward reloads where the mag is empty or near empty
-			reward -= 0.75f;
+			if (autoSetReward) {
+				reward += (1f - ((weapon.magazines.Count > 0 ? weapon.magazines [weapon.currentMag] : 0) / weapon.magSize)); // we give reward based on how many bullets are in mag, to reward reloads where the mag is empty or near empty
+				reward -= 0.5f;
+			}
 			weapon.stateOfWeapon = WeaponState.Reloading;
 			yield return new WaitForSeconds (weapon.reloadTime);
 			weapon.stateOfWeapon = WeaponState.Ready;
@@ -570,7 +592,7 @@ namespace AssemblyCSharp
 			//					}
 			//				}
 			//			}
-			if (temp != null) {
+			if (temp != null && temp.centreOfMass!=null) {
 				for (int i = 0; i<GameData.getFaction(thisEntity.faction).Soldiers.Count; ++i) {
 					LOSRay.direction = weapon.barrelEnd.position - weapon.barrelStart.position;
 					LOSRay.origin = weapon.barrelStart.position;
@@ -597,7 +619,7 @@ namespace AssemblyCSharp
 				healthController.heal(healthController.maxhealth*0.5f);
 				GameObject.Instantiate(bigHealEffect,gameObject.transform.position,Quaternion.identity);
 			}
-			reward += ((healthController.health - initialHealth) / healthController.maxhealth); //give reward based on change in health
+			if (autoSetReward) reward += ((healthController.health - initialHealth) / healthController.maxhealth); //give reward based on change in health
 		}
 
 		public virtual void OnDestroy(){
@@ -608,7 +630,9 @@ namespace AssemblyCSharp
 		public void Respawn(){
 			//qAgent.RewardAgent (-10);
 			//reward = 0f;
-			reward -= 10;
+			if (autoSetReward) {
+				reward -= 10;
+			}
 			Vector3 spawnPoint = new Vector3(1,0,1);
 			++GameData.scores [((int)(thisEntity.faction)+1) % GameData.scores.Length];
 			//Debug.Log (thisEntity.faction.ToString () + " " + (((int)(thisEntity.faction) + 1) % GameData.scores.Length));

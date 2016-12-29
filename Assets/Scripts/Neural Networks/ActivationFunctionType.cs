@@ -12,7 +12,7 @@ namespace AssemblyCSharp
 {
 	public enum ActivationFunctionType
 	{
-		SIGMOID,LINEAR,TANH,SOFT_MAX
+		SIGMOID,LINEAR,TANH
 	}
 }
 

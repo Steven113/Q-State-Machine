@@ -12,7 +12,7 @@ namespace AssemblyCSharp
 {
 	public enum WeaponName
 	{
-		Rifle, Rocket_Launcher
+		Rifle, Rocket_Launcher,Welder
 	}
 }
 

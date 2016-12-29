@@ -11,6 +11,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System.Collections;
+using System.Threading;
 
 
 namespace AssemblyCSharp
@@ -30,17 +32,24 @@ namespace AssemblyCSharp
 		int offset = 0;
 		int currentGeneration = 0;
 		public int numExamplesRun = 0;
-		int numExamplesBeforeEvolving = 600;
+		public int numExamplesBeforeEvolving = 600;
 
-		bool useDeltaStateLearning = false;
+		public int lastConjecture;
 
-		int [] previousState;
+		public bool useDeltaStateLearning = false;
+		public bool useTemporalDifferenceLearning = true;
+
+		int [] previousState = null;
 
 		[NonSerialized]Vector3 scrollPos = Vector2.zero;
 
 		public List<QConjectureMap> conjectures = new List<QConjectureMap> (possibleStates.Count);
 
+		public float timeSpentCalculating = 0;
+
 		//Func<QConjectureLearner,bool> generationValidator = map => map
+
+		public static int numConstructorsLoading = 0;
 
 		public QConjectureLearner(List<string> possibleStates, List<string> possibleActions, float learningRate, float discountFactor){
 			this.possibleStates = possibleStates;
@@ -65,6 +74,62 @@ namespace AssemblyCSharp
 			}
 		}
 
+		public QConjectureLearner(QConjectureLearner other){
+			for (int i = 0; i<other.possibleStates.Count; ++i) {
+				possibleStates.Add(other.possibleStates[i]);
+			}
+
+			for (int i = 0; i<other.possibleActions.Count; ++i) {
+				possibleStates.Add(other.possibleActions[i]);
+			}
+
+			int length0 = other.stateCombinationConstraints.GetLength (0);
+			int length1 = other.stateCombinationConstraints.GetLength (1);
+
+			stateCombinationConstraints = new bool[length0, length1];
+
+			for (int i = 0; i<length0; ++i) {
+				for (int j = 0; j<length1; ++j) {
+					stateCombinationConstraints[i,j] = other.stateCombinationConstraints[i,j];
+				}
+			}
+
+			length0 = other.actionCombinationConstraints.GetLength (0);
+			length1 = other.actionCombinationConstraints.GetLength (1);
+			
+			actionCombinationConstraints = new bool[length0, length1];
+			
+			for (int i = 0; i<length0; ++i) {
+				for (int j = 0; j<length1; ++j) {
+					actionCombinationConstraints[i,j] = other.actionCombinationConstraints[i,j];
+				}
+			}
+
+			this.learningRate = other.learningRate;
+			this.discountFactor = other.discountFactor;
+			this.offset = other.offset;
+			this.currentGeneration = other.currentGeneration;
+			this.numExamplesRun = other.numExamplesRun;
+			this.useDeltaStateLearning = useDeltaStateLearning;
+
+			previousState = new int[possibleStates.Count];
+
+			int otherConjLength = other.conjectures.Count;
+
+			conjectures = new List<QConjectureMap> (otherConjLength);
+
+			for (int i = 0; i<otherConjLength ; ++i) {
+				conjectures.Add(new QConjectureMap(other.conjectures[i]));
+			}
+
+		}
+
+		//only exists for coroutine based loading!
+		public QConjectureLearner(string data){
+			Thread loadThread = new Thread (LoadInBackground);
+			loadThread.Start (data);
+		}
+
 		public QConjectureLearner(List<string> possibleStates, List<string> possibleActions, bool [,] stateCombinationConstraints, bool [,] actionCombinationConstraints, float learningRate, float discountFactor){
 			this.possibleStates = possibleStates;
 			this.possibleActions = possibleActions;
@@ -79,6 +144,8 @@ namespace AssemblyCSharp
 
 			previousState = new int[possibleStates.Count / 32 + 1];
 		}
+
+
 
 		/*for all strings in stringsToConvert, looks up the index i of the matching string in conversionReference
 		 * and sets the ith bit in the binary string to 1.
@@ -103,10 +170,13 @@ namespace AssemblyCSharp
 
 		List<String> toStringList(int [] byteString, List<string> conversionReference){
 			List<string> result = new List<string> (possibleStates.Count);
+			int conversionRefLength = conversionReference.Count;
 			for (int i = 0; i<byteString.Length; ++i) {
 				for (int j = 0; j<32; ++j) {
 					if (0<((1<<j) & byteString[i])){
-						result.Add(conversionReference[i*32 + j]);
+						if ((i*32 + j)<conversionRefLength){
+							result.Add(conversionReference[i*32 + j]);
+						}
 					}
 				}
 			}
@@ -126,20 +196,24 @@ namespace AssemblyCSharp
 			previousState = new int[possibleStates.Count / 32 + 1];
 			conjectures.Clear ();
 			if (resetGeneration) currentGeneration = 0;
-			for (int i = 0; i<possibleActions.Count; ++i) {
+			int paCount = possibleActions.Count;
+			for (int i = 0; i<paCount; ++i) {
+				for (int n = 0; n<paCount; ++n) {
 				List<string> actionsToSelect = new List<string>(possibleActions.Count);
-				actionsToSelect.Add(possibleActions[i]);
-				for (int j = i+1; j<possibleActions.Count; ++j) {
+				actionsToSelect.Add(possibleActions[(i+n)%paCount]);
+				for (int j = n; j<paCount; ++j) {
+					if (i==j) continue;
 					bool noConstraints = true;
 					for (int k = 0; k<actionsToSelect.Count; ++k){
-						if (!actionCombinationConstraints[possibleActions.IndexOf(actionsToSelect[k]),(j)]){
+						int index = possibleActions.IndexOf(actionsToSelect[k]);
+							if (index!=i && !actionCombinationConstraints[index,((j))]){
 							noConstraints = false;
 							break;
 						}
 					}
 					//if (actionCombinationConstraints[i,j]){
 						if (noConstraints){
-							actionsToSelect.Add(possibleActions[j]);
+							actionsToSelect.Add(possibleActions[(j)]);
 						}
 					//}
 				}
@@ -147,11 +221,14 @@ namespace AssemblyCSharp
 				int [] tempBitMask_A = toBinaryString(actionsToSelect,possibleActions);
 				int [] tempBitMask_B = getNoConstraintBinaryString(possibleStates);
 				conjectures.Add(new QConjectureMap(tempBitMask_B,tempBitMask_A,learningRate,discountFactor,currentGeneration));
+				}
 			}
+			PrintConjectures ();
 		}
 
 		public List<string> GetAction(List<string> state){
 			++numExamplesRun;
+			float startTime = Time.realtimeSinceStartup;
 			int [] binaryStateString = toBinaryString (state, possibleStates);
 			if (useDeltaStateLearning) {
 				binaryStateString = Utils.XOR_Integer (binaryStateString, previousState);
@@ -160,19 +237,23 @@ namespace AssemblyCSharp
 			for (int i = 0; i<conjectureCount; ++i) {
 				if (conjectures[(i+offset)%conjectureCount].StatesCorrespond(binaryStateString)){ //we need a offset to stop the same conjecture from being chosen every time, so that all conjectures get a chance to be rewarded
 					conjectures[(i+offset)%conjectureCount].timeWhenConjectureWasLastSelected = Time.time; //update time when string was last used
-
-
+					lastConjecture = (i+offset)%conjectureCount;
+					float endTime = Time.realtimeSinceStartup;
+					timeSpentCalculating+=(endTime-startTime);
 					if (numExamplesRun>numExamplesBeforeEvolving){
+						Debug.Log("Now evolving. Spend " + ((float)timeSpentCalculating) + " on " + numExamplesRun);
+
+						timeSpentCalculating = 0;
 						numExamplesRun%=numExamplesBeforeEvolving;
-						Evolve();
+ 						Evolve();
 					}
 					previousState = binaryStateString;
 					List<string> actions = toStringList(conjectures[(i+offset)%conjectureCount].actionBinaryString,possibleActions);
-					//if (conjectures[(i+offset)%conjectureCount].generation == 0){
+					if (conjectures[(i+offset)%conjectureCount].generation == 0){
 					offset = (i+offset+1)%conjectureCount;
-					//} else {
-					//	offset = 0;
-					//}
+					} else {
+						offset = 0;
+					}
 					//actions = Utils.ShuffleList(actions);
 					return actions;
 
@@ -182,8 +263,16 @@ namespace AssemblyCSharp
 		}
 
 		public bool RewardAgent(float reward){
-			for (int i =0; i<conjectures.Count; ++i) {
-				conjectures[i].Reward(reward);
+			if (useTemporalDifferenceLearning) {
+				for (int i =0; i<conjectures.Count; ++i) {
+					conjectures [i].Reward (reward);
+				}
+			} else {
+				int conjCount = conjectures.Count;
+				//if (conjCount>0){
+				lastConjecture = (lastConjecture)%conjCount;
+				conjectures[lastConjecture].Reward(reward);
+				//}
 			}
 			return true;
 		}
@@ -215,9 +304,9 @@ namespace AssemblyCSharp
 //				}
 //			}
 
-
-			//orderedConjectures.AddAll (BreedConjectures (orderedConjectures [0], orderedConjectures [1]));
-			orderedConjectures.AddAll (SpecializeConjecture (orderedConjectures[0]));
+			QConjectureMap tempQM = orderedConjectures [0];
+			orderedConjectures.AddAll (BreedConjectures (tempQM, orderedConjectures [1]));
+			orderedConjectures.AddAll (SpecializeConjecture (tempQM));
 
 
 
@@ -339,6 +428,7 @@ namespace AssemblyCSharp
 			EditorGUILayout.LabelField ("Set whether the QConjectureLearner learns based on state, or change in state.");
 			EditorGUILayout.LabelField ("You must regenerate the conjectures from scratch after changing the settings.");
 			useDeltaStateLearning = EditorGUILayout.Toggle ("Use Delta State Learning", useDeltaStateLearning);
+			useTemporalDifferenceLearning = EditorGUILayout.Toggle ("Use Temporal Difference Learning", useTemporalDifferenceLearning);
 
 			numExamplesBeforeEvolving = EditorGUILayout.IntField ("Num examples to run before evolving",numExamplesBeforeEvolving);
 			nextState = EditorGUILayout.TextField ("State name", nextState);
@@ -414,6 +504,177 @@ namespace AssemblyCSharp
 			set {
 				currentGeneration = value;
 			}
+		}
+
+		public void PrintConjectures(){
+			Debug.Log ("Printing Conjectures");
+			for (int i = 0; i<conjectures.Count; ++i) {
+				Debug.Log("Conjecture "+i+":");
+				List<string> stateStr = toStringList(conjectures[i].stateBinaryString,possibleStates);
+				List<string> actionStr = toStringList(conjectures[i].actionBinaryString,possibleActions);
+				Debug.Log("States");
+				string str = "";
+				for (int j = 0; j<stateStr.Count; ++j){
+					str= str + stateStr[j] + " ";
+				}
+				Debug.Log(str);
+				Debug.Log("actions");
+				str = "";
+				for (int j = 0; j<actionStr.Count; ++j){
+					str= str + actionStr[j] + " ";
+				}
+				Debug.Log(str);
+				Debug.Log ("Reward: "+conjectures[i].fitness);
+			}
+		}
+
+//		public List<string> possibleStates = new List<string>();
+//		public bool[,] stateCombinationConstraints = new bool[0, 0];
+//		
+//		public List<string> possibleActions = new List<string>();
+//		public bool[,] actionCombinationConstraints = new bool[0, 0];
+//		public float learningRate = 0.1f;
+//		public float discountFactor = 0.3f;
+//		string nextState = "";
+//		string nextAction = "";
+//		int offset = 0;
+//		int currentGeneration = 0;
+//		public int numExamplesRun = 0;
+//		int numExamplesBeforeEvolving = 600;
+//		
+//		bool useDeltaStateLearning = false;
+//		
+//		int [] previousState;
+
+		public void LoadInBackground (object dataObj){
+
+			++numConstructorsLoading;
+
+			string data = (dataObj).ToString();
+			/*we generate the base conjectures just so the AI has something to use for it's decision making until loading is done
+			 * These base conjectures are always retained by the agent, so we don't store them when we save the learner's state.
+			 * We know the agent will always have them.
+			 */
+			GenerateBaseConjectures (false); 
+
+			List<string> dataSplitIntoLines = new List<string>(data.Split (Environment.NewLine.ToCharArray()));
+		
+			possibleStates = new List<string>(dataSplitIntoLines [0].Split ("-".ToCharArray()));
+			possibleActions = new List<string>(dataSplitIntoLines [1].Split ("-".ToCharArray()));
+			char [] stateConjunctionCharArray = dataSplitIntoLines [2].ToCharArray ();
+			int posStatesCount = possibleStates.Count;
+			for (int i = 0; i< posStatesCount; ++i) {
+				for (int j = 0; j< posStatesCount; ++j) {
+					stateCombinationConstraints[i,j] = stateConjunctionCharArray[i*posStatesCount+j]=='t'?true:false;
+				}
+			}
+
+
+
+			char [] actionConjunctionCharArray = dataSplitIntoLines [3].ToCharArray ();
+			int posActionsCount = possibleActions.Count;
+			for (int i = 0; i< posActionsCount; ++i) {
+				for (int j = 0; j< posActionsCount; ++j) {
+					actionCombinationConstraints[i,j] = actionConjunctionCharArray[i*posStatesCount+j]=='t'?true:false;
+				}
+			}
+
+
+
+			List<string> miscDataString = new List<string>(dataSplitIntoLines [4].Split("-".ToCharArray()));
+			Debug.Assert (float.TryParse (miscDataString [0], out learningRate));
+			Debug.Assert (float.TryParse (miscDataString [1], out discountFactor));
+			Debug.Assert (int.TryParse (miscDataString [2], out offset));
+			Debug.Assert (int.TryParse (miscDataString [3], out currentGeneration));
+			Debug.Assert (int.TryParse (miscDataString [4], out numExamplesRun));
+			Debug.Assert (int.TryParse (miscDataString [5], out numExamplesBeforeEvolving));
+			Debug.Assert (bool.TryParse (miscDataString [6], out useDeltaStateLearning));
+
+
+
+			List<string> previousStateStr = new List<string>(dataSplitIntoLines[5].Split("-".ToCharArray()));
+			previousState = new int[previousStateStr.Count];
+			int presStateLength = previousState.Length;
+			for (int i = 0; i<presStateLength; ++i) {
+				int temp = 0;
+				Debug.Assert(int.TryParse(previousStateStr[i], out temp));
+				previousState[i] = temp;
+			}
+
+		
+
+			int dataSplitIntoLinesCount = dataSplitIntoLines.Count;
+
+			for (int i = 6; i<dataSplitIntoLinesCount; ++i) {
+				conjectures.Add(new QConjectureMap(dataSplitIntoLines[i],learningRate,discountFactor));
+
+			}
+
+			--numConstructorsLoading;
+		}
+
+		public string ToFileFormat(){
+			string result = "";
+			int posStatesCount = possibleStates.Count;
+			for (int i = 0; i<posStatesCount; ++i) {
+				result = result + possibleStates[i];
+				if (i<posStatesCount-1){
+					result = result + "-";
+				}
+			}
+
+			result = result + Environment.NewLine;
+
+			int posActionsCount = possibleActions.Count;
+			for (int i = 0; i<posActionsCount; ++i) {
+				result = result + possibleActions[i];
+				if (i<posActionsCount-1){
+					result = result + "-";
+				}
+			}
+
+			result = result + Environment.NewLine;
+
+
+
+			char [] stateConjunctionCharArray = new char[posStatesCount*posStatesCount];
+
+			for (int i = 0; i<posStatesCount; ++i) {
+				for (int j = 0; j<posStatesCount; ++j) {
+					stateConjunctionCharArray[i*posStatesCount + j] = stateCombinationConstraints[i,j]?'t':' ';
+					//Debug.Log(i+" " + j);
+				}
+			}
+
+			result = result + new string(stateConjunctionCharArray) +  Environment.NewLine;
+
+			char [] actionConjunctionCharArray = new char[posActionsCount*posActionsCount];
+
+			for (int i = 0; i<posActionsCount; ++i) {
+				for (int j = 0; j<posActionsCount; ++j) {
+					actionConjunctionCharArray[i*posActionsCount + j] = actionCombinationConstraints[i,j]?'t':' ';
+				}
+			}
+
+			result = result + new string(actionConjunctionCharArray) +  Environment.NewLine;
+
+			result = result + learningRate + "-";
+			result = result + discountFactor + "-";
+			result = result + offset + "-";
+			result = result + currentGeneration + "-";
+			result = result + numExamplesRun + "-";
+			result = result + numExamplesBeforeEvolving + "-";
+			result = result + useDeltaStateLearning;
+
+			int conjCount = conjectures.Count;
+			for (int i = 0; i<conjCount; ++i) {
+				result = result + conjectures[i].ToFileFormat();
+				if (i<conjCount-1){
+					result = result + Environment.NewLine;
+				}
+			}
+
+			return result;
 		}
 	}
 }

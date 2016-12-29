@@ -31,7 +31,16 @@ namespace AssemblyCSharp
 		}
 
 		public static void SerializeFile<T>(string fileName, ref T objectToLoadDataInto) where T : class {
-			using (Stream stream = File.OpenWrite(fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))*/+ ".qsf") ) //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
+			using (Stream stream = File.OpenWrite(fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))+ ".qsf"*/) ) //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
+			{
+				//Debug.Log("Serializing tree!");
+				BinaryFormatter formatter = new BinaryFormatter();
+				formatter.Serialize(stream, objectToLoadDataInto);
+			}
+		}
+
+		public static void SerializeFile<T>(string fileName, ref T objectToLoadDataInto, string extension) where T : class {
+			using (Stream stream = File.OpenWrite(fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))*/+extension) ) //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
 			{
 				//Debug.Log("Serializing tree!");
 				BinaryFormatter formatter = new BinaryFormatter();
