@@ -119,13 +119,16 @@ namespace AssemblyCSharp
 			return true;
 		}
 
-		public void Reward(float reward){
+		public void Reward(float reward,float humanResponseDelayCompensation = 0){
 			if (timeWhenConjectureWasLastSelected != 0) {
 				float adjustedTime = Mathf.Max (Time.time, 0.01f);
 				//fitness = learningRate*(reward * (((adjustedTime) - timeWhenConjectureWasLastSelected) / Time.time))+(1-learningRate)*fitness;
 				//fitness += (reward * (((adjustedTime) - timeWhenConjectureWasLastSelected) / Time.time));
+				if ((adjustedTime-humanResponseDelayCompensation) >0 && (adjustedTime+humanResponseDelayCompensation)<Time.time){
+				adjustedTime+=humanResponseDelayCompensation;
 				float timeMultiplier = (1f/(((1f+(adjustedTime) - timeWhenConjectureWasLastSelected))));
 				fitness += (reward * timeMultiplier*timeMultiplier);
+				}
 				//fitness = learningRate*(reward * (1f/(((1f+(adjustedTime) - timeWhenConjectureWasLastSelected)))))+(1-learningRate)*fitness;
 			}
 		}

@@ -262,16 +262,16 @@ namespace AssemblyCSharp
 			return null;
 		}
 
-		public bool RewardAgent(float reward){
+		public bool RewardAgent(float reward , float humanResponseDelayCompensation = 0){
 			if (useTemporalDifferenceLearning) {
 				for (int i =0; i<conjectures.Count; ++i) {
-					conjectures [i].Reward (reward);
+					conjectures [i].Reward (reward,humanResponseDelayCompensation);
 				}
 			} else {
 				int conjCount = conjectures.Count;
 				//if (conjCount>0){
 				lastConjecture = (lastConjecture)%conjCount;
-				conjectures[lastConjecture].Reward(reward);
+				conjectures[lastConjecture].Reward(reward,humanResponseDelayCompensation);
 				//}
 			}
 			return true;

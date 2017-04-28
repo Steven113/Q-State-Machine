@@ -40,6 +40,12 @@ public class PlayerManager : MonoBehaviour {
 
 	HealingPotionDistributor healingPotionDistributor;
 
+	public float humanResponseTimeCompensation = 0.25f;
+
+	//for when we are only training a part of the team
+	public int startIndexOfRangeToSpawn = 0;
+	public int endIndexOfRangeToSpawn = 5;
+
 	// Use this for initialization
 	void Awake () {
 		Debug.Assert (referenceForPlayerData.text != ""); 
@@ -63,7 +69,11 @@ public class PlayerManager : MonoBehaviour {
 
 		Debug.Assert (robotTypeStrings.Length == AITextAssetLocations.Count);
 
+		Debug.Assert (startIndexOfRangeToSpawn >= 0);
+		Debug.Assert (startIndexOfRangeToSpawn <= endIndexOfRangeToSpawn);
+
 		for (int i = 0; i<robotTypeStrings.Length; ++i) {
+			if (i<startIndexOfRangeToSpawn || i>endIndexOfRangeToSpawn) continue;
 			bool hasSpawned = false;
 			for (int j = 0; j<prefabMap.Count && !hasSpawned; ++j){
 				if (prefabMap[j].robotType.ToString() == robotTypeStrings[i]){
@@ -125,6 +135,7 @@ public class PlayerManager : MonoBehaviour {
 
 		if (numberOfRespawns == 0) {
 			for (int i = 0; i<5; ++i){
+				if (i<startIndexOfRangeToSpawn || i>endIndexOfRangeToSpawn) continue;
 				qSoldiers[i].healthController.destroyOnDeath = true;
 			}
 		}
@@ -142,24 +153,28 @@ public class PlayerManager : MonoBehaviour {
 
 	public void SelectNextAgent(){
 		meshRendererToEnableUponSelection [selectedAgent].enabled = false;
-		++selectedAgent;
-		selectedAgent %= qSoldiers.Count;
+		while (selectedAgent<startIndexOfRangeToSpawn || selectedAgent>endIndexOfRangeToSpawn) {
+			++selectedAgent;
+			selectedAgent %= qSoldiers.Count;
+		}
 		meshRendererToEnableUponSelection [selectedAgent].enabled = true;
 	}
 
 	public void SelectPreviousAgent(){
 		meshRendererToEnableUponSelection [selectedAgent].enabled = false;
-		selectedAgent = selectedAgent + qSoldiers.Count - 1;
-		selectedAgent %= qSoldiers.Count;
+		while (selectedAgent<startIndexOfRangeToSpawn || selectedAgent>endIndexOfRangeToSpawn) {
+			selectedAgent = selectedAgent + qSoldiers.Count - 1;
+			selectedAgent %= qSoldiers.Count;
+		}
 		meshRendererToEnableUponSelection [selectedAgent].enabled = true;
 	}
 
 	public void PunishCurrentAgent(){
-		qConAgents [selectedAgent].RewardAgent (punishRate);
+		qConAgents [selectedAgent].RewardAgent (punishRate,humanResponseTimeCompensation);
 	}
 
 	public void RewardCurrentAgent(){
-		qConAgents [selectedAgent].RewardAgent (rewardRate);
+		qConAgents [selectedAgent].RewardAgent (rewardRate,humanResponseTimeCompensation);
 	}
 
 }
