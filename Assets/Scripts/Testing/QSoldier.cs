@@ -28,7 +28,7 @@ namespace AssemblyCSharp
 
 		public float previousTargetHealth = 0;
 
-		public NavMeshAgent agent;
+		public UnityEngine.AI.NavMeshAgent agent;
 		public QAgent qAgent;
 		public List<string> currentActionSet = new List<string> ();
 		public Weapon weapon;
@@ -118,7 +118,7 @@ namespace AssemblyCSharp
 		public void Awake ()
 		{
 			lookDirection = gameObject.transform.forward;
-			agent = gameObject.GetComponent<NavMeshAgent> ();
+			agent = gameObject.GetComponent<UnityEngine.AI.NavMeshAgent> ();
 			agent.updateRotation = false;
 			allQSensors.Add (this);
 			GameData.SuppressionSphereDictionary.Add (suppressionSphere, healthController);

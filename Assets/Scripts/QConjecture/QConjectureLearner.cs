@@ -43,7 +43,7 @@ namespace AssemblyCSharp
 
 		[NonSerialized]Vector3 scrollPos = Vector2.zero;
 
-		public List<QConjectureMap> conjectures = new List<QConjectureMap> (possibleStates.Count);
+		public List<QConjectureMap> conjectures = new List<QConjectureMap> ();
 
 		public float timeSpentCalculating = 0;
 
@@ -52,6 +52,7 @@ namespace AssemblyCSharp
 		public static int numConstructorsLoading = 0;
 
 		public QConjectureLearner(List<string> possibleStates, List<string> possibleActions, float learningRate, float discountFactor){
+			conjectures = new List<QConjectureMap> (possibleStates.Count);
 			this.possibleStates = possibleStates;
 			this.possibleActions = possibleActions;
 			this.discountFactor = discountFactor;

@@ -2,7 +2,7 @@
 using System.Collections;
 using AssemblyCSharp;
 
-[RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(UnityEngine.AI.NavMeshAgent))]
 [RequireComponent(typeof(CreateSoldierEntity))]
 public class SuicideDroneController : MonoBehaviour {
 
@@ -10,7 +10,7 @@ public class SuicideDroneController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		GetComponent<NavMeshAgent> ().SetDestination (targetPos);
+		GetComponent<UnityEngine.AI.NavMeshAgent> ().SetDestination (targetPos);
 		++SuicideSpawner.numSuicideDronesInPlay;
 		//GameData.addEntity (GetComponent<CreateSoldierEntity> ().entity);
 	}
