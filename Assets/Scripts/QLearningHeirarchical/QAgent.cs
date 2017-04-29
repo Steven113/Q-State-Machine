@@ -6,7 +6,7 @@ using AssemblyCSharp;
 
 public abstract class QAgent : MonoBehaviour {
 
-	public string qFileName;
+	public string qFileName; // file describing initial agent
 	// Use this for initialization
 	//public bool useStandarAStar = true;
 	//Vector3 end = Vector3.zero;

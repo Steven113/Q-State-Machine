@@ -51,6 +51,12 @@ namespace AssemblyCSharp
 			outgoingEdges.Add (edge);
 		}
 
+		public static QGraphNode MutateNode(QGraphNode node, List<string> possibleActions){
+			QGraphNode mutant = new QGraphNode (node);
+			mutant.actions = Utils.RandomlyModifyList (possibleActions, mutant.actions);
+			return mutant;
+		}
+
 		public List<string> Actions {
 			get {
 				return actions;

@@ -7,6 +7,8 @@ namespace AssemblyCSharp
 {
 	public class QGraph
 	{
+		float totalReward = 0;
+
 		public List<QGraphNode> nodes = new List<QGraphNode> ();
 
 		QGraphNode currentNode;
@@ -14,7 +16,7 @@ namespace AssemblyCSharp
 		QGraphNode root;
 		//this node is the "default" node - if the current node has no edge for the current state, this is the selected node
 
-		bool busyWithAction = false;
+		int numActions = 0;
 
 		float mutationIncrement = 0.001f;
 
@@ -22,6 +24,10 @@ namespace AssemblyCSharp
 		float actionMutationChance = 0.1f;
 		float addNodeChance = 0.8f;
 		float changeInterruptWeightChance = 0.01f;
+
+		List<string> possibleStates;
+		List<string> possibleActions;
+		List<float> float_restriction;
 
 		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_restrictions)
 		{
@@ -31,6 +37,11 @@ namespace AssemblyCSharp
 
 			string[] states = possibleStates.ToArray ();
 			string[] actions = possibleActions.ToArray ();
+
+
+			this.possibleStates = new List<string> (states);
+			this.possibleActions = new List<string> (actions);
+			this.float_restriction = new List<float> (default_float_restrictions.ToArray ());
 
 			int s_c = states.Count ();
 			int a_c = actions.Count ();
@@ -78,6 +89,10 @@ namespace AssemblyCSharp
 
 		}
 
+		public void ResetCurrentNodeToRoot(){
+			currentNode = root;
+		}
+
 		public QGraph (QGraph other){
 			int n_c = other.nodes.Count; 
 
@@ -89,7 +104,7 @@ namespace AssemblyCSharp
 
 			currentNode = nodes [other.nodes.IndexOf (other.currentNode)];
 
-			this.busyWithAction = other.busyWithAction;
+			this.numActions = other.numActions;
 
 			this.mutationIncrement = other.mutationIncrement;
 
@@ -103,11 +118,13 @@ namespace AssemblyCSharp
 		{
 			//List<string> actions = new List<string> ();
 
-			busyWithAction = false;
+			//numActions = false;
 			int edgeToUse = -1;
 			int edgeMatchLevel = 0;
 
 			int e_c = currentNode.outgoingEdges.Count;
+
+			currentNode.outgoingEdges = Utils.ShuffleList (currentNode.outgoingEdges);
 
 			for (int i = 0; i < e_c; ++i) {
 				int t_matchLevel = currentNode.outgoingEdges [i].GetStateMatchLevel (states, values);
@@ -123,19 +140,19 @@ namespace AssemblyCSharp
 
 			currentNode = nodes [currentNode.outgoingEdges [edgeToUse].targetNode];
 
-			if (!busyWithAction || UnityEngine.Random.value > currentNode.outgoingEdges [edgeToUse].InterruptThreshold) {
+			if (numActions ==0 || UnityEngine.Random.value > currentNode.outgoingEdges [edgeToUse].InterruptThreshold) {
 				return new List<string> (nodes [currentNode.outgoingEdges [edgeToUse].targetNode].Actions);
 			} else {
 				return new List<string> ();
 			}
 		}
 
-		public bool BusyWithAction {
+		public int BusyWithAction {
 			get {
-				return busyWithAction;
+				return numActions;
 			}
 			set {
-				busyWithAction = value;
+				numActions = value;
 			}
 		}
 
@@ -148,46 +165,81 @@ namespace AssemblyCSharp
 			}
 		}
 
-		public QGraph Mutate(){
-			QGraph mutant = new QGraph (this);
+		public static QGraph Mutate(QGraph graph){
+			QGraph mutant = new QGraph (graph);
 
 
 
-			edgeMutationChance += mutationIncrement*(0.5f-UnityEngine.Random.value);
-			actionMutationChance += mutationIncrement*(0.5f-UnityEngine.Random.value);
-			addNodeChance += mutationIncrement*(0.5f-UnityEngine.Random.value);
-			changeInterruptWeightChance += mutationIncrement*(0.5f-UnityEngine.Random.value);
+			mutant.edgeMutationChance += mutant.mutationIncrement*(0.5f-UnityEngine.Random.value);
+			mutant.actionMutationChance += mutant.mutationIncrement*(0.5f-UnityEngine.Random.value);
+			mutant.addNodeChance += mutant.mutationIncrement*(0.5f-UnityEngine.Random.value);
+			mutant.changeInterruptWeightChance += mutant.mutationIncrement*(0.5f-UnityEngine.Random.value);
 
-			float mutation_sum = edgeMutationChance + actionMutationChance + addNodeChance + changeInterruptWeightChance;
+//			float mutationIncrement = 0.001f;
+//
+//			float edgeMutationChance = 0.1f;
+//			float actionMutationChance = 0.1f;
+//			float addNodeChance = 0.8f;
+//			float changeInterruptWeightChance = 0.01f;
 
-			float t_sum = 0;
+			//mutate edges
 
-			float r_val = mutation_sum*UnityEngine.Random.value;
+			List<QGraphNode> t_nodes = new List<QGraphNode> (mutant.nodes);
 
-			t_sum += edgeMutationChance;
+			float numChanges = mutant.nodes.Count * mutant.edgeMutationChance;
 
-			if (t_sum > r_val) {
+			float n_c = t_nodes.Count;
 
-			} else {
+			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
 
-				t_sum += actionMutationChance;
+			for (int i = 0; i < numChanges; ++i) {
+				int nodeToChange = (int)(mutant.nodes.Count * UnityEngine.Random.value);
+				int edgeToChange = (int)(mutant.nodes [nodeToChange].outgoingEdges.Count * UnityEngine.Random.value);
 
-				if (t_sum > r_val) {
-					
+				t_nodes [nodeToChange].outgoingEdges [edgeToChange] =QGraphEdge.MutateEdge (t_nodes [nodeToChange].outgoingEdges [edgeToChange], mutant.possibleStates, mutant.mutationIncrement);
 
-				} else {
+			}
 
-					t_sum += addNodeChance;
+			//mutate nodes
+			numChanges = mutant.nodes.Count * mutant.actionMutationChance;
 
-					if (t_sum > r_val) {
+			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
 
-					} else {
+			for (int i = 0; i < numChanges; ++i) {
+				int nodeToChange = (int)(mutant.nodes.Count * UnityEngine.Random.value);
 
-					}
+				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange],mutant.possibleStates);
+
+			}
+
+			//add nodes
+			numChanges = mutant.nodes.Count * mutant.addNodeChance;
+
+			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
+
+			for (int i = 0; i < numChanges; ++i) {
+				QGraphNode newNode = new QGraphNode (mutant.possibleActions [i % mutant.possibleActions.Count]);
+
+				for (int j = 0; j < n_c; ++j) {
+					QGraphEdge temp_edge = new QGraphEdge (j);
+					temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
+					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction);
+					newNode.AddEdge (temp_edge);
 				}
+
 			}
 
 			return mutant;
+		}
+
+		public void Reward(float reward){
+			totalReward += reward;
+		}
+
+		public float TotalReward {
+			get {
+				return totalReward;
+			}
 		}
 	}
 }

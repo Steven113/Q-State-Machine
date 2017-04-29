@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace AssemblyCSharp
 {
@@ -86,6 +87,19 @@ namespace AssemblyCSharp
 			}
 
 			return result;
+		}
+
+		public static QGraphEdge MutateEdge(QGraphEdge edge, List<string> possibleStates, float mutationRate){
+			QGraphEdge mutant = new QGraphEdge (edge);
+			mutant.requiredStates = Utils.RandomlyModifyList (possibleStates, mutant.requiredStates);
+			for (int i = 0; i < mutant.float_restrictions.Count; ++i) {
+				mutant.float_restrictions[i] += (UnityEngine.Random.value - 0.5f) * mutationRate;
+			}
+
+			mutant.interruptThreshold += (UnityEngine.Random.value - 0.5f) * mutationRate;
+			mutant.interruptThreshold = Mathf.Clamp (mutant.interruptThreshold, 0, 1);
+
+			return mutant;
 		}
 
 		public float InterruptThreshold {

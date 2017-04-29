@@ -16,7 +16,7 @@ namespace AssemblyCSharp
 {
 
 
-	//Base class for all agents that can provide their state to a q learner
+	//Base class for all agents that can detect and provide their state to a q learner
 	public abstract class QSensor : MonoBehaviour
 	{
 

@@ -98,7 +98,28 @@ namespace AssemblyCSharp
 			
 		}
 
-		public static List<T> ShuffleArray<T>(List<T> input){
+		public static List<T> RandomlyModifyList<T>(List<T> possibleStates, List<T> originalList){
+			List<T> result = new List<T> (originalList);
+			float r_val = UnityEngine.Random.value;
+			if (r_val < 0.33f) {
+				r_val = UnityEngine.Random.value;
+				if (!result.Contains (possibleStates [(int)(r_val * possibleStates.Count)])) {
+					result.Add(possibleStates [(int)(r_val * possibleStates.Count)] );
+				}
+			} else if (r_val < 0.66f) {
+				r_val = UnityEngine.Random.value;
+				result.Add ( possibleStates [(int)(r_val * possibleStates.Count)] );
+			} else {
+				r_val = UnityEngine.Random.value;
+				float state_to_replace_with = UnityEngine.Random.value;
+				if (!result.Contains (possibleStates [(int)(state_to_replace_with * possibleStates.Count)])) {
+					result[(int)(r_val * result.Count)] = possibleStates[(int)(state_to_replace_with * possibleStates.Count)];
+				}
+			}
+			return result;
+		}
+
+		public static List<T> ShuffleList<T>(List<T> input){
 			List<T> result = new List<T> ();
 			result.AddRange (input);
 			for (int i = 0; i<result.Count; ++i) {
@@ -126,6 +147,23 @@ namespace AssemblyCSharp
 			}
 			return result;
 		}
+
+
+	}
+
+	[Serializable]
+	public class Pair<T,U>{
+		public T first;
+		public U second;
+
+		public Pair(T first, U second){
+			this.first = first;
+			this.second = second;
+		}
+
+		//		public int Equals(Pair<T,U> other){
+		//			return this.first.Equals (other.first);
+		//		}
 	}
 }
 
