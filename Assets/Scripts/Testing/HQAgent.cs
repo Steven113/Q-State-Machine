@@ -26,7 +26,7 @@ namespace AssemblyCSharp
 		}
 
 		// we use the list of strings as a return parameter as we want to facilitate concept-action-mapping
-		public override List<string> GetAction (List<string> state){
+		public override List<string> GetAction (List<string> state, List<float> values){
 			return new List<string>();
 		}
 		

@@ -98,11 +98,28 @@ namespace AssemblyCSharp
 			
 		}
 
-		public static List<T> ShuffleList<T>(List<T> input){
+		public static List<T> ShuffleArray<T>(List<T> input){
 			List<T> result = new List<T> ();
 			result.AddRange (input);
 			for (int i = 0; i<result.Count; ++i) {
 				int randomIndex = UnityEngine.Random.Range(0,result.Count-1);
+				T temp = result [randomIndex];
+				result[randomIndex] = result[i];
+				result[i] = temp;
+			}
+			return result;
+		}
+
+		public static T[] ShuffleArray<T>(T[] input){
+			int i_l = input.Length;
+			T[] result = new T [i_l];
+
+			for (int i = 0; i < i_l; ++i) {
+				result [i] = input [i];
+			}
+
+			for (int i = 0; i<result.Length; ++i) {
+				int randomIndex = UnityEngine.Random.Range(0,result.Length-1);
 				T temp = result [randomIndex];
 				result[randomIndex] = result[i];
 				result[i] = temp;

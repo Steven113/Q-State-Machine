@@ -110,6 +110,8 @@ namespace AssemblyCSharp
 
 		double shuffleIndex = 0;
 
+		[SerializeField]int numActionsBusyWith = 0;
+
 		public override void Reward(float reward){
 			qAgent.RewardAgent (reward);
 		}
@@ -180,7 +182,7 @@ namespace AssemblyCSharp
 							qAgent.RewardAgent (reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
 							reward = 0;
 						}
-						currentActionSet = qAgent.GetAction (getState ());
+					currentActionSet = qAgent.GetAction (getState (),getStateValues());
 						++shuffleIndex;
 					}
 				}
@@ -223,35 +225,24 @@ namespace AssemblyCSharp
 			//}
 		}
 
+		public override List<float> getStateValues ()
+		{
+			List<float> data = new List<float> ();
+			data.Add (healthController.health / healthController.maxhealth);
+			data.Add (weapon.magazines [weapon.currentMag]/weapon.magSize);
+			data.Add (currentlyVisibleEnemies.Count);
+			data.Add (healthController.suppressionLevel);
+			return data;
+		}
+
 		public override List<string> getState ()
 		{
 			List<string> result = new List<string> ();
-			if (healthController.health > 0.8f * healthController.maxhealth) {
-				result.Add ("FULL_HEALTH");
-			} else if (healthController.health > 0.4f * healthController.maxhealth) {
-				result.Add ("WOUNDED");
-			} else {
-				result.Add ("HEAVILY_WOUNDED");
-			} 
 			
 			if (weapon.weaponName == WeaponName.Rifle) {
 				result.Add ("RIFLE");
 			} else if (weapon.weaponName == WeaponName.Rocket_Launcher) {
 				result.Add ("ROCKET_LAUNCHER");
-			}
-			
-			if (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] == 0) {
-				result.Add ("EMPTY_MAG");
-			} else if (weapon.magazines [weapon.currentMag] > 0.5f * weapon.magSize) {
-				result.Add ("FULL_MAG");
-			} else {
-				result.Add ("HALF_MAG");
-			}
-			
-			if (currentTarget!=null && currentTarget.mainLOSCollider != null || currentlyVisibleEnemies.Count > 0) {
-				result.Add ("ENEMIES");
-			} else {
-				result.Add ("NO_ENEMIES");
 			}
 
 			if (currentTargetIsVisible == LOSResult.Visible) {
@@ -262,11 +253,7 @@ namespace AssemblyCSharp
 				result.Add("RELOADING");
 			}
 
-			if (healthController.suppressionLevel > healthController.maxhealth * 0.75f) {
-				result.Add("SUPPRESSED_HIGH");
-			} else if (healthController.suppressionLevel > healthController.maxhealth * 0.4f) {
-				result.Add("SUPPRESSED_LIGHT");
-			}
+			throw new NotImplementedException ();
 
 			return result;
 		}
@@ -524,8 +511,10 @@ namespace AssemblyCSharp
 				reward += (1f - ((weapon.magazines.Count > 0 ? weapon.magazines [weapon.currentMag] : 0) / weapon.magSize)); // we give reward based on how many bullets are in mag, to reward reloads where the mag is empty or near empty
 				reward -= 0.5f;
 			}
+			++numActionsBusyWith;
 			weapon.stateOfWeapon = WeaponState.Reloading;
 			yield return new WaitForSeconds (weapon.reloadTime);
+			--numActionsBusyWith;
 			weapon.stateOfWeapon = WeaponState.Ready;
 			weapon.InsertNewMag ();
 
@@ -641,6 +630,10 @@ namespace AssemblyCSharp
 			agent.Warp(new Vector3 (spawnPoint.x, gameObject.transform.position.y, spawnPoint.z));
 			healthController.health = healthController.maxhealth;
 			CurrentTarget = null;
+		}
+
+		public override int GetBusyWithAction(){
+			return numActionsBusyWith;
 		}
 	}
 }

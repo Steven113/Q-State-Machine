@@ -15,7 +15,7 @@ public class TargetSpawner : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		spawnPoints = Utils.ShuffleList (spawnPoints);
+		spawnPoints = Utils.ShuffleArray (spawnPoints);
 	}
 	
 	// Update is called once per frame
@@ -24,7 +24,7 @@ public class TargetSpawner : MonoBehaviour {
 			++numSpawns;
 			if (numSpawns>=spawnPoints.Count){
 				numSpawns = 0;
-				spawnPoints = Utils.ShuffleList (spawnPoints);
+				spawnPoints = Utils.ShuffleArray (spawnPoints);
 			}
 
 			GameObject.Instantiate(targetPrefab,spawnPoints[numSpawns],Quaternion.identity);

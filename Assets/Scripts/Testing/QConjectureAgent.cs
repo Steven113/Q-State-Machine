@@ -28,8 +28,8 @@ namespace AssemblyCSharp
 		//get the action(s) a agent should perform given it's current state
 		// we use the list of strings rather than one string as a return parameter as we want to facilitate concept-action-mapping
 
-		public override List<string> GetAction (List<string> state){
-			return learner.GetAction (state);
+		public override List<string> GetAction (List<string> state,List<float> values){
+			return learner.GetAction (state,values);
 		}
 		//give the agent a reward instantly. The agent will add a reduced amount of the given reward value for the reward for it's given state/action pair
 		public bool RewardAgent (float reward, float reflexCompensationTime = 0){

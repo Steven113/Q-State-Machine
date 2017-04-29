@@ -23,6 +23,10 @@ namespace AssemblyCSharp
 
 		public abstract List<string> getState();
 
+		public abstract List<float> getStateValues ();
+
+		public abstract int GetBusyWithAction(); //return number of actions soldier is busy with
+
 		public abstract void Reward(float reward); //need this method to support manual rewards and punishments by the user
 	}
 }

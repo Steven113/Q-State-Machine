@@ -16,7 +16,7 @@ namespace AssemblyCSharp
 	public class QNNAgent : QAgent
 	{
 		public List<ActionGroup> actionGroupings = new List<ActionGroup> ();
-		public override List<string> GetAction (List<string> state){
+		public override List<string> GetAction (List<string> state, List<float> values){
 			return null;
 		}
 		

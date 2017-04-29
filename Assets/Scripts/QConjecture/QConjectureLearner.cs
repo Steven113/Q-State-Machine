@@ -227,7 +227,7 @@ namespace AssemblyCSharp
 			PrintConjectures ();
 		}
 
-		public List<string> GetAction(List<string> state){
+		public List<string> GetAction(List<string> state, List<float> values){
 			++numExamplesRun;
 			float startTime = Time.realtimeSinceStartup;
 			int [] binaryStateString = toBinaryString (state, possibleStates);

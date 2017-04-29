@@ -12,7 +12,7 @@ public abstract class QAgent : MonoBehaviour {
 	//Vector3 end = Vector3.zero;
 
 	//get the action(s) a agent should perform given it's current state
-	public abstract List<string> GetAction (List<string> state); // we use the list of strings as a return parameter as we want to facilitate concept-action-mapping
+	public abstract List<string> GetAction (List<string> state, List<float> variables); // we use the list of strings as a return parameter as we want to facilitate concept-action-mapping
 
 	//give the agent a reward instantly. The agent will add a reduced amount of the given reward value for the reward for it's given state/action pair
 	public abstract bool RewardAgent (float reward); 
