@@ -17,11 +17,12 @@ namespace AssemblyCSharp
 {
 	public static class Utils
 	{
-		public static bool DeserializeFile<T>(string fileName, ref T objectToLoadDataInto) where T : class {
+		public static bool DeserializeFile<T> (string fileName, ref T objectToLoadDataInto) where T : class
+		{
 			if (File.Exists (fileName)) {//first confirm that the navmesh file exists
-				using (Stream navmeshStream = File.OpenRead(fileName)){ //File.OpenRead opens the file with the read flag, rather than us having to set it. The using statement ensures that the created stream is cleaned up at the end of the block
-					BinaryFormatter formatterForNavMesh = new BinaryFormatter();
-					objectToLoadDataInto = ((formatterForNavMesh.Deserialize(navmeshStream) as T));
+				using (Stream navmeshStream = File.OpenRead (fileName)) { //File.OpenRead opens the file with the read flag, rather than us having to set it. The using statement ensures that the created stream is cleaned up at the end of the block
+					BinaryFormatter formatterForNavMesh = new BinaryFormatter ();
+					objectToLoadDataInto = ((formatterForNavMesh.Deserialize (navmeshStream) as T));
 					return true;
 				}
 				//return true;
@@ -30,67 +31,68 @@ namespace AssemblyCSharp
 			}
 		}
 
-		public static void SerializeFile<T>(string fileName, ref T objectToLoadDataInto) where T : class {
-			using (Stream stream = File.OpenWrite(fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))+ ".qsf"*/) ) //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
-			{
+		public static void SerializeFile<T> (string fileName, ref T objectToLoadDataInto) where T : class
+		{
+			using (Stream stream = File.OpenWrite (fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))+ ".qsf"*/)) { //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
 				//Debug.Log("Serializing tree!");
-				BinaryFormatter formatter = new BinaryFormatter();
-				formatter.Serialize(stream, objectToLoadDataInto);
+				BinaryFormatter formatter = new BinaryFormatter ();
+				formatter.Serialize (stream, objectToLoadDataInto);
 			}
 		}
 
-		public static void SerializeFile<T>(string fileName, ref T objectToLoadDataInto, string extension) where T : class {
-			using (Stream stream = File.OpenWrite(fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))*/+extension) ) //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
-			{
+		public static void SerializeFile<T> (string fileName, ref T objectToLoadDataInto, string extension) where T : class
+		{
+			using (Stream stream = File.OpenWrite (fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))*/ + extension)) { //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
 				//Debug.Log("Serializing tree!");
-				BinaryFormatter formatter = new BinaryFormatter();
-				formatter.Serialize(stream, objectToLoadDataInto);
+				BinaryFormatter formatter = new BinaryFormatter ();
+				formatter.Serialize (stream, objectToLoadDataInto);
 			}
 		}
 
-		public static int[] XOR_Integer(int[] first, int[] second) 
+		public static int[] XOR_Integer (int[] first, int[] second)
 		{
-			int [] result = new int[first.Length];
+			int[] result = new int[first.Length];
 
-			for (int i = 0; i<result.Length; ++i) {
-				result[i] = first[i] ^ second[i];
+			for (int i = 0; i < result.Length; ++i) {
+				result [i] = first [i] ^ second [i];
 			}
 
 			return result;
 
 		}
 
-		public static int[] AND_Integer(int[] first, int[] second) 
+		public static int[] AND_Integer (int[] first, int[] second)
 		{
-			int [] result = new int[first.Length];
+			int[] result = new int[first.Length];
 			
-			for (int i = 0; i<result.Length; ++i) {
-				result[i] = first[i] & second[i];
+			for (int i = 0; i < result.Length; ++i) {
+				result [i] = first [i] & second [i];
 			}
 			
 			return result;
 			
 		}
 
-		public static int[] OR_Integer(int[] first, int[] second) 
+		public static int[] OR_Integer (int[] first, int[] second)
 		{
-			int [] result = new int[first.Length];
+			int[] result = new int[first.Length];
 			
-			for (int i = 0; i<result.Length; ++i) {
-				result[i] = first[i] | second[i];
+			for (int i = 0; i < result.Length; ++i) {
+				result [i] = first [i] | second [i];
 			}
 			
 			return result;
 			
 		}
 
-		public static int GetNumberOfOnesInBinaryString(int[] str) 
+		public static int GetNumberOfOnesInBinaryString (int[] str)
 		{
 			int result = 0;
 			
-			for (int i = 0; i<str.Length; ++i) {
-				for (int j = 0; j<32; j++){
-					if (0<(str[i] & (1<<j))) ++result;
+			for (int i = 0; i < str.Length; ++i) {
+				for (int j = 0; j < 32; j++) {
+					if (0 < (str [i] & (1 << j)))
+						++result;
 				}
 			}
 			
@@ -98,40 +100,52 @@ namespace AssemblyCSharp
 			
 		}
 
-		public static List<T> RandomlyModifyList<T>(List<T> possibleStates, List<T> originalList){
+		public static List<T> RandomlyModifyList<T> (List<T> possibleAdditions, List<T> originalList)
+		{
 			List<T> result = new List<T> (originalList);
+
+			if (possibleAdditions.Count == 0) {
+				return result;
+			}
+
 			float r_val = UnityEngine.Random.value;
-			if (r_val < 0.33f) {
-				r_val = UnityEngine.Random.value;
-				if (!result.Contains (possibleStates [(int)(r_val * possibleStates.Count)])) {
-					result.Add(possibleStates [(int)(r_val * possibleStates.Count)] );
-				}
+			if (r_val < 0.33f && originalList.Count > 1) {
+
+				int node1 = UnityEngine.Random.Range (0, possibleAdditions.Count);
+				result.Remove (possibleAdditions [node1]);
+
+
 			} else if (r_val < 0.66f) {
-				r_val = UnityEngine.Random.value;
-				result.Add ( possibleStates [(int)(r_val * possibleStates.Count)] );
+				int node1 = UnityEngine.Random.Range (0, possibleAdditions.Count);
+
+				if (!result.Contains (possibleAdditions [node1])) {
+					result.Add (possibleAdditions [node1]);
+				}
 			} else {
-				r_val = UnityEngine.Random.value;
-				float state_to_replace_with = UnityEngine.Random.value;
-				if (!result.Contains (possibleStates [(int)(state_to_replace_with * possibleStates.Count)])) {
-					result[(int)(r_val * result.Count)] = possibleStates[(int)(state_to_replace_with * possibleStates.Count)];
+				int node1 = UnityEngine.Random.Range (0, possibleAdditions.Count);
+				int node2 = UnityEngine.Random.Range (0, possibleAdditions.Count);
+				if (!result.Contains (possibleAdditions [node2])) {
+					result [node1] = possibleAdditions [node2];
 				}
 			}
 			return result;
 		}
 
-		public static List<T> ShuffleList<T>(List<T> input){
+		public static List<T> ShuffleList<T> (List<T> input)
+		{
 			List<T> result = new List<T> ();
 			result.AddRange (input);
-			for (int i = 0; i<result.Count; ++i) {
-				int randomIndex = UnityEngine.Random.Range(0,result.Count-1);
+			for (int i = 0; i < result.Count; ++i) {
+				int randomIndex = UnityEngine.Random.Range (0, result.Count - 1);
 				T temp = result [randomIndex];
-				result[randomIndex] = result[i];
-				result[i] = temp;
+				result [randomIndex] = result [i];
+				result [i] = temp;
 			}
 			return result;
 		}
 
-		public static T[] ShuffleArray<T>(T[] input){
+		public static T[] ShuffleArray<T> (T[] input)
+		{
 			int i_l = input.Length;
 			T[] result = new T [i_l];
 
@@ -139,11 +153,11 @@ namespace AssemblyCSharp
 				result [i] = input [i];
 			}
 
-			for (int i = 0; i<result.Length; ++i) {
-				int randomIndex = UnityEngine.Random.Range(0,result.Length-1);
+			for (int i = 0; i < result.Length; ++i) {
+				int randomIndex = UnityEngine.Random.Range (0, result.Length - 1);
 				T temp = result [randomIndex];
-				result[randomIndex] = result[i];
-				result[i] = temp;
+				result [randomIndex] = result [i];
+				result [i] = temp;
 			}
 			return result;
 		}
@@ -152,11 +166,13 @@ namespace AssemblyCSharp
 	}
 
 	[Serializable]
-	public class Pair<T,U>{
+	public class Pair<T,U>
+	{
 		public T first;
 		public U second;
 
-		public Pair(T first, U second){
+		public Pair (T first, U second)
+		{
 			this.first = first;
 			this.second = second;
 		}
@@ -167,8 +183,10 @@ namespace AssemblyCSharp
 	}
 
 	[Serializable]
-	public class StringFloatMap : Pair<string,float>{
-		public StringFloatMap(string s, float f) : base (s,f){
+	public class StringFloatMap : Pair<string,float>
+	{
+		public StringFloatMap (string s, float f) : base (s, f)
+		{
 
 		}
 	}

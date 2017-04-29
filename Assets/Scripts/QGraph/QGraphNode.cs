@@ -20,11 +20,11 @@ namespace AssemblyCSharp
 		}
 
 		public QGraphNode(QGraphNode other){
-			actions = new List<string> (actions.Count);
-			int e_c = outgoingEdges.Count; 
+			actions = new List<string> (actions);
+			int e_c = other.outgoingEdges.Count; 
 
 			for (int i = 0; i < e_c; ++i) {
-				outgoingEdges.Add (new QGraphEdge (outgoingEdges [i]));
+				outgoingEdges.Add (new QGraphEdge (other.outgoingEdges [i]));
 			}
 		}
 

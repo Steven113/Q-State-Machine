@@ -46,7 +46,7 @@ namespace AssemblyCSharp
 			int s_c = states.Count ();
 			int a_c = actions.Count ();
 
-			Debug.Assert (s_c > 0);
+			//Debug.Assert (s_c > 0);
 			Debug.Assert (a_c > 0);
 
 			for (int i = 0; i < a_c; ++i) {
@@ -57,7 +57,9 @@ namespace AssemblyCSharp
 			//randomly plug root node into other nodes
 			for (int i = 1; i < a_c + 1; ++i) {
 				QGraphEdge temp_edge = new QGraphEdge (i);
-				temp_edge.RequiredStates = new List<string>{ states [i % s_c] };
+				if (s_c > 0) {
+					temp_edge.RequiredStates = new List<string>{ states [i % s_c] };
+				}
 				temp_edge.Float_restrictions = new List<float> (default_float_restrictions.ToArray ());
 				root.AddEdge (temp_edge);
 			}
@@ -80,7 +82,9 @@ namespace AssemblyCSharp
 					}
 
 					QGraphEdge temp_edge = new QGraphEdge (j);
-					temp_edge.RequiredStates = new List<string>{ states [stateIndex] };
+					if (s_c > 0) {
+						temp_edge.RequiredStates = new List<string>{ states [stateIndex] };
+					}
 					temp_edge.Float_restrictions = new List<float> (default_float_restrictions.ToArray ());
 					nodes [i].AddEdge (temp_edge);
 
@@ -110,8 +114,12 @@ namespace AssemblyCSharp
 
 			this.edgeMutationChance = other.edgeMutationChance;
 			this.actionMutationChance = other.actionMutationChance;
-			this.addNodeChance = this.addNodeChance;
-			this.changeInterruptWeightChance = this.changeInterruptWeightChance;
+			this.addNodeChance = other.addNodeChance;
+			this.changeInterruptWeightChance = other.changeInterruptWeightChance;
+
+			this.possibleStates = other.possibleStates;
+			this.possibleActions = other.possibleActions;
+			this.float_restriction = other.float_restriction;
 		}
 
 		public List<string> GetActionsToTake (IEnumerable<string> states, IEnumerable<float> values)
@@ -134,7 +142,11 @@ namespace AssemblyCSharp
 				}
 			}
 
-			Debug.Assert (edgeToUse > 0);
+			Debug.Assert (edgeToUse > -1);
+
+			if (nodes [currentNode.outgoingEdges [edgeToUse].targetNode] == root) {
+				edgeToUse = UnityEngine.Random.Range (1, nodes.Count);
+			}
 
 			currentNode.outgoingEdges [edgeToUse].LastTriggeredTime = Time.time;
 
@@ -193,10 +205,14 @@ namespace AssemblyCSharp
 			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
 
 			for (int i = 0; i < numChanges; ++i) {
-				int nodeToChange = (int)(mutant.nodes.Count * UnityEngine.Random.value);
-				int edgeToChange = (int)(mutant.nodes [nodeToChange].outgoingEdges.Count * UnityEngine.Random.value);
+				int nodeToChange = UnityEngine.Random.Range(0,t_nodes.Count);
+				int edgeToChange = UnityEngine.Random.Range(0,t_nodes[nodeToChange].outgoingEdges.Count);
 
-				t_nodes [nodeToChange].outgoingEdges [edgeToChange] =QGraphEdge.MutateEdge (t_nodes [nodeToChange].outgoingEdges [edgeToChange], mutant.possibleStates, mutant.mutationIncrement);
+//				if (nodeToChange >= t_nodes.Count || edgeToChange>=t_nodes[nodeToChange].outgoingEdges.Count) {
+//					break;
+//				}
+
+				t_nodes [nodeToChange].outgoingEdges [edgeToChange] = QGraphEdge.MutateEdge (t_nodes [nodeToChange].outgoingEdges [edgeToChange], mutant.possibleStates, mutant.mutationIncrement);
 
 			}
 
@@ -206,7 +222,7 @@ namespace AssemblyCSharp
 			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
 
 			for (int i = 0; i < numChanges; ++i) {
-				int nodeToChange = (int)(mutant.nodes.Count * UnityEngine.Random.value);
+				int nodeToChange = UnityEngine.Random.Range(0,t_nodes.Count);
 
 				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange],mutant.possibleStates);
 
@@ -217,12 +233,18 @@ namespace AssemblyCSharp
 
 			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
 
+			if (numChanges < 1) {
+				numChanges = 1f;
+			}
+
 			for (int i = 0; i < numChanges; ++i) {
 				QGraphNode newNode = new QGraphNode (mutant.possibleActions [i % mutant.possibleActions.Count]);
 
 				for (int j = 0; j < n_c; ++j) {
 					QGraphEdge temp_edge = new QGraphEdge (j);
-					temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
+					if (mutant.possibleStates.Count > 0) {
+						temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
+					}
 					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction);
 					newNode.AddEdge (temp_edge);
 				}
@@ -246,9 +268,9 @@ namespace AssemblyCSharp
 
 			int p_c = population.Length;
 
-			for (int i = 1; i < p_c; ++i) {
-				population [i] = QGraph.Mutate (population [0]);
-			}
+			//for (int i = 1; i < p_c; ++i) {
+			population [population.Length-1] = QGraph.Mutate (population [0]);
+			//}
 
 			for (int i = 0; i < p_c; ++i) {
 				population[i].totalReward = 0;
