@@ -165,5 +165,12 @@ namespace AssemblyCSharp
 		//			return this.first.Equals (other.first);
 		//		}
 	}
+
+	[Serializable]
+	public class StringFloatMap : Pair<string,float>{
+		public StringFloatMap(string s, float f) : base (s,f){
+
+		}
+	}
 }
 

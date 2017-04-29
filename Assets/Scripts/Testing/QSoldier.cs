@@ -112,6 +112,8 @@ namespace AssemblyCSharp
 
 		[SerializeField]int numActionsBusyWith = 0;
 
+		public BoxCollider mapBounds;
+
 		public override void Reward(float reward){
 			qAgent.RewardAgent (reward);
 		}
@@ -232,6 +234,8 @@ namespace AssemblyCSharp
 			data.Add (weapon.magazines [weapon.currentMag]/weapon.magSize);
 			data.Add (currentlyVisibleEnemies.Count);
 			data.Add (healthController.suppressionLevel);
+			data.Add (smallFoodCount);
+			data.Add (bigFoundCount);
 			return data;
 		}
 

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AssemblyCSharp
 {
-	public class QGraph
+	public class QGraph : IComparable<QGraph>
 	{
 		float totalReward = 0;
 
@@ -236,9 +236,35 @@ namespace AssemblyCSharp
 			totalReward += reward;
 		}
 
+		public int CompareTo(QGraph other){
+			return totalReward.CompareTo (other.totalReward);
+		}
+
+		public static QGraph [] Evolve(QGraph [] population){
+			Array.Sort (population);
+			Array.Reverse (population);
+
+			int p_c = population.Length;
+
+			for (int i = 1; i < p_c; ++i) {
+				population [i] = QGraph.Mutate (population [0]);
+			}
+
+			for (int i = 0; i < p_c; ++i) {
+				population[i].totalReward = 0;
+			}
+
+			return population;
+
+		}
+
 		public float TotalReward {
 			get {
 				return totalReward;
+			}
+
+			set {
+				totalReward = value;
 			}
 		}
 	}
