@@ -28,8 +28,9 @@ namespace AssemblyCSharp
 		List<string> possibleStates;
 		List<string> possibleActions;
 		List<float> float_restriction;
+		List<float> float_mult;
 
-		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_restrictions)
+		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_restrictions, IEnumerable<float> default_float_mult)
 		{
 			root = new QGraphNode ();
 			nodes.Add (root);
@@ -42,6 +43,7 @@ namespace AssemblyCSharp
 			this.possibleStates = new List<string> (states);
 			this.possibleActions = new List<string> (actions);
 			this.float_restriction = new List<float> (default_float_restrictions.ToArray ());
+			this.float_mult = new List<float> (default_float_mult.ToArray ());
 
 			int s_c = states.Count ();
 			int a_c = actions.Count ();
@@ -61,6 +63,7 @@ namespace AssemblyCSharp
 					temp_edge.RequiredStates = new List<string>{ states [i % s_c] };
 				}
 				temp_edge.Float_restrictions = new List<float> (default_float_restrictions.ToArray ());
+				temp_edge.Float_mult = new List<float> (default_float_mult.ToArray ());
 				root.AddEdge (temp_edge);
 			}
 
@@ -86,6 +89,7 @@ namespace AssemblyCSharp
 						temp_edge.RequiredStates = new List<string>{ states [stateIndex] };
 					}
 					temp_edge.Float_restrictions = new List<float> (default_float_restrictions.ToArray ());
+					temp_edge.Float_mult = new List<float> (default_float_mult.ToArray ());
 					nodes [i].AddEdge (temp_edge);
 
 				}
@@ -97,7 +101,8 @@ namespace AssemblyCSharp
 		public QGraph (TextAsset asset){
 			List<string> lines = new List<string>(asset.text.Split (Environment.NewLine.ToCharArray ()));
 			for (int i = 0; i < lines.Count; ++i) {
-				if (lines [i].Contains ("//")) {
+				if (lines [i].Contains ("//") || string.IsNullOrEmpty(lines[i])) {
+					Debug.Log ("Removing: " + lines [i]);
 					lines.RemoveAt (i);
 					--i;
 				}
@@ -109,33 +114,37 @@ namespace AssemblyCSharp
 
 			Utils.ConverterTU<string, float> f_conv = Utils.TryParseR;
 
+			Debug.Log (lines [0]);
 			possibleStates = new List<string> (lines [0].Split (" ".ToCharArray()));
+			Debug.Log (lines [1]);
 			possibleActions = new List<string> (lines [1].Split (" ".ToCharArray()));
+			Debug.Log (lines [2]);
 			float_restriction = new List<float> (Utils.ConvertArrayType<string, float> (lines [2].Split(" ".ToCharArray()), f_conv));
 
 			for (int i = 3; i < lines.Count; ++i) {
-				if (lines [i].StartsWith ("Neuron")) {
+				Debug.Log ("Parsing: " + lines [i]);
+				if (lines [i].StartsWith ("Node")) {
 					//format: Neuron [refName] [Action1] ... [ActionN]
-					string [] neuronLine = lines [i].Split(" ".ToCharArray());
-					QGraphNode node = new QGraphNode();
+					string[] neuronLine = lines [i].Split (" ".ToCharArray ());
+					QGraphNode node = new QGraphNode ();
 
-					Debug.Assert (neuronLine.Length > 0, "Line is missing a neuron name!");
-					Debug.Assert (!neuronDict.ContainsKey (neuronLine [0]), "Node with this name is already defined!");
+					Debug.Assert (neuronLine.Length > 1, "Line is missing a neuron name!");
+					Debug.Assert (!neuronDict.ContainsKey (neuronLine [1]), "Node with this name is already defined!");
 
-					for (int j = 1; j<neuronLine.Length; ++j){
+					for (int j = 1; j < neuronLine.Length; ++j) {
 						node.AddAction (neuronLine [j]);
 					}
 					nodes.Add (node);
-					neuronDict.Add (neuronLine [0], node);
+					neuronDict.Add (neuronLine [1], node);
 				} else if (lines [i].StartsWith ("Edge")) {
-					//format: [startNode] [Node connected to] | [state1] ... [stateN] | [float_restriction1] ... [float_restrictionN] | [interruptChance]
+					//format: [startNode] [Node connected to] | [state1] ... [stateN] | [float_restriction1] ... [float_restrictionN] | [mult1] ... [multN] | [interruptChance]
 
-					string [] lineSegs = lines[i].Split("|".ToCharArray());
-					Debug.Assert (lineSegs.Length == 4);
+					string[] lineSegs = lines [i].Split ("|".ToCharArray ());
+					Debug.Assert (lineSegs.Length == 5);
 					string[] edgeNodes = lineSegs [0].Split (" ".ToCharArray ());
-					Debug.Assert (edgeNodes.Length == 2, "Start and end nodes not defined");
-					Debug.Assert (neuronDict.ContainsKey (edgeNodes [0]), "Start neuron not defined");
-					Debug.Assert (neuronDict.ContainsKey (edgeNodes [1]), "End neuron not defined");
+					Debug.Assert (edgeNodes.Length == 3, "Start and end nodes not defined");
+					Debug.Assert (neuronDict.ContainsKey (edgeNodes [1]), "Start neuron not defined");
+					Debug.Assert (neuronDict.ContainsKey (edgeNodes [2]), "End neuron not defined");
 
 					//string [] reqFloats = lineSegs[2].Split (" ".ToCharArray ());
 
@@ -151,19 +160,27 @@ namespace AssemblyCSharp
 
 					float interruptChance = 0;
 
-					Debug.Assert (float.TryParse (lineSegs [3], out interruptChance));
+					Debug.Assert (Utils.TryParseR (lineSegs [4], out interruptChance));
 
 
-					QGraphEdge edge = new QGraphEdge (new List<string> (lineSegs [1].Split(" ".ToCharArray())), Utils.ConvertArrayType<string,float>(lineSegs[2].Split(" ".ToCharArray()), f_conv), nodes.IndexOf (neuronDict [edgeNodes [1]]));
+					QGraphEdge edge = new QGraphEdge (new List<string> (lineSegs [1].Split (" ".ToCharArray ())), Utils.ConvertArrayType<string,float> (lineSegs [2].Split (" ".ToCharArray ()), f_conv), Utils.ConvertArrayType<string,float> (lineSegs [3].Split (" ".ToCharArray ()), f_conv), nodes.IndexOf (neuronDict [edgeNodes [2]]));
 
 					edge.InterruptThreshold = interruptChance;
 
-					nodes [nodes.IndexOf (neuronDict [edgeNodes [0]])].AddEdge (edge);
+					nodes [nodes.IndexOf (neuronDict [edgeNodes [1]])].AddEdge (edge);
 
 
 
+				} else if (lines [i].StartsWith ("CurrentNode")) {
+					string[] vals = lines [i].Split (" ".ToCharArray ());
+					Debug.Assert (neuronDict.ContainsKey (vals [1]));
+					currentNode = neuronDict [vals [1]];
+				} else if (lines [i].StartsWith ("Root")) {
+					string[] vals = lines [i].Split (" ".ToCharArray ());
+					Debug.Assert (neuronDict.ContainsKey (vals [1]));
+					root = neuronDict [vals [1]];
 				} else {
-					throw new Exception ("Line definition format could not be determined");
+					throw new Exception ("Line definition format could not be determined: "+i+ " " + lines [i]);
 				}
 			}
 		}
@@ -217,19 +234,23 @@ namespace AssemblyCSharp
 				}
 			}
 
-			Debug.Assert (edgeToUse > -1);
+			//Debug.Assert (edgeToUse > -1);
 
-			if (nodes [currentNode.outgoingEdges [edgeToUse].targetNode] == root) {
-				edgeToUse = UnityEngine.Random.Range (1, nodes.Count);
+			if (edgeToUse < 0 || nodes [currentNode.outgoingEdges [edgeToUse].targetNode] == root) {
+				edgeToUse = UnityEngine.Random.Range (0, currentNode.outgoingEdges.Count);
 			}
+
+			//Debug.Log (currentNode.outgoingEdges.Count);
 
 			currentNode.outgoingEdges [edgeToUse].LastTriggeredTime = Time.time;
 
-			currentNode = nodes [currentNode.outgoingEdges [edgeToUse].targetNode];
+
 
 			if (numActions ==0 || UnityEngine.Random.value > currentNode.outgoingEdges [edgeToUse].InterruptThreshold) {
-				return new List<string> (nodes [currentNode.outgoingEdges [edgeToUse].targetNode].Actions);
+				currentNode = nodes [currentNode.outgoingEdges [edgeToUse].targetNode];
+				return new List<string> (currentNode.Actions);
 			} else {
+				currentNode = nodes [currentNode.outgoingEdges [edgeToUse].targetNode];
 				return new List<string> ();
 			}
 		}
@@ -321,6 +342,7 @@ namespace AssemblyCSharp
 						temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
 					}
 					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction);
+					temp_edge.Float_mult = new List<float> (mutant.float_mult);
 					newNode.AddEdge (temp_edge);
 				}
 

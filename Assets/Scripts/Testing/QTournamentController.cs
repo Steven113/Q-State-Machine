@@ -10,6 +10,8 @@ namespace AssemblyCSharp
 	{
 		public QGraphAgent[] soldiers;
 
+		public QGraphAgent[] dummySoldiers;
+
 		public float roundLength = 120; //round length in seconds
 
 		public float timeSinceRoundStart = 0;
@@ -50,10 +52,16 @@ namespace AssemblyCSharp
 					spawnPoints = Utils.ShuffleArray (spawnPoints);
 				}
 
+				for (int i = 0; i < dummySoldiers.Length; ++i) {
+					dummySoldiers [i].Graph.ResetCurrentNodeToRoot ();
+					QSoldier qs = dummySoldiers[i].gameObject.GetComponent<QSoldier> ();
+					qs.agent.Warp(spawnPoints [i % spawnPoints.Length].transform.position);
+				}
 
 				for (int i = 0; i < soldiers.Length; ++i) {
+					soldiers [i].Graph.ResetCurrentNodeToRoot ();
 					QSoldier qs = soldiers [i].gameObject.GetComponent<QSoldier> ();
-					qs.agent.Warp(spawnPoints [i % spawnPoints.Length].transform.position);
+					qs.agent.Warp(spawnPoints [(i+dummySoldiers.Length) % spawnPoints.Length].transform.position);
 					qs.CurrentTarget = null;
 					ControlHealth hc = soldiers [i].gameObject.GetComponent<ControlHealth> ();
 					hc.health = hc.maxhealth;

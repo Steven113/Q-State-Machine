@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 namespace AssemblyCSharp
 {
@@ -8,6 +9,7 @@ namespace AssemblyCSharp
 	{
 		List<string> requiredStates = new List<string>();
 		List<float> float_restrictions = new List<float>();
+		List<float> float_mult = new List<float>();
 
 		public int targetNode = -1;
 
@@ -15,10 +17,10 @@ namespace AssemblyCSharp
 
 		float lastTriggeredTime = 0;
 
-		public QGraphEdge (IEnumerable<string> requiredStates, IEnumerable<float> float_restriction_list, int targetNode)
+		public QGraphEdge (IEnumerable<string> requiredStates, IEnumerable<float> float_restriction_list,IEnumerable<float> float_mult_list, int targetNode)
 		{
 			AddRequiredStates (requiredStates);
-			AddRestrictions (float_restriction_list);
+			AddRestrictions (float_restriction_list,float_mult_list);
 
 			this.targetNode = targetNode;
 		}
@@ -41,6 +43,7 @@ namespace AssemblyCSharp
 			this.requiredStates = new List<string> (other.requiredStates);
 			this.interruptThreshold = other.interruptThreshold;
 			this.float_restrictions = new List<float> (other.float_restrictions);
+			this.float_mult = new List<float> (other.float_mult);
 			this.targetNode = other.targetNode;
 		}
 
@@ -65,8 +68,10 @@ namespace AssemblyCSharp
 			}
 		}
 
-		public void AddRestrictions(IEnumerable<float> newRestrictions){
+		public void AddRestrictions(IEnumerable<float> newRestrictions,IEnumerable<float> newMult){
+			Debug.Assert (newRestrictions.Count() == newMult.Count());
 			float_restrictions.AddRange (float_restrictions);
+			float_mult.AddRange(newMult);
 		}
 
 		public int GetStateMatchLevel(IEnumerable<string> states, IEnumerable<float> values){
@@ -79,8 +84,11 @@ namespace AssemblyCSharp
 
 			int restrictionIndex = 0;
 
+			//Debug.Log (float_restrictions.Count);
+			//Debug.Log (float_mult.Count);
+
 			foreach (float val in values) {
-				if (restrictionIndex < float_restrictions.Count && val < float_restrictions[restrictionIndex]) {
+				if (restrictionIndex < float_restrictions.Count && val < float_restrictions[restrictionIndex]*float_mult[restrictionIndex]) {
 					++result;
 				} 
 				++restrictionIndex;
@@ -94,6 +102,7 @@ namespace AssemblyCSharp
 			mutant.requiredStates = Utils.RandomlyModifyList (possibleStates, mutant.requiredStates);
 			for (int i = 0; i < mutant.float_restrictions.Count; ++i) {
 				mutant.float_restrictions[i] += (UnityEngine.Random.value - 0.5f) * mutationRate;
+				mutant.float_mult[i]+= (UnityEngine.Random.value - 0.5f) * mutationRate;
 			}
 
 			mutant.interruptThreshold += (UnityEngine.Random.value - 0.5f) * mutationRate;
@@ -135,6 +144,15 @@ namespace AssemblyCSharp
 			}
 			set {
 				lastTriggeredTime = value;
+			}
+		}
+
+		public List<float> Float_mult {
+			get {
+				return float_mult;
+			}
+			set {
+				float_mult = value;
 			}
 		}
 	}

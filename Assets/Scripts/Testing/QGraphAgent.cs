@@ -8,11 +8,11 @@ namespace AssemblyCSharp
 	{
 		QGraph graph;
 
-		TextAsset graphDefinition;
+		[SerializeField]TextAsset graphDefinition;
 
 		public void Awake(){
 			if (graphDefinition != null && !graphDefinition.text.Equals("")) {
-
+				graph = new QGraph (graphDefinition);
 			}
 		}
 
