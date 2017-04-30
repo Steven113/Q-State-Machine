@@ -197,7 +197,7 @@ namespace AssemblyCSharp
 
 			if (timeSinceLastActionUpdate > ActionUpdateInterval) {
 
-				if (!(weapon.stateOfWeapon == WeaponState.Reloading)) {
+				//if (!(weapon.stateOfWeapon == WeaponState.Reloading)) {
 					timeSinceLastActionUpdate %= ActionUpdateInterval; // this statement gets moved here so that only if the next action is requested do we restart the timer before requesting an action
 					if (autoSetReward) {
 						qAgent.RewardAgent (reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
@@ -205,18 +205,24 @@ namespace AssemblyCSharp
 					}
 					currentActionSet = qAgent.GetAction (getState (), getStateValues ());
 					++shuffleIndex;
-				}
+				//}
 			}
 			//thisEntity.faction
 			//if (shuffleIndex % 2 == 0) {
 			if (currentActionSet.Contains ("Shoot") && weapon.stateOfWeapon == WeaponState.Ready && (!useCheatConditions || (weapon.magazines.Count > 0 && weapon.magazines [weapon.currentMag] > 0))) {
 				if (autoSetReward && (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] == 0)) {
 					reward -= Time.deltaTime;
+				} else if ((currentTarget != null && currentTarget.mainLOSCollider != null)) {
+					reward += Time.deltaTime;
 				}
 				weapon.fire ((currentTarget == null || currentTarget.mainLOSCollider == null)?weapon.barrelEnd.position:((currentTarget.mainLOSCollider.gameObject.transform.position-weapon.barrelStart.position).normalized*(weapon.barrelEnd.position-weapon.barrelStart.position).magnitude) + weapon.barrelStart.position, weapon.barrelStart.position, thisEntity.faction, false);
 			} else if (currentActionSet.Contains ("Reload") && weapon.stateOfWeapon != WeaponState.Reloading && (!useCheatConditions || (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] < weapon.magSize * 0.5f))) {
 				StartCoroutine (Reload ());
 			}
+			if (currentActionSet.Contains ("Turn180")){
+				gameObject.transform.Rotate (new Vector3 (0, 180, 0));
+			}
+
 //			} else {
 //				if (currentActionSet.Contains ("SHOOT") && weapon.stateOfWeapon == WeaponState.Ready) {
 //					weapon.fire(weapon.barrelEnd.position,weapon.barrelStart.position,thisEntity.faction,false);
@@ -431,6 +437,9 @@ namespace AssemblyCSharp
 
 		public SoldierEntity CurrentTarget {
 			get {
+				if (currentTarget != null && currentTarget.mainLOSCollider == null) {
+					return null;
+				}
 				return currentTarget;
 			}
 			set {
@@ -488,8 +497,11 @@ namespace AssemblyCSharp
 					if (currentTarget == null || currentTarget.mainLOSCollider == null) {
 						if (currentActionSet.Contains ("Explore") && !exploring) {
 							exploring = true;
-							//origin for search 
-							Vector3 searchPoint = new Vector3 (mapBounds.center.x + (UnityEngine.Random.value - 0.5f )* 2 * mapBounds.size.x, mapBounds.center.y + (UnityEngine.Random.value - 0.5f )* 2 * mapBounds.size.y, mapBounds.center.z + (UnityEngine.Random.value - 0.5f )* 2 * mapBounds.size.z);
+							//origin for search
+							Vector3 scaledBounds = mapBounds.gameObject.transform.TransformPoint(mapBounds.size);
+							Vector3 searchPoint = new Vector3 (mapBounds.gameObject.transform.position.x + (UnityEngine.Random.value - 0.5f )* 2 * scaledBounds.x, mapBounds.gameObject.transform.position.y + (UnityEngine.Random.value - 0.5f )* 2 * scaledBounds.y, mapBounds.gameObject.transform.position.z + (UnityEngine.Random.value - 0.5f )* 2 * scaledBounds.z);
+
+							//Debug.DrawRay (searchPoint, Vector3.up*100, Color.red, 30f);
 
 							NavMesh.SamplePosition (searchPoint, out nav_hit, float.PositiveInfinity, agent.areaMask);
 
@@ -536,10 +548,10 @@ namespace AssemblyCSharp
 
 		public IEnumerator Reload ()
 		{
-			if (autoSetReward) {
-				reward += (1f - ((weapon.magazines.Count > 0 ? weapon.magazines [weapon.currentMag] : 0) / weapon.magSize)); // we give reward based on how many bullets are in mag, to reward reloads where the mag is empty or near empty
-				reward -= 0.5f;
-			}
+//			if (autoSetReward) {
+//				reward += (1f - ((weapon.magazines.Count > 0 ? weapon.magazines [weapon.currentMag] : 0) / weapon.magSize)); // we give reward based on how many bullets are in mag, to reward reloads where the mag is empty or near empty
+//				reward -= 0.5f;
+//			}
 			++numActionsBusyWith;
 			weapon.stateOfWeapon = WeaponState.Reloading;
 			yield return new WaitForSeconds (weapon.reloadTime);

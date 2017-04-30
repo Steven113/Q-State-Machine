@@ -93,6 +93,81 @@ namespace AssemblyCSharp
 
 		}
 
+		//load QGraph from file, for heuristic init
+		public QGraph (TextAsset asset){
+			List<string> lines = new List<string>(asset.text.Split (Environment.NewLine.ToCharArray ()));
+			for (int i = 0; i < lines.Count; ++i) {
+				if (lines [i].Contains ("//")) {
+					lines.RemoveAt (i);
+					--i;
+				}
+			}
+
+			Dictionary<string,QGraphNode> neuronDict = new Dictionary<string, QGraphNode> ();
+
+			Debug.Assert (lines.Count > 3);
+
+			Utils.ConverterTU<string, float> f_conv = Utils.TryParseR;
+
+			possibleStates = new List<string> (lines [0].Split (" ".ToCharArray()));
+			possibleActions = new List<string> (lines [1].Split (" ".ToCharArray()));
+			float_restriction = new List<float> (Utils.ConvertArrayType<string, float> (lines [2].Split(" ".ToCharArray()), f_conv));
+
+			for (int i = 3; i < lines.Count; ++i) {
+				if (lines [i].StartsWith ("Neuron")) {
+					//format: Neuron [refName] [Action1] ... [ActionN]
+					string [] neuronLine = lines [i].Split(" ".ToCharArray());
+					QGraphNode node = new QGraphNode();
+
+					Debug.Assert (neuronLine.Length > 0, "Line is missing a neuron name!");
+					Debug.Assert (!neuronDict.ContainsKey (neuronLine [0]), "Node with this name is already defined!");
+
+					for (int j = 1; j<neuronLine.Length; ++j){
+						node.AddAction (neuronLine [j]);
+					}
+					nodes.Add (node);
+					neuronDict.Add (neuronLine [0], node);
+				} else if (lines [i].StartsWith ("Edge")) {
+					//format: [startNode] [Node connected to] | [state1] ... [stateN] | [float_restriction1] ... [float_restrictionN] | [interruptChance]
+
+					string [] lineSegs = lines[i].Split("|".ToCharArray());
+					Debug.Assert (lineSegs.Length == 4);
+					string[] edgeNodes = lineSegs [0].Split (" ".ToCharArray ());
+					Debug.Assert (edgeNodes.Length == 2, "Start and end nodes not defined");
+					Debug.Assert (neuronDict.ContainsKey (edgeNodes [0]), "Start neuron not defined");
+					Debug.Assert (neuronDict.ContainsKey (edgeNodes [1]), "End neuron not defined");
+
+					//string [] reqFloats = lineSegs[2].Split (" ".ToCharArray ());
+
+					
+
+//					List<float> restrictions = new List<float> (reqFloats.Length);
+//
+//					for (int j = 0; j < reqFloats.Length; ++j) {
+//						float f = 0;
+//						Debug.Assert (float.TryParse (reqFloats [j], out f));
+//						restrictions.Add (f);
+//					}
+
+					float interruptChance = 0;
+
+					Debug.Assert (float.TryParse (lineSegs [3], out interruptChance));
+
+
+					QGraphEdge edge = new QGraphEdge (new List<string> (lineSegs [1].Split(" ".ToCharArray())), Utils.ConvertArrayType<string,float>(lineSegs[2].Split(" ".ToCharArray()), f_conv), nodes.IndexOf (neuronDict [edgeNodes [1]]));
+
+					edge.InterruptThreshold = interruptChance;
+
+					nodes [nodes.IndexOf (neuronDict [edgeNodes [0]])].AddEdge (edge);
+
+
+
+				} else {
+					throw new Exception ("Line definition format could not be determined");
+				}
+			}
+		}
+
 		public void ResetCurrentNodeToRoot(){
 			currentNode = root;
 		}
@@ -289,6 +364,8 @@ namespace AssemblyCSharp
 				totalReward = value;
 			}
 		}
+
+
 	}
 }
 

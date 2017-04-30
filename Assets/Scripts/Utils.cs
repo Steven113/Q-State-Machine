@@ -11,6 +11,7 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 namespace AssemblyCSharp
@@ -100,8 +101,33 @@ namespace AssemblyCSharp
 			
 		}
 
+		public delegate bool ConverterTU<T,U>(T input, out U output);
+
+		public static U[] ConvertArrayType<T,U>(T [] original, ConverterTU<T,U> conversionFunc){
+			int o_c = original.Length;
+			U[] result = new U[o_c];
+
+			for (int i = 0; i < o_c; ++i) {
+				U f;
+				Debug.Assert (conversionFunc (original [i], out f));
+				result [i] = f;
+			}
+
+			return result;
+		}
+
+		public static bool TryParseR(string s, out float f){
+			if (s.Equals ("R")) {
+				f = UnityEngine.Random.value;
+				return true;
+			} else {
+				return float.TryParse (s, out f);
+			}
+		}
+
 		public static List<T> RandomlyModifyList<T> (List<T> possibleAdditions, List<T> originalList)
 		{
+			
 			List<T> result = new List<T> (originalList);
 
 			if (possibleAdditions.Count == 0) {
@@ -116,10 +142,13 @@ namespace AssemblyCSharp
 
 
 			} else if (r_val < 0.66f) {
-				int node1 = UnityEngine.Random.Range (0, possibleAdditions.Count);
-
-				if (!result.Contains (possibleAdditions [node1])) {
-					result.Add (possibleAdditions [node1]);
+				List<T> possibleAdditions_copy = new List<T>(possibleAdditions);
+				possibleAdditions_copy  = ShuffleList (possibleAdditions_copy );
+				for (int i = 0; i < possibleAdditions_copy.Count ; ++i) {
+					if (!result.Contains (possibleAdditions_copy [i])) {
+						result.Add (possibleAdditions_copy [i]);
+						break;
+					}
 				}
 			} else {
 				int node1 = UnityEngine.Random.Range (0, possibleAdditions.Count);

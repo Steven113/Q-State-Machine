@@ -1,11 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace AssemblyCSharp
 {
 	public class QGraphAgent : QAgent
 	{
 		QGraph graph;
+
+		TextAsset graphDefinition;
+
+		public void Awake(){
+			if (graphDefinition != null && !graphDefinition.text.Equals("")) {
+
+			}
+		}
 
 		public override List<string> GetAction (List<string> state, List<float> variables){
 			return graph.GetActionsToTake (state, variables);

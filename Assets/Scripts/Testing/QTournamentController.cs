@@ -18,7 +18,8 @@ namespace AssemblyCSharp
 
 		public QGraphController graphController;
 
-		int soldierUnderConsideration;
+		int soldierUnderConsideration_i;
+		int soldierUnderConsideration_j;
 
 		public static GameObject [] g_SpawnPoints;
 
@@ -28,7 +29,7 @@ namespace AssemblyCSharp
 			g_SpawnPoints = spawnPoints;
 
 			for (int i = 0; i < soldiers.Length; ++i) {
-				soldiers [(i) % graphController.numGraphs].Graph = graphController.Graphs [(i + soldierUnderConsideration)% graphController.numGraphs];
+				soldiers [(i) % graphController.numGraphs].Graph = graphController.Graphs [(i + soldierUnderConsideration_i)% graphController.numGraphs];
 			}
 		}
 
@@ -37,7 +38,18 @@ namespace AssemblyCSharp
 
 			if (timeSinceRoundStart > roundLength) {
 				timeSinceRoundStart = 0;
-				++soldierUnderConsideration;
+				++soldierUnderConsideration_j;
+
+				if (soldierUnderConsideration_i >= graphController.numGraphs) {
+					graphController.Evolve ();
+
+					Debug.Log ("Evolving.");
+
+					soldierUnderConsideration_i = 0;
+
+					spawnPoints = Utils.ShuffleArray (spawnPoints);
+				}
+
 
 				for (int i = 0; i < soldiers.Length; ++i) {
 					QSoldier qs = soldiers [i].gameObject.GetComponent<QSoldier> ();
@@ -51,22 +63,22 @@ namespace AssemblyCSharp
 
 				GameData.scores = new float[]{ 0, 0 };
 
-				if (soldierUnderConsideration > graphController.numGraphs) {
-					graphController.Evolve ();
-
-					Debug.Log ("Evolving.");
-
-					soldierUnderConsideration = 0;
-
-					spawnPoints = Utils.ShuffleArray (spawnPoints);
-
-
-
-				}
-
 				for (int i = 0; i < soldiers.Length; ++i) {
-					soldiers [(i) % graphController.numGraphs].Graph = graphController.Graphs [(i + soldierUnderConsideration)% graphController.numGraphs];
+					if (soldierUnderConsideration_j >= graphController.numGraphs) {
+						soldierUnderConsideration_j = 0;
+						++soldierUnderConsideration_i;
+					}
+
+					soldiers [i].Graph = graphController.Graphs [(soldierUnderConsideration_i * graphController.numGraphs + soldierUnderConsideration_j) % graphController.numGraphs];
+
 				}
+
+
+
+
+				//for (int i = 0; i < soldiers.Length; ++i) {
+				//	soldiers [(i) % graphController.numGraphs].Graph = graphController.Graphs [(i + soldierUnderConsideration_i)% graphController.numGraphs];
+				//}
 			}
 		}
 	}
