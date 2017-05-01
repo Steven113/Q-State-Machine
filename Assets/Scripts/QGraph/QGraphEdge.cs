@@ -25,10 +25,11 @@ namespace AssemblyCSharp
 			this.targetNode = targetNode;
 		}
 
-		public QGraphEdge (string requiredState, float f_restriction, int targetNode)
+		public QGraphEdge (string requiredState, float f_restriction, float f_mult, int targetNode)
 		{
 			requiredStates.Add(requiredState);
 			float_restrictions.Add(f_restriction);
+			float_mult.Add(f_mult);
 
 			this.targetNode = targetNode;
 		}

@@ -40,7 +40,7 @@ namespace AssemblyCSharp
 
 			if (timeSinceRoundStart > roundLength) {
 				timeSinceRoundStart = 0;
-				++soldierUnderConsideration_j;
+
 
 				if (soldierUnderConsideration_i >= graphController.numGraphs) {
 					graphController.Evolve ();
@@ -78,7 +78,7 @@ namespace AssemblyCSharp
 					}
 
 					soldiers [i].Graph = graphController.Graphs [(soldierUnderConsideration_i * graphController.numGraphs + soldierUnderConsideration_j) % graphController.numGraphs];
-
+					++soldierUnderConsideration_j;
 				}
 
 

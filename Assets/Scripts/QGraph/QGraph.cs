@@ -209,9 +209,10 @@ namespace AssemblyCSharp
 			this.addNodeChance = other.addNodeChance;
 			this.changeInterruptWeightChance = other.changeInterruptWeightChance;
 
-			this.possibleStates = other.possibleStates;
-			this.possibleActions = other.possibleActions;
-			this.float_restriction = other.float_restriction;
+			this.possibleStates = new List<string> (other.possibleStates);
+			this.possibleActions = new List<string> (other.possibleActions);
+			this.float_restriction = new List<float> (other.float_restriction);
+			this.float_mult = new List<float> (other.float_mult);
 		}
 
 		public List<string> GetActionsToTake (IEnumerable<string> states, IEnumerable<float> values)
