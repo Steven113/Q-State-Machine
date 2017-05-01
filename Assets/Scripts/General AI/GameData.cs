@@ -23,7 +23,7 @@ namespace AssemblyCSharp
         //public static Dictionary<Collider,SoldierEntity> colliderToSoldierMap = new Dictionary<Collider,SoldierEntity>();//used to enable fast look ups of which soldier has been spotted/hurt
         public static Collection<Faction> Factions = new Collection<Faction>();
         public static Dictionary<Collider, ControlHealth> SuppressionSphereDictionary = new Dictionary<Collider, ControlHealth>();
-        public static float[] scores = new float[2]; //score array for AI factions
+		public static Dictionary<FactionName,int> scores = new Dictionary<FactionName, int>(); //score array for AI factions
         public static List<Vector3> Spawnpoints = new List<Vector3>(); //spawnpoints for respawning
         public static List<GameObject> mapBoundaries = new List<GameObject>();
         //public static float mapWidth = 0f;
@@ -148,6 +148,14 @@ namespace AssemblyCSharp
                 }
             }
         }
+
+		public static FactionName [] ActiveFactions(){
+			FactionName[] activeFactions = new FactionName[Factions.Count];
+			for (int i = 0; i < Factions.Count; ++i) {
+				activeFactions [i] = Factions [i].FactionName;
+			}
+			return activeFactions;
+		}
     }
 }
 

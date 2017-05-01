@@ -27,10 +27,10 @@ namespace AssemblyCSharp
 
 		List<string> possibleStates;
 		List<string> possibleActions;
-		List<float> float_restriction;
+		List<FloatRange> float_restriction_range;
 		List<float> float_mult;
 
-		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_restrictions, IEnumerable<float> default_float_mult)
+		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_mult, IEnumerable<FloatRange> default_restriction_range)
 		{
 			root = new QGraphNode ();
 			nodes.Add (root);
@@ -42,8 +42,13 @@ namespace AssemblyCSharp
 
 			this.possibleStates = new List<string> (states);
 			this.possibleActions = new List<string> (actions);
-			this.float_restriction = new List<float> (default_float_restrictions.ToArray ());
 			this.float_mult = new List<float> (default_float_mult.ToArray ());
+			this.float_restriction_range = new List<FloatRange>(default_restriction_range.ToArray ());
+
+			Debug.Assert (float_restriction_range.Count == float_restriction_range.Count);
+
+			this.possibleStates = Utils.ShuffleList (this.possibleStates);
+			this.possibleActions = Utils.ShuffleList (this.possibleActions);
 
 			int s_c = states.Count ();
 			int a_c = actions.Count ();
@@ -62,7 +67,12 @@ namespace AssemblyCSharp
 				if (s_c > 0) {
 					temp_edge.RequiredStates = new List<string>{ states [i % s_c] };
 				}
-				temp_edge.Float_restrictions = new List<float> (default_float_restrictions.ToArray ());
+				temp_edge.Float_restrictions = new List<float> (float_restriction_range.Count);
+				for (int j = 0; j < float_restriction_range.Count; ++j) {
+					temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (float_restriction_range [j].min, float_restriction_range [j].max));
+					//temp_edge.Float_restrictions [j] = (UnityEngine.Random.Range (float_restriction_range, 1f));
+					//temp_edge.Float_restrictions [j] = Mathf.ac
+				}
 				temp_edge.Float_mult = new List<float> (default_float_mult.ToArray ());
 				root.AddEdge (temp_edge);
 			}
@@ -88,7 +98,10 @@ namespace AssemblyCSharp
 					if (s_c > 0) {
 						temp_edge.RequiredStates = new List<string>{ states [stateIndex] };
 					}
-					temp_edge.Float_restrictions = new List<float> (default_float_restrictions.ToArray ());
+					temp_edge.Float_restrictions = new List<float> (float_restriction_range.Count);
+					for (int k = 0; k<float_restriction_range.Count; ++k){
+						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (float_restriction_range [k].min, float_restriction_range [k].max));
+					}
 					temp_edge.Float_mult = new List<float> (default_float_mult.ToArray ());
 					nodes [i].AddEdge (temp_edge);
 
@@ -110,7 +123,7 @@ namespace AssemblyCSharp
 
 			Dictionary<string,QGraphNode> neuronDict = new Dictionary<string, QGraphNode> ();
 
-			Debug.Assert (lines.Count > 3);
+			Debug.Assert (lines.Count > 4);
 
 			Utils.ConverterTU<string, float> f_conv = Utils.TryParseR;
 
@@ -119,9 +132,9 @@ namespace AssemblyCSharp
 			Debug.Log (lines [1]);
 			possibleActions = new List<string> (lines [1].Split (" ".ToCharArray()));
 			Debug.Log (lines [2]);
-			float_restriction = new List<float> (Utils.ConvertArrayType<string, float> (lines [2].Split(" ".ToCharArray()), f_conv));
+			float_restriction_range = new List<FloatRange>(FloatRange.ToFloatRange(new List<float> (Utils.ConvertArrayType<string, float> (lines [2].Split(" ".ToCharArray()), f_conv)),new List<float> (Utils.ConvertArrayType<string, float> (lines [3].Split(" ".ToCharArray()), f_conv))));
 
-			for (int i = 3; i < lines.Count; ++i) {
+			for (int i = 4; i < lines.Count; ++i) {
 				Debug.Log ("Parsing: " + lines [i]);
 				lines [i] = lines [i].Trim ();
 				if (lines [i].StartsWith ("Node")) {
@@ -212,7 +225,7 @@ namespace AssemblyCSharp
 
 			this.possibleStates = new List<string> (other.possibleStates);
 			this.possibleActions = new List<string> (other.possibleActions);
-			this.float_restriction = new List<float> (other.float_restriction);
+			this.float_restriction_range = new List<FloatRange> (other.float_restriction_range);
 			this.float_mult = new List<float> (other.float_mult);
 		}
 
@@ -343,7 +356,12 @@ namespace AssemblyCSharp
 					if (mutant.possibleStates.Count > 0) {
 						temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
 					}
-					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction);
+					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction_range.Count);
+
+					for (int k = 0; k<temp_edge.Float_restrictions.Count; ++k){
+						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (mutant.float_restriction_range [k].min, mutant.float_restriction_range [k].max));
+					}
+
 					temp_edge.Float_mult = new List<float> (mutant.float_mult);
 					newNode.AddEdge (temp_edge);
 				}

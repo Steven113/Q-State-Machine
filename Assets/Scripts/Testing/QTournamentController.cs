@@ -27,12 +27,20 @@ namespace AssemblyCSharp
 		public static GameObject [] g_SpawnPoints;
 
 		public void Start(){
+			UnityEngine.Random.InitState (5145636);
+
 			//graphController.Evolve ();
 			Debug.Log("Num combos: "+Mathf.Pow(graphController.numGraphs,soldiers.Length));
 			g_SpawnPoints = spawnPoints;
 
 			for (int i = 0; i < soldiers.Length; ++i) {
 				soldiers [(i) % graphController.numGraphs].Graph = graphController.Graphs [(i)% graphController.numGraphs];
+			}
+
+			FactionName [] activeFactions = GameData.ActiveFactions ();
+			GameData.scores.Clear ();
+			for (int i = 0; i < activeFactions.Length; ++i) {
+				GameData.scores.Add (activeFactions [i], 0);
 			}
 		}
 
@@ -65,9 +73,12 @@ namespace AssemblyCSharp
 				spawnPoints = Utils.ShuffleArray (spawnPoints);
 
 				for (int i = 0; i < dummySoldiers.Length; ++i) {
-					dummySoldiers [i].Graph.ResetCurrentNodeToRoot ();
+					//dummySoldiers [i].Graph.ResetCurrentNodeToRoot ();
 					QSoldier qs = dummySoldiers[i].gameObject.GetComponent<QSoldier> ();
 					qs.agent.Warp(spawnPoints [i % spawnPoints.Length].transform.position);
+					qs.CurrentTarget = null;
+					ControlHealth hc = dummySoldiers [i].gameObject.GetComponent<ControlHealth> ();
+					hc.health = hc.maxhealth;
 				}
 
 				for (int i = 0; i < soldiers.Length; ++i) {
@@ -79,9 +90,17 @@ namespace AssemblyCSharp
 					hc.health = hc.maxhealth;
 				}
 
-				Debug.Log (GameData.scores [0] + " " + GameData.scores [1]);
+				//Debug.Log (GameData.scores [0] + " " + GameData.scores [1]);
 
-				GameData.scores = new float[]{ 0, 0 };
+				//GameData.scores = new float[]{ 0, 0 };
+
+				FactionName [] activeFactions = GameData.ActiveFactions ();
+				for (int i = 0; i < activeFactions.Length; ++i) {
+					Debug.Log (activeFactions [i].ToString () + " : " + GameData.scores [activeFactions [i]]);
+					GameData.scores [activeFactions [i]] = 0;
+				}
+
+				//GameData.scores.Clear ();
 
 				for (int i = 0; i < soldiers.Length; ++i) {
 					int selectedGraph = (int)((soldierUnderConsideration_j / Mathf.Pow (graphController.numGraphs, i))) % graphController.numGraphs;

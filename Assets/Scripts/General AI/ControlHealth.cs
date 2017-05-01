@@ -28,14 +28,23 @@ namespace AssemblyCSharp
         public List<ControlHealth> children = new List<ControlHealth> ();
 		public float lastSuppressionTime = - 0.1f;
 		public float suppressionLevel = 0;
+		public CreateSoldierEntity c_soldierEntity;
+
+		public List<Func<ControlHealth,float,FactionName,Vector3,bool>> eventsToCallOnDamage = new List<Func<ControlHealth,float,FactionName,Vector3,bool>> ();
+
         /*
          * This method damages a object, then it's parents. If the health is <=0 and the object should be destroyed when it dies (runs out of health) it is destroyed and a random death sound is played
         */
         public virtual bool damage(float amount, FactionName factionThatFiredShot = FactionName.NONE, 
             Vector3 shotDirection = default(Vector3)){
 
-			if (canBeDamaged){
+			if (canBeDamaged && (c_soldierEntity.entity== null || c_soldierEntity.entity.faction != factionThatFiredShot)){
 				health -= amount;
+
+				for (int i = 0; i < eventsToCallOnDamage.Count; ++i) {
+					eventsToCallOnDamage [i] (this, amount, factionThatFiredShot, shotDirection);
+				}
+
 				if (parent!=null){
 					parent.damage(amount,factionThatFiredShot,shotDirection);
 				}
@@ -77,7 +86,13 @@ namespace AssemblyCSharp
 			}
 		}
 
+		public void AddOnDamageEvent(Func<ControlHealth,float,FactionName,Vector3,bool> func){
+			eventsToCallOnDamage.Add (func);
+		}
 
+		public void RemoveOnDamageEvent(Func<ControlHealth,float,FactionName,Vector3,bool> func){
+			eventsToCallOnDamage.Remove (func);
+		}
        
 	}
 }

@@ -81,7 +81,7 @@ namespace AssemblyCSharp
 
 		
 		//Data related to combat behaviour
-		public SoldierEntity currentTarget = null;
+		[SerializeField]SoldierEntity currentTarget = null;
 		public LOSResult currentTargetIsVisible = LOSResult.Invisible;
 		public float amountOfTimeCurrentTargetHasBeenInLOS;
 		public bool enableDebugPrint = false;
@@ -129,6 +129,8 @@ namespace AssemblyCSharp
 
 		bool exploring = false;
 
+		//public Dictionary<FactionName,int> scoreMap = new Dictionary<FactionName, int>();
+
 		//inilization and update methods
 		public void Awake ()
 		{
@@ -147,6 +149,7 @@ namespace AssemblyCSharp
 		public void Start ()
 		{
 			thisEntity = GetComponent<CreateSoldierEntity> ().entity;
+			healthController.AddOnDamageEvent (this.OnDamage);
 		}
 
 		public virtual void Update ()
@@ -159,17 +162,22 @@ namespace AssemblyCSharp
 			timeSinceLastUpdate += Time.deltaTime;
 			timeSinceLastActionUpdate += Time.deltaTime;
 
-			if (GameData.scores [0] != expectedScores [0] || GameData.scores [1] != expectedScores [1]) {
-				CurrentTarget = null;
-				expectedScores [0] = GameData.scores [0];
-				expectedScores [1] = GameData.scores [1];
-			}
+//			if (GameData.scores [0] != expectedScores [0] || GameData.scores [1] != expectedScores [1]) {
+//				CurrentTarget = null;
+//				expectedScores [0] = GameData.scores [0];
+//				expectedScores [1] = GameData.scores [1];
+//			}
 
 			if (autoSetReward) {
 				reward += (healthController.health / healthController.maxhealth) * (Time.deltaTime);
-				float scoreDiff = ((GameData.scores [(int)thisEntity.faction] - GameData.scores [((int)thisEntity.faction + 1) % GameData.scores.Length]) * Time.deltaTime) * 0.01f;
-				//if (scoreDiff<0){
-				reward += scoreDiff;
+				FactionName[] activeFactions = GameData.ActiveFactions ();
+				for (int i = 0; i < activeFactions.Length; ++i) {
+					if (activeFactions [i] == thisEntity.faction) {
+						continue;
+					}
+					//if (scoreDiff<0){
+					reward += ((GameData.scores[thisEntity.faction] - GameData.scores[activeFactions [i]])*Time.deltaTime);
+				}
 				//}
 
 				if (autoSetReward && currentTargetIsVisible == LOSResult.Visible && weapon.stateOfWeapon == WeaponState.Reloading) {
@@ -203,6 +211,7 @@ namespace AssemblyCSharp
 						qAgent.RewardAgent (reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
 						reward = 0;
 					}
+
 					currentActionSet = qAgent.GetAction (getState (), getStateValues ());
 					++shuffleIndex;
 				//}
@@ -237,9 +246,7 @@ namespace AssemblyCSharp
 				heal (true);
 			}
 
-			if (healthController.health <= 0) {
-				Respawn ();
-			}
+
 
 			//AttackTarget ();
 
@@ -657,6 +664,7 @@ namespace AssemblyCSharp
 		public virtual void OnDestroy ()
 		{
 			allQSensors.Remove (this); //we can be sure that this is in the list, since we add it to the list upon initialisation
+			healthController.RemoveOnDamageEvent (this.OnDamage);
 			GameData.SuppressionSphereDictionary.Remove (suppressionSphere);
 		}
 
@@ -668,13 +676,22 @@ namespace AssemblyCSharp
 				reward -= 10;
 			}
 			Vector3 spawnPoint = new Vector3 (1, 0, 1);
-			++GameData.scores [((int)(thisEntity.faction) + 1) % GameData.scores.Length];
+			//++GameData.scores [((int)(thisEntity.faction) + 1) % GameData.scores.Length];
 			//Debug.Log (thisEntity.faction.ToString () + " " + (((int)(thisEntity.faction) + 1) % GameData.scores.Length));
 			//Debug.Assert (AIGrid.findFleeingPoint (this, gameObject.transform.position, out spawnPoint));
 			//Debug.Log ("Spawning at " + spawnPoint);
 			agent.Warp ((QTournamentController.g_SpawnPoints[UnityEngine.Random.Range(0,QTournamentController.g_SpawnPoints.Length)].transform.position));
 			healthController.health = healthController.maxhealth;
 			CurrentTarget = null;
+		}
+
+		public bool OnDamage(ControlHealth healthController, float damage, FactionName factionThatFiredShot, Vector3 shotDirection){
+			if (healthController.health <= 0) {
+				Debug.Assert (GameData.scores.ContainsKey (factionThatFiredShot));
+				++GameData.scores [factionThatFiredShot];
+				Respawn ();
+			}
+			return false;
 		}
 
 		public override int GetBusyWithAction ()

@@ -20,7 +20,7 @@ namespace AssemblyCSharp
 		public string sideOneName;
 		public string sideTwoName;
 		void Update(){
-			text.text = sideOneName + " " + GameData.scores [0] + " " + sideTwoName + " " + GameData.scores [1]; 
+			//text.text = sideOneName + " " + GameData.scores [0] + " " + sideTwoName + " " + GameData.scores [1]; 
 		}
 	}
 }

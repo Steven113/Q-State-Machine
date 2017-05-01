@@ -12,6 +12,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 
 namespace AssemblyCSharp
@@ -217,6 +218,33 @@ namespace AssemblyCSharp
 		public StringFloatMap (string s, float f) : base (s, f)
 		{
 
+		}
+	}
+
+	[Serializable]
+	public class FloatRange{
+		public string label;
+		public float min;
+		public float max;
+
+		public FloatRange(string label, float min, float max){
+			Debug.Assert (max >= min);
+			this.label = label;
+			this.min = min;
+			this.max = max;
+		}
+
+		public static FloatRange [] ToFloatRange(IEnumerable<float> l1, IEnumerable<float> l2){
+			float[] fl1 = l1.ToArray ();
+			float[] fl2 = l2.ToArray ();
+			Debug.Assert (fl1.Length == fl2.Length);
+			FloatRange[] result = new FloatRange[fl1.Length];
+			int f_l = fl1.Length;
+			for (int i = 0; i < f_l; ++i) {
+				result [i] = new FloatRange ("", fl1 [i], fl2 [i]);
+			}
+
+			return result;
 		}
 	}
 }
