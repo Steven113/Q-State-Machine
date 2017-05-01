@@ -123,6 +123,7 @@ namespace AssemblyCSharp
 
 			for (int i = 3; i < lines.Count; ++i) {
 				Debug.Log ("Parsing: " + lines [i]);
+				lines [i] = lines [i].Trim ();
 				if (lines [i].StartsWith ("Node")) {
 					//format: Neuron [refName] [Action1] ... [ActionN]
 					string[] neuronLine = lines [i].Split (" ".ToCharArray ());

@@ -43,9 +43,9 @@ namespace AssemblyCSharp
 
 			if (timeSinceRoundStart > roundLength) {
 				timeSinceRoundStart = 0;
-				++soldierUnderConsideration_j;
 
-				if (soldierUnderConsideration_j > Mathf.Pow(graphController.numGraphs,soldiers.Length)) {
+
+				if (soldierUnderConsideration_j >= ((soldiers.Length>1f)?(Mathf.Pow(graphController.numGraphs,soldiers.Length)):((float)graphController.numGraphs))) {
 
 					for (int i = 0; i < graphController.numGraphs; ++i) {
 						Debug.Assert (numAssessments [graphController.Graphs [i]] == numAssessments [graphController.Graphs [(i + 1) % graphController.numGraphs]], "Graph " + i+ " tested "+numAssessments [graphController.Graphs [i]] + " times, graph " + ((i + 1) % graphController.numGraphs) + " tested "+numAssessments [graphController.Graphs [(i + 1) % graphController.numGraphs]]+ " times." );
@@ -54,6 +54,8 @@ namespace AssemblyCSharp
 					graphController.Evolve ();
 
 					Debug.Log ("Evolving.");
+
+					numAssessments.Clear ();
 
 					soldierUnderConsideration_j = 0;
 
@@ -69,7 +71,7 @@ namespace AssemblyCSharp
 				}
 
 				for (int i = 0; i < soldiers.Length; ++i) {
-					soldiers [i].Graph.ResetCurrentNodeToRoot ();
+					
 					QSoldier qs = soldiers [i].gameObject.GetComponent<QSoldier> ();
 					qs.agent.Warp(spawnPoints [(i+dummySoldiers.Length) % spawnPoints.Length].transform.position);
 					qs.CurrentTarget = null;
@@ -89,12 +91,15 @@ namespace AssemblyCSharp
 					} else {
 						numAssessments[graphController.Graphs[selectedGraph]]+=1;
 					}
+
+					soldiers [i].Graph.ResetCurrentNodeToRoot ();
+
 					Debug.Log ("Soldier " + i + " given graph " + selectedGraph);
 
 				}
 
 
-
+				++soldierUnderConsideration_j;
 
 				//for (int i = 0; i < soldiers.Length; ++i) {
 				//	soldiers [(i) % graphController.numGraphs].Graph = graphController.Graphs [(i + soldierUnderConsideration_i)% graphController.numGraphs];

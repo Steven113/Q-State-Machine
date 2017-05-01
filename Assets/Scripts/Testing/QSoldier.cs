@@ -525,7 +525,7 @@ namespace AssemblyCSharp
 								NavMesh.SamplePosition (searchPoint, out nav_hit, float.PositiveInfinity, agent.areaMask);
 
 								agent.SetDestination (nav_hit.position);
-						} else if (currentActionSet.Contains ("TACTICAL_MOVE") && currentTarget != null && currentTarget.centreOfMass != null) {
+						} else if (currentActionSet.Contains ("MoveTo") && currentTarget != null && currentTarget.centreOfMass != null) {
 							exploring = false;
 							agent.SetDestination (currentTarget.centreOfMass.position);
 							//AIGrid.findPath (this, gameObject.transform.position, currentTarget.centreOfMass.position, out path, false, false);
