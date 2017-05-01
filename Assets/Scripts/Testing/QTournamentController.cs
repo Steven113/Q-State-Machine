@@ -34,7 +34,11 @@ namespace AssemblyCSharp
 			g_SpawnPoints = spawnPoints;
 
 			for (int i = 0; i < soldiers.Length; ++i) {
-				soldiers [(i) % graphController.numGraphs].Graph = graphController.Graphs [(i)% graphController.numGraphs];
+				if (soldiers [(i) % graphController.numGraphs].Graph == null) {
+					soldiers [(i) % graphController.numGraphs].Graph = graphController.Graphs [(i) % graphController.numGraphs];
+				} else {
+					graphController.Graphs [(i) % graphController.numGraphs] = soldiers [(i) % graphController.numGraphs].Graph;
+				}
 			}
 
 			FactionName [] activeFactions = GameData.ActiveFactions ();

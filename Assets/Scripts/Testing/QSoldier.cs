@@ -176,7 +176,7 @@ namespace AssemblyCSharp
 						continue;
 					}
 					//if (scoreDiff<0){
-					reward += ((GameData.scores[thisEntity.faction] - GameData.scores[activeFactions [i]])*Time.deltaTime);
+					reward += ((GameData.scores[thisEntity.faction] - GameData.scores[activeFactions [i] ])*Time.deltaTime);
 				}
 				//}
 
@@ -185,15 +185,15 @@ namespace AssemblyCSharp
 				}
 
 				if (currentTarget != null && currentTarget.mainLOSCollider != null) {
-					if (previousTargetHealth < currentTarget.controlHealth.health) {
-						qAgent.RewardAgent (10);
-						previousTargetHealth = currentTarget.controlHealth.maxhealth;
-					}
-					if (currentTarget.controlHealth.health < previousTargetHealth) {
-						reward += (previousTargetHealth - currentTarget.controlHealth.health);
-						previousTargetHealth = currentTarget.controlHealth.health;
-
-					}
+//					if (previousTargetHealth < currentTarget.controlHealth.health) {
+//						qAgent.RewardAgent (10);
+//						previousTargetHealth = currentTarget.controlHealth.maxhealth;
+//					}
+//					if (currentTarget.controlHealth.health < previousTargetHealth) {
+//						reward += (previousTargetHealth - currentTarget.controlHealth.health);
+//						previousTargetHealth = currentTarget.controlHealth.health;
+//
+//					}
 				}
 			}
 
