@@ -19,6 +19,7 @@ namespace AssemblyCSharp
 	[RequireComponent (typeof(ControlHealth))]
 	public class QSoldier : QSensor
 	{
+
 		public static List<QSensor> allQSensors = new List<QSensor> ();
 		//public static List<Camera> sensorCameras = new List<Camera>(); //we want to be able to switch between agents and cameras
 		public static int currentAgent = 0;
@@ -27,18 +28,30 @@ namespace AssemblyCSharp
 
 		public bool useCheatConditions = false;
 
+
+
 		public float previousTargetHealth = 0;
 
+		[Header("Referenced Components")]
 		public UnityEngine.AI.NavMeshAgent agent;
 		public QAgent qAgent;
-		public List<string> currentActionSet = new List<string> ();
+
 		public Weapon weapon;
 		public ControlHealth healthController;
+
+		[Header("Reward + Pathfinding")]
+		public List<string> currentActionSet = new List<string> ();
 		public Collection<Vector3> path = new Collection<Vector3> ();
 
 		public float reward = 0;
 		public bool autoSetReward = true;
+		public float healthRewardMultiplier = 1f;
+		public float hasPathReward = 1f;
 
+		public Vector3 previousPos;
+		public float posRewardThreshold = 1f;
+
+		[Header("Food")]
 		public int smallFoodCount = 2;
 		//for small heals
 		public int bigFoundCount = 1;
@@ -47,6 +60,7 @@ namespace AssemblyCSharp
 		public float ActionUpdateInterval = 0.5f;
 		public float timeSinceLastActionUpdate = 1000f;
 
+		[Header("AI Update Rate")]
 		//Data for controlling update rate
 		public float AIUpdateInterval = 0.1f;
 		public float timeSinceLastUpdate = 1000f;
@@ -60,7 +74,8 @@ namespace AssemblyCSharp
 		public float timeSinceLastUpdatingSuppressionPathOffset = 1000f;
 		public float intervalForUpdatingFlankingPathOffset = 5f;
 		public float timeSinceLastUpdatingFlankingPathOffset = 1000f;
-		
+
+		[Header("LOS Check Variables")]
 		//Data related to LOS checks
 		//public SoldierEntity thisEntity;
 		public float verticalLOSDistance = 100;
@@ -79,7 +94,7 @@ namespace AssemblyCSharp
 		public float maxDistanceForUsingHighAccuracyLOSChecks = 100f;
 
 
-		
+		[Header("Combat Behaviour")]
 		//Data related to combat behaviour
 		[SerializeField]SoldierEntity currentTarget = null;
 		public LOSResult currentTargetIsVisible = LOSResult.Invisible;
@@ -104,9 +119,10 @@ namespace AssemblyCSharp
 		public float sprintSpeed = 1.5f;
 		bool friendlySoldierInLineOfFire;
 		SoldierEntity thisEntity;
-		float maxAngleOffsetForFiringShotsNotLinedUpWithBarrel = 10f;
-		float amountOfTimePlayerMustBeVisibleBeforeShooting = 0.1f;
+		[SerializeField]float maxAngleOffsetForFiringShotsNotLinedUpWithBarrel = 10f;
+		[SerializeField]float amountOfTimePlayerMustBeVisibleBeforeShooting = 0.1f;
 
+		[Header("Misc")]
 		public GameObject smallHealEffect;
 		public GameObject bigHealEffect;
 
@@ -116,11 +132,12 @@ namespace AssemblyCSharp
 
 		[SerializeField]int numActionsBusyWith = 0;
 
+		//[Header("Referenced Components")]
 		public BoxCollider mapBounds;
 
 		NavMeshHit nav_hit;
 
-		float [] expectedScores = new float[]{0,0};
+		//float [] expectedScores = new float[]{0,0};
 
 		public override void Reward (float reward)
 		{
@@ -150,6 +167,7 @@ namespace AssemblyCSharp
 		{
 			thisEntity = GetComponent<CreateSoldierEntity> ().entity;
 			healthController.AddOnDamageEvent (this.OnDamage);
+			previousPos = gameObject.transform.position;
 		}
 
 		public virtual void Update ()
@@ -169,7 +187,11 @@ namespace AssemblyCSharp
 //			}
 
 			if (autoSetReward) {
-				reward += (healthController.health / healthController.maxhealth) * (Time.deltaTime);
+				reward += healthRewardMultiplier*(healthController.health / healthController.maxhealth) * (Time.deltaTime);
+				if (Vector3.SqrMagnitude (gameObject.transform.position - previousPos) > posRewardThreshold * posRewardThreshold) {
+					previousPos = gameObject.transform.position;
+					reward += (posRewardThreshold/agent.speed) * hasPathReward;
+				}
 				FactionName[] activeFactions = GameData.ActiveFactions ();
 				for (int i = 0; i < activeFactions.Length; ++i) {
 					if (activeFactions [i] == thisEntity.faction) {
@@ -214,6 +236,12 @@ namespace AssemblyCSharp
 
 					currentActionSet = qAgent.GetAction (getState (), getStateValues ());
 					++shuffleIndex;
+
+				if (currentActionSet.Contains ("Turn180")){
+					Vector3 c_dest = agent.destination;
+					gameObject.transform.Rotate (new Vector3 (0, 180, 0));
+					agent.SetDestination (c_dest);
+				}
 				//}
 			}
 			//thisEntity.faction
@@ -224,13 +252,18 @@ namespace AssemblyCSharp
 				} else if ((currentTarget != null && currentTarget.mainLOSCollider != null)) {
 					reward += Time.deltaTime;
 				}
-				weapon.fire ((currentTarget == null || currentTarget.mainLOSCollider == null)?weapon.barrelEnd.position:((currentTarget.mainLOSCollider.gameObject.transform.position-weapon.barrelStart.position).normalized*(weapon.barrelEnd.position-weapon.barrelStart.position).magnitude) + weapon.barrelStart.position, weapon.barrelStart.position, thisEntity.faction, false);
+
+				if (CurrentTarget == null || Vector3.Angle(gameObject.transform.forward,(currentTarget.mainLOSCollider.gameObject.transform.position-weapon.barrelStart.position))>maxAngleOffsetForFiringShotsNotLinedUpWithBarrel) {
+					weapon.fire (weapon.barrelEnd.position, weapon.barrelStart.position, thisEntity.faction, false);
+				} else {
+					weapon.fire (((currentTarget.mainLOSCollider.gameObject.transform.position-weapon.barrelStart.position).normalized*(weapon.barrelEnd.position-weapon.barrelStart.position).magnitude) + weapon.barrelStart.position, weapon.barrelStart.position, thisEntity.faction, false);
+				}
+
+
 			} else if (currentActionSet.Contains ("Reload") && weapon.stateOfWeapon != WeaponState.Reloading && (!useCheatConditions || (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] < weapon.magSize * 0.5f))) {
 				StartCoroutine (Reload ());
 			}
-			if (currentActionSet.Contains ("Turn180")){
-				gameObject.transform.Rotate (new Vector3 (0, 180, 0));
-			}
+
 
 //			} else {
 //				if (currentActionSet.Contains ("SHOOT") && weapon.stateOfWeapon == WeaponState.Ready) {
@@ -681,8 +714,7 @@ namespace AssemblyCSharp
 			//Debug.Assert (AIGrid.findFleeingPoint (this, gameObject.transform.position, out spawnPoint));
 			//Debug.Log ("Spawning at " + spawnPoint);
 			agent.Warp ((QTournamentController.g_SpawnPoints[UnityEngine.Random.Range(0,QTournamentController.g_SpawnPoints.Length)].transform.position));
-			healthController.health = healthController.maxhealth;
-			CurrentTarget = null;
+			this.Reset ();
 		}
 
 		public bool OnDamage(ControlHealth healthController, float damage, FactionName factionThatFiredShot, Vector3 shotDirection){
@@ -697,6 +729,17 @@ namespace AssemblyCSharp
 		public override int GetBusyWithAction ()
 		{
 			return numActionsBusyWith;
+		}
+
+		public void Reset(){
+			previousPos = gameObject.transform.position;
+			healthController.health = healthController.maxhealth;
+			this.CurrentTarget = null;
+			this.weapon.magazines = new List<int>{ weapon.magSize, weapon.magSize, weapon.magSize };
+			exploring = false;
+			agent.ResetPath ();
+			numActionsBusyWith = 0;
+			currentActionSet.Clear ();
 		}
 	}
 }

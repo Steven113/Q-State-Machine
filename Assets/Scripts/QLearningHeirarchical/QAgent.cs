@@ -18,6 +18,8 @@ public abstract class QAgent : MonoBehaviour {
 	public abstract bool RewardAgent (float reward); 
 
 	public QSensor stateDetector;
+
+	public abstract void Reset();
 	//void Start () {
 
 

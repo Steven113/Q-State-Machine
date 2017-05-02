@@ -1,0 +1,612 @@
+Num combos: 10
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 4
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 1
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 3
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 5
+QHeirarchyArmy : 1
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 2
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 1
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 4
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 3
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: 328.1436
+Graph 1 has fitness: -65.80588
+Graph 2 has fitness: -223.4931
+Graph 3 has fitness: 93.11488
+Graph 4 has fitness: 99.75948
+Graph 5 has fitness: 35.39454
+Graph 6 has fitness: 354.2636
+Graph 7 has fitness: -22.78317
+Graph 8 has fitness: 226.2964
+Graph 9 has fitness: 70.93258
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 4
+QHeirarchyArmy : 6
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 2
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 4
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 5
+QHeirarchyArmy : 5
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 4
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 1
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 3
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: 132.7128
+Graph 1 has fitness: 480.1353
+Graph 2 has fitness: -14.14954
+Graph 3 has fitness: 99.24568
+Graph 4 has fitness: -16.16785
+Graph 5 has fitness: 122.4132
+Graph 6 has fitness: -72.01731
+Graph 7 has fitness: 70.60032
+Graph 8 has fitness: -17.46114
+Graph 9 has fitness: 43.62818
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 1
+QHeirarchyArmy : 1
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 4
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 4
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 2
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 0
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 7
+QHeirarchyArmy : 5
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 1
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 2
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 3
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: 276.3233
+Graph 1 has fitness: 175.6331
+Graph 2 has fitness: 58.13793
+Graph 3 has fitness: -110.5686
+Graph 4 has fitness: -142.5686
+Graph 5 has fitness: 16.82859
+Graph 6 has fitness: -5.398993
+Graph 7 has fitness: -55.8835
+Graph 8 has fitness: -55.49942
+Graph 9 has fitness: 170.6685
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 0
+QHeirarchyArmy : 1
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 1
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 3
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 3
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 6
+QHeirarchyArmy : 1
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 4
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 2
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 1
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: -74.07133
+Graph 1 has fitness: 1.469556
+Graph 2 has fitness: -117.5116
+Graph 3 has fitness: -8.422306
+Graph 4 has fitness: -149.2174
+Graph 5 has fitness: 56.3271
+Graph 6 has fitness: -70.79041
+Graph 7 has fitness: -36.53268
+Graph 8 has fitness: -35.97821
+Graph 9 has fitness: -3.704534
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 3
+QHeirarchyArmy : 3
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 5
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 4
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 2
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: -22.94452
+Graph 1 has fitness: -7.907936
+Graph 2 has fitness: 249.0464
+Graph 3 has fitness: -20.68419
+Graph 4 has fitness: -24.89839
+Graph 5 has fitness: 31.48987
+Graph 6 has fitness: -3.105419
+Graph 7 has fitness: 201.7306
+Graph 8 has fitness: -12.40697
+Graph 9 has fitness: -21.31209
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 6
+QHeirarchyArmy : 4
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 1
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 6
+QHeirarchyArmy : 4
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 1
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 5
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 5
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 3
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 1
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 2
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: -161.4708
+Graph 1 has fitness: -66.17288
+Graph 2 has fitness: 157.2785
+Graph 3 has fitness: -130.0742
+Graph 4 has fitness: 229.1438
+Graph 5 has fitness: 192.7731
+Graph 6 has fitness: 108.5788
+Graph 7 has fitness: 206.9836
+Graph 8 has fitness: 240.1452
+Graph 9 has fitness: -24.91133
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 0
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 4
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 1
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 3
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 4
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 1
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: -127.0397
+Graph 1 has fitness: -17.24664
+Graph 2 has fitness: 100.2921
+Graph 3 has fitness: -38.4357
+Graph 4 has fitness: 33.05734
+Graph 5 has fitness: -28.32466
+Graph 6 has fitness: -4.555776
+Graph 7 has fitness: 402.5088
+Graph 8 has fitness: 187.1715
+Graph 9 has fitness: -114.9577
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 6
+QHeirarchyArmy : 3
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 3
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 5
+QHeirarchyArmy : 0
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 3
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 3
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 2
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: -17.20673
+Graph 1 has fitness: 399.2314
+Graph 2 has fitness: -341.8706
+Graph 3 has fitness: 269.7589
+Graph 4 has fitness: 213.103
+Graph 5 has fitness: 218.7616
+Graph 6 has fitness: -7.704485
+Graph 7 has fitness: -13.54909
+Graph 8 has fitness: -16.14091
+Graph 9 has fitness: -23.17721
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 6
+QHeirarchyArmy : 5
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 1
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 6
+QHeirarchyArmy : 4
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 6
+QHeirarchyArmy : 2
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 0
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 2
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 2
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: 3.523686
+Graph 1 has fitness: -34.96276
+Graph 2 has fitness: -285.1015
+Graph 3 has fitness: -165.3132
+Graph 4 has fitness: -2.989226
+Graph 5 has fitness: -21.23936
+Graph 6 has fitness: -143.3902
+Graph 7 has fitness: -81.11808
+Graph 8 has fitness: 88.19029
+Graph 9 has fitness: 55.91394
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 1
+QHeirarchyArmy : 2
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 2
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 5
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 2
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 5
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 3
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 1
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: 93.5316
+Graph 1 has fitness: 213.673
+Graph 2 has fitness: 111.494
+Graph 3 has fitness: -21.36611
+Graph 4 has fitness: 73.97157
+Graph 5 has fitness: -27.19828
+Graph 6 has fitness: 171.933
+Graph 7 has fitness: 227.2324
+Graph 8 has fitness: 36.85994
+Graph 9 has fitness: -108.2273
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 5
+QHeirarchyArmy : 2
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 6
+QHeirarchyArmy : 1
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 5
+QHeirarchyArmy : 5
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 6
+QHeirarchyArmy : 5
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 4
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 3
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 1
+Soldier 0 given graph 6
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 2
+Soldier 0 given graph 7
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 8
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 3
+Soldier 0 given graph 9
+===============================================================================
+Graph 0 has fitness: -504.5115
+Graph 1 has fitness: 256.8532
+Graph 2 has fitness: -61.92542
+Graph 3 has fitness: 162.9133
+Graph 4 has fitness: 84.42827
+Graph 5 has fitness: -8.614646
+Graph 6 has fitness: 122.2075
+Graph 7 has fitness: -17.74618
+Graph 8 has fitness: -14.15452
+Graph 9 has fitness: -41.98572
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 3
+QHeirarchyArmy : 2
+Soldier 0 given graph 0
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 1
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 2
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 3
+Soldier 0 given graph 3
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 4
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 1
+Soldier 0 given graph 5
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 6

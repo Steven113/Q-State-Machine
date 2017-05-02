@@ -34,6 +34,10 @@ namespace AssemblyCSharp
 		public override bool RewardAgent (float reward){
 			return false;
 		}
+
+		public override void Reset(){
+
+		}
 	}
 
 

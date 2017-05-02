@@ -26,6 +26,10 @@ namespace AssemblyCSharp
 			return false;
 		}
 
+		public override void Reset(){
+			graph.ResetCurrentNodeToRoot ();
+		}
+
 		public QGraph Graph {
 			get {
 				return graph;

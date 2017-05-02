@@ -24,6 +24,8 @@ namespace AssemblyCSharp
 
 		public float mutationIncrement = 0.01f;
 
+		public TextAsset heuristicInitFile;
+
 		public void Awake(){
 			int f_l = float_restriction_range.Length;
 			List<FloatRange> float_r = new List<FloatRange> (float_restriction_range);
@@ -38,8 +40,17 @@ namespace AssemblyCSharp
 			graphs = new QGraph[numGraphs];
 
 			for (int i = 0; i < numGraphs; ++i) {
-				graphs [i] = new QGraph (possibleStates, possibleActions,float_m,float_r);
-				graphs [i].MutationIncrement = mutationIncrement;
+				if (heuristicInitFile == null || string.IsNullOrEmpty(heuristicInitFile.text)) {
+					graphs [i] = new QGraph (possibleStates, possibleActions, float_m, float_r);
+					graphs [i].MutationIncrement = mutationIncrement;
+				} else {
+					graphs [i] = new QGraph (heuristicInitFile);
+					graphs [i].MutationIncrement = mutationIncrement;
+					if (i > 0) {
+						graphs [i] = QGraph.Mutate (graphs [i]);
+					}
+				}
+
 			}
 
 

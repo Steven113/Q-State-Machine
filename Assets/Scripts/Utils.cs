@@ -136,7 +136,7 @@ namespace AssemblyCSharp
 			}
 
 			float r_val = UnityEngine.Random.value;
-			if (r_val < 0.33f && originalList.Count > 1) {
+			if (r_val < 0.15f && originalList.Count > 1) {
 
 				int node1 = UnityEngine.Random.Range (0, possibleAdditions.Count);
 				result.Remove (possibleAdditions [node1]);
@@ -152,7 +152,7 @@ namespace AssemblyCSharp
 					}
 				}
 			} else {
-				int node1 = UnityEngine.Random.Range (0, possibleAdditions.Count);
+				int node1 = UnityEngine.Random.Range (0, result.Count);
 				int node2 = UnityEngine.Random.Range (0, possibleAdditions.Count);
 				if (!result.Contains (possibleAdditions [node2])) {
 					result [node1] = possibleAdditions [node2];
@@ -190,6 +190,34 @@ namespace AssemblyCSharp
 				result [i] = temp;
 			}
 			return result;
+		}
+
+		public static float StandardDeviation(float[] data)
+		{
+			float stdDev = 0;
+			float sumAll = 0;
+			float sumAllQ = 0;
+
+			//Sum of x and sum of x²
+			for (int i = 0; i < data.Length; i++)
+			{
+				float x = data[i];
+				sumAll += x;
+				sumAllQ += x * x;
+			}
+
+			//Mean (not used here)
+			//double mean = 0;
+			//mean = sumAll / (double)data.Length;
+
+			//Standard deviation
+			stdDev = Mathf.Sqrt(
+				(sumAllQ -
+					(sumAll * sumAll) / data.Length) *
+				(1.0f / (data.Length - 1))
+			);
+
+			return stdDev;
 		}
 
 

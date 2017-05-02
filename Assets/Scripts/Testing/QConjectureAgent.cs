@@ -52,6 +52,10 @@ namespace AssemblyCSharp
 //			}
 		}
 
+		public override void Reset(){
+
+		}
+
 
 	}
 }

@@ -7,6 +7,11 @@ namespace AssemblyCSharp
 {
 	public class QGraph : IComparable<QGraph>
 	{
+
+		static int numGraphs;
+
+		public int ID;
+
 		float totalReward = 0;
 
 		public List<QGraphNode> nodes = new List<QGraphNode> ();
@@ -32,6 +37,10 @@ namespace AssemblyCSharp
 
 		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_mult, IEnumerable<FloatRange> default_restriction_range)
 		{
+			ID = numGraphs;
+
+			++numGraphs;
+
 			root = new QGraphNode ();
 			nodes.Add (root);
 			currentNode = root;
@@ -112,6 +121,10 @@ namespace AssemblyCSharp
 
 		//load QGraph from file, for heuristic init
 		public QGraph (TextAsset asset){
+			ID = numGraphs;
+
+			++numGraphs;
+
 			List<string> lines = new List<string>(asset.text.Split (Environment.NewLine.ToCharArray ()));
 			for (int i = 0; i < lines.Count; ++i) {
 				if (lines [i].Contains ("//") || string.IsNullOrEmpty(lines[i])) {
@@ -123,7 +136,7 @@ namespace AssemblyCSharp
 
 			Dictionary<string,QGraphNode> neuronDict = new Dictionary<string, QGraphNode> ();
 
-			Debug.Assert (lines.Count > 4);
+			Debug.Assert (lines.Count > 5);
 
 			Utils.ConverterTU<string, float> f_conv = Utils.TryParseR;
 
@@ -132,9 +145,11 @@ namespace AssemblyCSharp
 			Debug.Log (lines [1]);
 			possibleActions = new List<string> (lines [1].Split (" ".ToCharArray()));
 			Debug.Log (lines [2]);
+			Debug.Log (lines [3]);
 			float_restriction_range = new List<FloatRange>(FloatRange.ToFloatRange(new List<float> (Utils.ConvertArrayType<string, float> (lines [2].Split(" ".ToCharArray()), f_conv)),new List<float> (Utils.ConvertArrayType<string, float> (lines [3].Split(" ".ToCharArray()), f_conv))));
+			float_mult = new List<float> (Utils.ConvertArrayType<string, float> (lines [4].Split (" ".ToCharArray ()), f_conv));
 
-			for (int i = 4; i < lines.Count; ++i) {
+			for (int i = 5; i < lines.Count; ++i) {
 				Debug.Log ("Parsing: " + lines [i]);
 				lines [i] = lines [i].Trim ();
 				if (lines [i].StartsWith ("Node")) {
@@ -145,7 +160,7 @@ namespace AssemblyCSharp
 					Debug.Assert (neuronLine.Length > 1, "Line is missing a neuron name!");
 					Debug.Assert (!neuronDict.ContainsKey (neuronLine [1]), "Node with this name is already defined!");
 
-					for (int j = 1; j < neuronLine.Length; ++j) {
+					for (int j = 2; j < neuronLine.Length; ++j) {
 						node.AddAction (neuronLine [j]);
 					}
 					nodes.Add (node);
@@ -204,6 +219,12 @@ namespace AssemblyCSharp
 		}
 
 		public QGraph (QGraph other){
+
+			ID = numGraphs;
+
+			++numGraphs;
+
+
 			int n_c = other.nodes.Count; 
 
 			for (int i = 0; i < n_c; ++i) {
