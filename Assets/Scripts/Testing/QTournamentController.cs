@@ -24,10 +24,14 @@ namespace AssemblyCSharp
 		//int soldierUnderConsideration_i;
 		[SerializeField]int soldierUnderConsideration_j = 1;
 
+		public string dateOfTestStart;
+
 		public static GameObject [] g_SpawnPoints;
 
 		public void Start(){
 			UnityEngine.Random.InitState (5145636);
+
+			dateOfTestStart = DateTime.Now.Ticks.ToString();
 
 			//graphController.Evolve ();
 			Debug.Log("Num combos: "+Mathf.Pow(graphController.numGraphs,soldiers.Length));
@@ -60,27 +64,61 @@ namespace AssemblyCSharp
 
 				if (soldierUnderConsideration_j >= ((soldiers.Length>1f)?(Mathf.Pow(graphController.numGraphs,soldiers.Length)):((float)graphController.numGraphs))) {
 
-					float average = 0;
+					float average_evolving = 0;
 
-					float[] fitnessVals = new float[graphController.numGraphs];
+					float[] fitnessVals_evolving = new float[graphController.numGraphs];
 
+					float average_nonevolving = 0;
+
+					float[] fitnessVals_nonevolving = new float[dummySoldiers.Length];
+
+					Logging.globalLogger.Log ("Evolving enemies");
+
+					//for evolving enemies
 					for (int i = 0; i < graphController.numGraphs; ++i) {
+						Utils.SerializeFile<QGraph> ("Graph_"+dateOfTestStart+"_ID_"+ graphController.Graphs[i].ID +"_"+gameObject.transform.name+"_"+DateTime.Now.Ticks, ref graphController.Graphs[i]);
+
 						Debug.Log ("Graph " + i + " ID: " + graphController.Graphs[i].ID + " has fitness: " + graphController.Graphs [i].TotalReward);
-						average += graphController.Graphs [i].TotalReward;
-						fitnessVals [i] = graphController.Graphs [i].TotalReward;
+						average_evolving += graphController.Graphs [i].TotalReward;
+						fitnessVals_evolving [i] = graphController.Graphs [i].TotalReward;
 						Logging.globalLogger.Log("Graph " + i + " ID: " + graphController.Graphs[i].ID + " has fitness: " + graphController.Graphs [i].TotalReward);
 						Debug.Assert (numAssessments [graphController.Graphs [i]] == numAssessments [graphController.Graphs [(i + 1) % graphController.numGraphs]], "Graph " + i+ " tested "+numAssessments [graphController.Graphs [i]] + " times, graph " + ((i + 1) % graphController.numGraphs) + " tested "+numAssessments [graphController.Graphs [(i + 1) % graphController.numGraphs]]+ " times." );
 					}
 
-					average /= graphController.numGraphs;
+					Logging.globalLogger.Log ("Static enemies");
 
-					float stddev = Utils.StandardDeviation (fitnessVals);
+					//for non-evolving enemies
+					for (int i = 0; i < dummySoldiers.Length; ++i) {
+						Debug.Log ("Graph " + i + " ID: " + dummySoldiers[i].Graph.ID + " has fitness: " + dummySoldiers[i].Graph.TotalReward);
+						average_nonevolving += dummySoldiers[i].Graph.TotalReward;
+						fitnessVals_nonevolving [i] = dummySoldiers[i].Graph.TotalReward;
+						Logging.globalLogger.Log("Graph " + i + " ID: " + dummySoldiers[i].Graph.ID + " has fitness: " + dummySoldiers[i].Graph.TotalReward);
 
-					Debug.Log ("Average Fitness " + average);
-					Logging.globalLogger.Log ("Average Fitness " +average.ToString());
+					}
 
-					Debug.Log ("StdDev of Fitness " + stddev);
-					Logging.globalLogger.Log ("StdDev of Fitness " + stddev);
+					average_evolving /= graphController.numGraphs;
+
+					average_nonevolving /= dummySoldiers.Length;
+
+					float stddev_evolving = Utils.StandardDeviation (fitnessVals_evolving);
+
+					float stddev_nonevolving = Utils.StandardDeviation (fitnessVals_nonevolving);
+
+					Logging.globalLogger.Log ("Evolving enemies");
+
+					Debug.Log ("Average Fitness of evolving enemy " + average_evolving);
+					Logging.globalLogger.Log ("Average Fitness of evolving enemy " +average_evolving.ToString());
+
+					Debug.Log ("StdDev of Fitness of evolving enemy " + stddev_evolving);
+					Logging.globalLogger.Log ("StdDev of Fitness of evolving enemy " + stddev_evolving);
+
+					Logging.globalLogger.Log ("Static enemies");
+
+					Debug.Log ("Average Fitness of non-evolving enemy " + average_nonevolving);
+					Logging.globalLogger.Log ("Average Fitness of non-evolving enemy " +average_nonevolving.ToString());
+
+					Debug.Log ("StdDev of Fitness of non-evolving enemy " + stddev_nonevolving);
+					Logging.globalLogger.Log ("StdDev of Fitness of non-evolving enemy " + stddev_nonevolving);
 
 					graphController.Evolve ();
 

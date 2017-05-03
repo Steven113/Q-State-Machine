@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace AssemblyCSharp
 {
+	[Serializable]
 	public class QGraphEdge
 	{
 		List<string> requiredStates = new List<string>();
@@ -89,7 +90,7 @@ namespace AssemblyCSharp
 			//Debug.Log (float_mult.Count);
 
 			foreach (float val in values) {
-				if (restrictionIndex < float_restrictions.Count && val < float_restrictions[restrictionIndex]*float_mult[restrictionIndex]) {
+				if (restrictionIndex < float_restrictions.Count && val >= float_restrictions[restrictionIndex]*float_mult[restrictionIndex]) {
 					++result;
 				} 
 				++restrictionIndex;
@@ -98,9 +99,9 @@ namespace AssemblyCSharp
 			return result;
 		}
 
-		public static QGraphEdge MutateEdge(QGraphEdge edge, List<string> possibleStates, float mutationRate){
+		public static QGraphEdge MutateEdge(QGraphEdge edge, List<string> possibleStates, float mutationRate, ConstraintMapping constraints){
 			QGraphEdge mutant = new QGraphEdge (edge);
-			mutant.requiredStates = Utils.RandomlyModifyList (possibleStates, mutant.requiredStates);
+			mutant.requiredStates = Utils.RandomlyModifyList_FilterInvalidLists (possibleStates, mutant.requiredStates,constraints);
 			for (int i = 0; i < mutant.float_restrictions.Count; ++i) {
 				mutant.float_restrictions[i] += (UnityEngine.Random.value - 0.5f) * mutationRate;
 				mutant.float_mult[i]+= (UnityEngine.Random.value - 0.5f) * mutationRate;

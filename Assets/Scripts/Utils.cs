@@ -161,6 +161,80 @@ namespace AssemblyCSharp
 			return result;
 		}
 
+		public static List<T> RandomlyModifyList_FilterInvalidLists<T> (List<T> possibleAdditions, List<T> originalList, ConstraintMapping constraints)
+		{
+			string debug = "debug";
+			Debug.Assert (debug.ToString ().Equals (debug));
+			List<T> possibleAdditions_shuffled = ShuffleList<T> (possibleAdditions);
+
+			List<T> result = new List<T> (originalList);
+
+			if (possibleAdditions.Count == 0) {
+				return result;
+			}
+
+			float r_val = UnityEngine.Random.value;
+			if (r_val < 0.15f && originalList.Count > 1) {
+
+				for (int i = 0; i < possibleAdditions_shuffled.Count; ++i) {
+				
+					if (result.Contains (possibleAdditions_shuffled [i])) {
+						result.Remove (possibleAdditions_shuffled [i]);
+						break;
+					}
+				}
+
+
+			} else if (r_val < 0.66f) {
+				//List<T> possibleAdditions_copy = new List<T>(possibleAdditions_shuffled);
+				//possibleAdditions_copy  = ShuffleList (possibleAdditions_copy );
+				for (int i = 0; i < possibleAdditions_shuffled.Count ; ++i) {
+					if (!result.Contains (possibleAdditions_shuffled [i])) {
+						//check for constraint
+						bool noCostraint = true;
+						for (int j = 0; j < result.Count; ++j) {
+							if (constraints.HasConstraint (result [j].ToString(), possibleAdditions_shuffled [i].ToString())) {
+								noCostraint = false;
+								break;
+							}
+						}
+
+						if (!noCostraint) {
+							continue;
+						}
+
+						result.Add (possibleAdditions_shuffled [i]);
+						break;
+					}
+				}
+			} else {
+				int node1 = UnityEngine.Random.Range (0, result.Count);
+				int node2 = UnityEngine.Random.Range (0, possibleAdditions.Count);
+				for (int i = 0; i < possibleAdditions_shuffled.Count; ++i) {
+					if (!result.Contains (possibleAdditions [node2])) {
+						bool noCostraint = true;
+						for (int j = 0; j < result.Count; ++j) {
+							if (j == node1) {
+								continue; //if the new item would conflict with the item it is going to replace, it doesn't matter
+							}
+							if (constraints.HasConstraint (result [j].ToString (), possibleAdditions_shuffled [i].ToString())) {
+								noCostraint = false;
+								break;
+							}
+						}
+
+						if (!noCostraint) {
+							continue;
+						}
+
+						result [node1] = possibleAdditions [node2];
+						break;
+					}
+				}
+			}
+			return result;
+		}
+
 		public static List<T> ShuffleList<T> (List<T> input)
 		{
 			List<T> result = new List<T> ();

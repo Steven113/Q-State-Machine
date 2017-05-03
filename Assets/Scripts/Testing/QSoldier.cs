@@ -301,6 +301,7 @@ namespace AssemblyCSharp
 			data.Add (healthController.suppressionLevel);
 			data.Add (smallFoodCount);
 			data.Add (bigFoundCount);
+			data.Add ((currentTargetIsVisible == LOSResult.Invisible)?0:1);
 			return data;
 		}
 
@@ -519,7 +520,7 @@ namespace AssemblyCSharp
 				} else {
 					soldierState = AISoldierState.Idle;
 					amountOfTimeCurrentTargetHasBeenInLOS = -1000;
-				
+					currentTargetIsVisible = LOSResult.Invisible;
 				
 				}
 			
@@ -535,7 +536,7 @@ namespace AssemblyCSharp
 				timeSinceLastUpdatingCurrentPath %= intervalForUpdatingPath;
 				if (currentActionSet != null) {
 					if (currentTarget == null || currentTarget.mainLOSCollider == null) {
-						if (currentActionSet.Contains ("Explore") && !exploring) {
+						if (currentActionSet.Contains ("Explore") && (!exploring || (exploring && agent.remainingDistance == 0))) {
 							exploring = true;
 							//origin for search
 							Vector3 scaledBounds = mapBounds.gameObject.transform.TransformPoint(mapBounds.size);

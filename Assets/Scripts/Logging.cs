@@ -12,6 +12,7 @@ namespace AssemblyCSharp
 
 		public void Start(){
 			globalLogger = this;
+			fileName = fileName + "_" +DateTime.Now.Ticks;
 
 		}
 

@@ -1,0 +1,72 @@
+Num combos: 10
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 1
+Soldier 0 given graph 0 1
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 1 3
+===============================================================================
+QConceptArmy : 3
+QHeirarchyArmy : 5
+Soldier 0 given graph 2 5
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 2
+Soldier 0 given graph 3 7
+===============================================================================
+QConceptArmy : 0
+QHeirarchyArmy : 0
+Soldier 0 given graph 4 9
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 2
+Soldier 0 given graph 5 11
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 2
+Soldier 0 given graph 6 13
+===============================================================================
+QConceptArmy : 4
+QHeirarchyArmy : 2
+Soldier 0 given graph 7 15
+===============================================================================
+QConceptArmy : 1
+QHeirarchyArmy : 4
+Soldier 0 given graph 8 17
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 3
+Soldier 0 given graph 9 19
+===============================================================================
+Evolving enemies
+Graph 0 ID: 1 has fitness: 163.7365
+Graph 1 ID: 3 has fitness: 166.7461
+Graph 2 ID: 5 has fitness: -46.7
+Graph 3 ID: 7 has fitness: 46.34991
+Graph 4 ID: 9 has fitness: 140.8297
+Graph 5 ID: 11 has fitness: 129.6528
+Graph 6 ID: 13 has fitness: -46.18884
+Graph 7 ID: 15 has fitness: 175.1625
+Graph 8 ID: 17 has fitness: 68.39806
+Graph 9 ID: 19 has fitness: -2.796972
+Static enemies
+Graph 0 ID: 0 has fitness: -317.9066
+Evolving enemies
+Average Fitness of evolving enemy 79.51898
+StdDev of Fitness of evolving enemy 88.10014
+Static enemies
+Average Fitness of non-evolving enemy -317.9066
+StdDev of Fitness of non-evolving enemy NaN
+===============================================================================
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QConceptArmy : 1
+QHeirarchyArmy : 1
+Soldier 0 given graph 0 15
+===============================================================================
+QConceptArmy : 2
+QHeirarchyArmy : 3
+Soldier 0 given graph 1 3

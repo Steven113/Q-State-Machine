@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 namespace AssemblyCSharp
 {
@@ -9,6 +10,8 @@ namespace AssemblyCSharp
 		QGraph graph;
 
 		[SerializeField]TextAsset graphDefinition;
+
+		[SerializeField]string fileSaveName = "";
 
 		public void Awake(){
 			if (graphDefinition != null && !graphDefinition.text.Equals("")) {
@@ -37,6 +40,12 @@ namespace AssemblyCSharp
 			set {
 				graph = value;
 			}
+		}
+
+		public void OnDestroy(){
+			//if (File.Exists (fileSaveName)) {
+			Utils.SerializeFile<QGraph> (fileSaveName + "_ID_"+ graph.ID +"_"+gameObject.transform.name+"_"+DateTime.Now.Ticks, ref graph);
+			//}
 		}
 	}
 }

@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace AssemblyCSharp
 {
+	[Serializable]
 	public class QGraph : IComparable<QGraph>
 	{
 
@@ -21,6 +22,9 @@ namespace AssemblyCSharp
 		QGraphNode root;
 		//this node is the "default" node - if the current node has no edge for the current state, this is the selected node
 
+		ConstraintMapping actionConstraints = new ConstraintMapping();
+		ConstraintMapping stateConstraints = new ConstraintMapping();
+
 		int numActions = 0;
 
 		float mutationIncrement = 0.001f;
@@ -35,8 +39,13 @@ namespace AssemblyCSharp
 		List<FloatRange> float_restriction_range;
 		List<float> float_mult;
 
-		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_mult, IEnumerable<FloatRange> default_restriction_range)
+		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_mult, IEnumerable<FloatRange> default_restriction_range, IEnumerable<SAConstraint> stateConstraints, IEnumerable<SAConstraint> actionConstraints)
 		{
+
+			this.stateConstraints = new ConstraintMapping (stateConstraints.ToList ());
+
+			this.actionConstraints = new ConstraintMapping (actionConstraints.ToList ());
+
 			ID = numGraphs;
 
 			++numGraphs;
@@ -220,6 +229,9 @@ namespace AssemblyCSharp
 
 		public QGraph (QGraph other){
 
+			this.actionConstraints = new ConstraintMapping (actionConstraints);
+			this.stateConstraints = new ConstraintMapping (stateConstraints);
+
 			ID = numGraphs;
 
 			++numGraphs;
@@ -344,7 +356,7 @@ namespace AssemblyCSharp
 //					break;
 //				}
 
-				t_nodes [nodeToChange].outgoingEdges [edgeToChange] = QGraphEdge.MutateEdge (t_nodes [nodeToChange].outgoingEdges [edgeToChange], mutant.possibleStates, mutant.mutationIncrement);
+				t_nodes [nodeToChange].outgoingEdges [edgeToChange] = QGraphEdge.MutateEdge (t_nodes [nodeToChange].outgoingEdges [edgeToChange], mutant.possibleStates, mutant.mutationIncrement, mutant.stateConstraints);
 
 			}
 
@@ -356,7 +368,7 @@ namespace AssemblyCSharp
 			for (int i = 0; i < numChanges; ++i) {
 				int nodeToChange = UnityEngine.Random.Range(0,t_nodes.Count);
 
-				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange],mutant.possibleStates);
+				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange],mutant.possibleStates, mutant.actionConstraints);
 
 			}
 
@@ -388,6 +400,8 @@ namespace AssemblyCSharp
 				}
 
 			}
+
+			mutant.ResetCurrentNodeToRoot ();
 
 			return mutant;
 		}
@@ -429,6 +443,23 @@ namespace AssemblyCSharp
 		}
 
 
+		public ConstraintMapping ActionConstraints {
+			get {
+				return actionConstraints;
+			}
+			set {
+				actionConstraints = value;
+			}
+		}
+
+		public ConstraintMapping StateConstraints {
+			get {
+				return stateConstraints;
+			}
+			set {
+				stateConstraints = value;
+			}
+		}
 	}
 }
 

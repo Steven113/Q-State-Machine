@@ -18,6 +18,9 @@ namespace AssemblyCSharp
 
 		public FloatRange [] float_restriction_range;
 
+		public List<SAConstraint> stateConstraints;
+		public List<SAConstraint> actionConstraints;
+
 		QGraph [] graphs;
 
 		public int numGraphs = 5;
@@ -41,7 +44,7 @@ namespace AssemblyCSharp
 
 			for (int i = 0; i < numGraphs; ++i) {
 				if (heuristicInitFile == null || string.IsNullOrEmpty(heuristicInitFile.text)) {
-					graphs [i] = new QGraph (possibleStates, possibleActions, float_m, float_r);
+					graphs [i] = new QGraph (possibleStates, possibleActions, float_m, float_r, stateConstraints,actionConstraints);
 					graphs [i].MutationIncrement = mutationIncrement;
 				} else {
 					graphs [i] = new QGraph (heuristicInitFile);
@@ -50,6 +53,9 @@ namespace AssemblyCSharp
 						graphs [i] = QGraph.Mutate (graphs [i]);
 					}
 				}
+
+				graphs [i].ActionConstraints = new ConstraintMapping (actionConstraints);
+				graphs [i].StateConstraints = new ConstraintMapping (stateConstraints);
 
 			}
 

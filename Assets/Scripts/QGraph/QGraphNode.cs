@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace AssemblyCSharp
 {
+	[Serializable]
 	public class QGraphNode
 	{
 
@@ -51,9 +52,9 @@ namespace AssemblyCSharp
 			outgoingEdges.Add (edge);
 		}
 
-		public static QGraphNode MutateNode(QGraphNode node, List<string> possibleActions){
+		public static QGraphNode MutateNode(QGraphNode node, List<string> possibleActions,ConstraintMapping constraints){
 			QGraphNode mutant = new QGraphNode (node);
-			mutant.actions = Utils.RandomlyModifyList (possibleActions, mutant.actions);
+			mutant.actions = Utils.RandomlyModifyList_FilterInvalidLists (possibleActions, mutant.actions,constraints);
 			return mutant;
 		}
 
