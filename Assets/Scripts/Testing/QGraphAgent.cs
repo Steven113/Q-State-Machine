@@ -14,9 +14,13 @@ namespace AssemblyCSharp
 		[SerializeField]string fileSaveName = "";
 
 		public void Awake(){
+			
+
 			if (graphDefinition != null && !graphDefinition.text.Equals("")) {
 				graph = new QGraph (graphDefinition);
 			}
+
+
 		}
 
 		public override List<string> GetAction (List<string> state, List<float> variables){

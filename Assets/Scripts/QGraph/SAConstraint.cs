@@ -8,6 +8,11 @@ namespace AssemblyCSharp
 	{
 		public string action1;
 		public string action2;
+
+		public SAConstraint(string first, string second){
+			this.action1 = first;
+			this.action2 = action2;
+		}
 	}
 }
 

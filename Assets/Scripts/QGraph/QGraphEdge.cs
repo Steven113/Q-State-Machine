@@ -11,6 +11,7 @@ namespace AssemblyCSharp
 		List<string> requiredStates = new List<string>();
 		List<float> float_restrictions = new List<float>();
 		List<float> float_mult = new List<float>();
+		List<ComparisonOperator> comparison_operators = new List<ComparisonOperator>();
 
 		public int targetNode = -1;
 
@@ -18,10 +19,12 @@ namespace AssemblyCSharp
 
 		float lastTriggeredTime = 0;
 
-		public QGraphEdge (IEnumerable<string> requiredStates, IEnumerable<float> float_restriction_list,IEnumerable<float> float_mult_list, int targetNode)
+		public QGraphEdge (IEnumerable<string> requiredStates, IEnumerable<float> float_restriction_list,IEnumerable<float> float_mult_list, int targetNode, IEnumerable<ComparisonOperator> comparison_ops)
 		{
 			AddRequiredStates (requiredStates);
 			AddRestrictions (float_restriction_list,float_mult_list);
+			AddComparisonOps (comparison_ops);
+
 
 			this.targetNode = targetNode;
 		}
@@ -76,6 +79,18 @@ namespace AssemblyCSharp
 			float_mult.AddRange(newMult);
 		}
 
+		/* Add comparison ops*/
+		public int AddComparisonOps(IEnumerable<ComparisonOperator> compOps){
+			int result = 0;
+			foreach (ComparisonOperator op in compOps){
+				if (!this.comparison_operators.Contains (op)) {
+					this.comparison_operators.Add (op);
+					++result;
+				}
+			}
+			return result;
+		}
+
 		public int GetStateMatchLevel(IEnumerable<string> states, IEnumerable<float> values){
 			int result = 0;
 			foreach (string state in states){
@@ -90,7 +105,8 @@ namespace AssemblyCSharp
 			//Debug.Log (float_mult.Count);
 
 			foreach (float val in values) {
-				if (restrictionIndex < float_restrictions.Count && val >= float_restrictions[restrictionIndex]*float_mult[restrictionIndex]) {
+				//val >= float_restrictions[restrictionIndex]*float_mult[restrictionIndex]
+				if (restrictionIndex < float_restrictions.Count && Utils.Compare(float_restrictions[restrictionIndex]*float_mult[restrictionIndex],val,this.comparison_operators[restrictionIndex])) {
 					++result;
 				} 
 				++restrictionIndex;
@@ -155,6 +171,15 @@ namespace AssemblyCSharp
 			}
 			set {
 				float_mult = value;
+			}
+		}
+
+		public List<ComparisonOperator> Comparison_operators {
+			get {
+				return comparison_operators;
+			}
+			set {
+				comparison_operators = value;
 			}
 		}
 	}

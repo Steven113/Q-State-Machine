@@ -33,18 +33,34 @@ namespace AssemblyCSharp
 		float actionMutationChance = 0.1f;
 		float addNodeChance = 0.8f;
 		float changeInterruptWeightChance = 0.01f;
+		float numNodesToConnectToNewNode = 0.5f;
+		float numNodesToConnectNewNodeTo = 0.5f;
 
 		List<string> possibleStates;
 		List<string> possibleActions;
 		List<FloatRange> float_restriction_range;
 		List<float> float_mult;
 
-		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_mult, IEnumerable<FloatRange> default_restriction_range, IEnumerable<SAConstraint> stateConstraints, IEnumerable<SAConstraint> actionConstraints)
+		List<ComparisonOperator> comparison_operators = new List<ComparisonOperator>();
+
+		List<QGraphNode> memoryWindow;
+
+		int windowSize = 20;
+
+		int windowIndex = 0;
+
+		float timeCostDiscount = 0.5f;
+
+		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_mult, IEnumerable<FloatRange> default_restriction_range, IEnumerable<SAConstraint> stateConstraints, IEnumerable<SAConstraint> actionConstraints,float edgeMutationChance, float actionMutationChance,float addNodeChance, float changeInterruptWeightChance,float numNodesToConnectToNewNode,float numNodesToConnectNewNodeTo, IEnumerable<ComparisonOperator> comparison_ops, int windowSize, float timeCostDiscount)
 		{
 
 			this.stateConstraints = new ConstraintMapping (stateConstraints.ToList ());
 
 			this.actionConstraints = new ConstraintMapping (actionConstraints.ToList ());
+
+			this.comparison_operators = comparison_ops.ToList ();
+
+			this.timeCostDiscount = timeCostDiscount;
 
 			ID = numGraphs;
 
@@ -62,6 +78,14 @@ namespace AssemblyCSharp
 			this.possibleActions = new List<string> (actions);
 			this.float_mult = new List<float> (default_float_mult.ToArray ());
 			this.float_restriction_range = new List<FloatRange>(default_restriction_range.ToArray ());
+
+			this.edgeMutationChance = edgeMutationChance;
+			this.actionMutationChance = actionMutationChance;
+			this.addNodeChance = addNodeChance;
+			this.changeInterruptWeightChance = changeInterruptWeightChance;
+			this.numNodesToConnectToNewNode = numNodesToConnectToNewNode;
+			this.numNodesToConnectNewNodeTo = numNodesToConnectNewNodeTo;
+
 
 			Debug.Assert (float_restriction_range.Count == float_restriction_range.Count);
 
@@ -92,6 +116,7 @@ namespace AssemblyCSharp
 					//temp_edge.Float_restrictions [j] = Mathf.ac
 				}
 				temp_edge.Float_mult = new List<float> (default_float_mult.ToArray ());
+				temp_edge.Comparison_operators = new List<ComparisonOperator>(this.comparison_operators);
 				root.AddEdge (temp_edge);
 			}
 
@@ -121,10 +146,16 @@ namespace AssemblyCSharp
 						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (float_restriction_range [k].min, float_restriction_range [k].max));
 					}
 					temp_edge.Float_mult = new List<float> (default_float_mult.ToArray ());
+					temp_edge.Comparison_operators = new List<ComparisonOperator>(this.comparison_operators);
 					nodes [i].AddEdge (temp_edge);
 
 				}
 			}
+
+			//init window
+			this.windowSize = windowSize;
+			memoryWindow = new List<QGraphNode> (this.windowSize);
+			memoryWindow.Add (currentNode);
 
 		}
 
@@ -145,7 +176,7 @@ namespace AssemblyCSharp
 
 			Dictionary<string,QGraphNode> neuronDict = new Dictionary<string, QGraphNode> ();
 
-			Debug.Assert (lines.Count > 5);
+			Debug.Assert (lines.Count > 7);
 
 			Utils.ConverterTU<string, float> f_conv = Utils.TryParseR;
 
@@ -157,8 +188,29 @@ namespace AssemblyCSharp
 			Debug.Log (lines [3]);
 			float_restriction_range = new List<FloatRange>(FloatRange.ToFloatRange(new List<float> (Utils.ConvertArrayType<string, float> (lines [2].Split(" ".ToCharArray()), f_conv)),new List<float> (Utils.ConvertArrayType<string, float> (lines [3].Split(" ".ToCharArray()), f_conv))));
 			float_mult = new List<float> (Utils.ConvertArrayType<string, float> (lines [4].Split (" ".ToCharArray ()), f_conv));
+			List<float> evol_values = new List<float> (Utils.ConvertArrayType<string, float> (lines [5].Split (" ".ToCharArray ()), f_conv));
 
-			for (int i = 5; i < lines.Count; ++i) {
+			string [] comparisonLine = lines [6].Split (" ".ToCharArray ());
+
+			for (int i = 0; i<comparisonLine.Length; ++i) {
+				this.comparison_operators.Add((ComparisonOperator)Enum.Parse(typeof(ComparisonOperator),comparisonLine[i]));
+			}
+
+			Debug.Assert (evol_values.Count == 6);
+
+			this.edgeMutationChance = evol_values[0];
+			this.actionMutationChance = evol_values[1];
+			this.addNodeChance = evol_values[2];
+			this.changeInterruptWeightChance = evol_values[3];
+			this.numNodesToConnectToNewNode = evol_values[4];
+			this.numNodesToConnectNewNodeTo = evol_values[5];
+
+			Debug.Assert (int.TryParse (lines [7], out this.windowSize));
+
+			memoryWindow = new List<QGraphNode> (this.windowSize);
+			//memoryWindow.Add (currentNode);
+
+			for (int i = 8; i < lines.Count; ++i) {
 				Debug.Log ("Parsing: " + lines [i]);
 				lines [i] = lines [i].Trim ();
 				if (lines [i].StartsWith ("Node")) {
@@ -175,10 +227,10 @@ namespace AssemblyCSharp
 					nodes.Add (node);
 					neuronDict.Add (neuronLine [1], node);
 				} else if (lines [i].StartsWith ("Edge")) {
-					//format: [startNode] [Node connected to] | [state1] ... [stateN] | [float_restriction1] ... [float_restrictionN] | [mult1] ... [multN] | [interruptChance]
+					//format: [startNode] [Node connected to] | [state1] ... [stateN] | [float_restriction1] ... [float_restrictionN] | [mult1] ... [multN] | [op1] ... [opN] | [interruptChance]
 
 					string[] lineSegs = lines [i].Split ("|".ToCharArray ());
-					Debug.Assert (lineSegs.Length == 5);
+					Debug.Assert (lineSegs.Length == 6);
 					string[] edgeNodes = lineSegs [0].Split (" ".ToCharArray ());
 					Debug.Assert (edgeNodes.Length == 3, "Start and end nodes not defined");
 					Debug.Assert (neuronDict.ContainsKey (edgeNodes [1]), "Start neuron not defined");
@@ -196,12 +248,20 @@ namespace AssemblyCSharp
 //						restrictions.Add (f);
 //					}
 
+					comparisonLine = lineSegs[4].Split (" ".ToCharArray ());
+
+					List<ComparisonOperator> comp_ops = new List<ComparisonOperator>(comparisonLine.Length);
+
+					for (int j = 0; j<comparisonLine.Length; ++j){
+						comp_ops.Add((ComparisonOperator)Enum.Parse(typeof(ComparisonOperator),comparisonLine[j]));
+					}
+
 					float interruptChance = 0;
 
-					Debug.Assert (Utils.TryParseR (lineSegs [4], out interruptChance));
+					Debug.Assert (Utils.TryParseR (lineSegs [5], out interruptChance));
 
 
-					QGraphEdge edge = new QGraphEdge (new List<string> (lineSegs [1].Split (" ".ToCharArray ())), Utils.ConvertArrayType<string,float> (lineSegs [2].Split (" ".ToCharArray ()), f_conv), Utils.ConvertArrayType<string,float> (lineSegs [3].Split (" ".ToCharArray ()), f_conv), nodes.IndexOf (neuronDict [edgeNodes [2]]));
+					QGraphEdge edge = new QGraphEdge (new List<string> (lineSegs [1].Split (" ".ToCharArray ())), Utils.ConvertArrayType<string,float> (lineSegs [2].Split (" ".ToCharArray ()), f_conv), Utils.ConvertArrayType<string,float> (lineSegs [3].Split (" ".ToCharArray ()), f_conv), nodes.IndexOf (neuronDict [edgeNodes [2]]),comp_ops);
 
 					edge.InterruptThreshold = interruptChance;
 
@@ -221,6 +281,8 @@ namespace AssemblyCSharp
 					throw new Exception ("Line definition format could not be determined: "+i+ " " + lines [i]);
 				}
 			}
+
+			memoryWindow.Add (currentNode);
 		}
 
 		public void ResetCurrentNodeToRoot(){
@@ -231,11 +293,16 @@ namespace AssemblyCSharp
 
 			this.actionConstraints = new ConstraintMapping (actionConstraints);
 			this.stateConstraints = new ConstraintMapping (stateConstraints);
+			this.memoryWindow = new List<QGraphNode> (other.memoryWindow);
+
+			this.windowSize = other.windowSize;
+			this.windowIndex = other.windowIndex;
 
 			ID = numGraphs;
 
 			++numGraphs;
 
+			this.comparison_operators = new List<ComparisonOperator> (other.comparison_operators);
 
 			int n_c = other.nodes.Count; 
 
@@ -296,9 +363,23 @@ namespace AssemblyCSharp
 
 			if (numActions ==0 || UnityEngine.Random.value > currentNode.outgoingEdges [edgeToUse].InterruptThreshold) {
 				currentNode = nodes [currentNode.outgoingEdges [edgeToUse].targetNode];
+
+				++windowIndex;
+				windowIndex%=windowSize;
+				if (windowIndex>=memoryWindow.Count){
+					memoryWindow.Add(currentNode);
+				} else {
+					memoryWindow[windowIndex] = currentNode;
+				}
+
 				return new List<string> (currentNode.Actions);
 			} else {
 				currentNode = nodes [currentNode.outgoingEdges [edgeToUse].targetNode];
+
+				++windowIndex;
+				windowIndex%=windowSize;
+				memoryWindow[windowIndex] = currentNode;
+
 				return new List<string> ();
 			}
 		}
@@ -368,7 +449,7 @@ namespace AssemblyCSharp
 			for (int i = 0; i < numChanges; ++i) {
 				int nodeToChange = UnityEngine.Random.Range(0,t_nodes.Count);
 
-				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange],mutant.possibleStates, mutant.actionConstraints);
+				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange],mutant.possibleActions, mutant.actionConstraints);
 
 			}
 
@@ -382,10 +463,23 @@ namespace AssemblyCSharp
 			}
 
 			for (int i = 0; i < numChanges; ++i) {
-				QGraphNode newNode = new QGraphNode (mutant.possibleActions [i % mutant.possibleActions.Count]);
+				QGraphNode newNode = new QGraphNode (t_nodes[UnityEngine.Random.Range(0,t_nodes.Count-1)]);
 
-				for (int j = 0; j < n_c; ++j) {
-					QGraphEdge temp_edge = new QGraphEdge (j);
+				newNode = QGraphNode.MutateNode (newNode, mutant.possibleActions, mutant.actionConstraints);
+
+				int numNodesToConnectTo = (int)(n_c * mutant.numNodesToConnectToNewNode);
+
+				if (numNodesToConnectTo < 1) {
+					numNodesToConnectTo = 1;
+				}
+
+				List<QGraphNode> nodesToRandomlyConnectToTemp = new List<QGraphNode> (mutant.nodes);
+
+				nodesToRandomlyConnectToTemp = Utils.ShuffleList (nodesToRandomlyConnectToTemp);
+
+				//connect nodes to the new node
+				for (int j = 0; j < numNodesToConnectTo; ++j) {
+					QGraphEdge temp_edge = new QGraphEdge (mutant.nodes.Count);
 					if (mutant.possibleStates.Count > 0) {
 						temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
 					}
@@ -396,18 +490,74 @@ namespace AssemblyCSharp
 					}
 
 					temp_edge.Float_mult = new List<float> (mutant.float_mult);
+					temp_edge.Comparison_operators = new List<ComparisonOperator>(mutant.comparison_operators);
+					nodesToRandomlyConnectToTemp[j].AddEdge (temp_edge);
+				}
+
+
+				numNodesToConnectTo = (int)(n_c * mutant.numNodesToConnectNewNodeTo);
+
+				if (numNodesToConnectTo < 1) {
+					numNodesToConnectTo = 1;
+				}
+
+				//connect the new node to other nodes;
+
+				nodesToRandomlyConnectToTemp = Utils.ShuffleList (nodesToRandomlyConnectToTemp);
+
+				for (int j = 0; j < numNodesToConnectTo; ++j) {
+					QGraphEdge temp_edge = new QGraphEdge (mutant.nodes.IndexOf(nodesToRandomlyConnectToTemp[j]));
+					if (mutant.possibleStates.Count > 0) {
+						temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
+					}
+					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction_range.Count);
+
+					for (int k = 0; k<temp_edge.Float_restrictions.Count; ++k){
+						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (mutant.float_restriction_range [k].min, mutant.float_restriction_range [k].max));
+					}
+
+					temp_edge.Float_mult = new List<float> (mutant.float_mult);
+					temp_edge.Comparison_operators = new List<ComparisonOperator>(mutant.comparison_operators);
 					newNode.AddEdge (temp_edge);
 				}
+
+
+				mutant.nodes.Add (newNode);
 
 			}
 
 			mutant.ResetCurrentNodeToRoot ();
+
+			mutant.memoryWindow = new List<QGraphNode> (graph.memoryWindow.Count);
+			
+			mutant.windowSize = graph.windowSize;
+			mutant.windowIndex = 0;
+
+			mutant.memoryWindow.Add (mutant.currentNode);
 
 			return mutant;
 		}
 
 		public void Reward(float reward){
 			totalReward += reward;
+
+			float t_reward = reward;
+
+			for (int i = 0; i<windowSize; ++i) {
+				if ((i+windowIndex)%windowSize >= memoryWindow.Count || memoryWindow[(i+windowIndex)%windowSize]==null){
+					break;
+				} else {
+					memoryWindow[(i+windowIndex)%windowSize].Reward+=(t_reward*timeCostDiscount);
+					t_reward-=(t_reward*timeCostDiscount);
+				}
+			}
+
+		}
+
+		public void ClearNodeRewards(){
+			for (int i = 0; i<nodes.Count; ++i) {
+				nodes[i].Reward = 0;
+			}
 		}
 
 		public int CompareTo(QGraph other){

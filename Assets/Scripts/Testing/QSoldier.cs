@@ -714,7 +714,41 @@ namespace AssemblyCSharp
 			//Debug.Log (thisEntity.faction.ToString () + " " + (((int)(thisEntity.faction) + 1) % GameData.scores.Length));
 			//Debug.Assert (AIGrid.findFleeingPoint (this, gameObject.transform.position, out spawnPoint));
 			//Debug.Log ("Spawning at " + spawnPoint);
-			agent.Warp ((QTournamentController.g_SpawnPoints[UnityEngine.Random.Range(0,QTournamentController.g_SpawnPoints.Length)].transform.position));
+			//agent.Warp ((QTournamentController.g_SpawnPoints[UnityEngine.Random.Range(0,QTournamentController.g_SpawnPoints.Length)].transform.position));
+
+			float maxDist = 0;
+			int index = -1;
+
+			int s_c = QTournamentController.g_SpawnPoints.Length;
+
+			for (int i = 0; i < s_c; ++i) {
+				float t_dist = 0;
+				int numEnemies = 0;
+
+				for (int j = 0; j < GameData.Factions.Count; ++j) {
+					if (GameData.Factions [j].FactionName == thisEntity.faction) {
+						continue;
+					}
+
+					for (int k = 0; k < GameData.Factions [j].Soldiers.Count; ++k) {
+						++numEnemies;
+						///for (int n = 0; n < QTournamentController.g_SpawnPoints.Length; ++n) {
+						t_dist += Vector3.Distance (GameData.Factions [j].Soldiers [k].centreOfMass.position, QTournamentController.g_SpawnPoints[i].transform.position);
+						//}
+					}
+				}
+
+				t_dist /= numEnemies;
+
+				if (t_dist > maxDist) {
+					maxDist = t_dist;
+					index = i;
+				}
+
+			}
+
+			agent.Warp ((QTournamentController.g_SpawnPoints[index].transform.position));
+
 			this.Reset ();
 		}
 

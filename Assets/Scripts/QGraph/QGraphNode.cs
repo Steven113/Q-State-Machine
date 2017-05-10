@@ -10,6 +10,8 @@ namespace AssemblyCSharp
 		List<string> actions = new List<string>();
 		public List<QGraphEdge> outgoingEdges = new List<QGraphEdge>();
 
+		float reward = 0;
+
 		public QGraphNode ()
 		{
 			
@@ -64,6 +66,15 @@ namespace AssemblyCSharp
 			}
 			set {
 				actions = value;
+			}
+		}
+
+		public float Reward {
+			get {
+				return reward;
+			}
+			set {
+				reward = value;
 			}
 		}
 	}

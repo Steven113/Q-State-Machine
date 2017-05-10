@@ -28,8 +28,17 @@ namespace AssemblyCSharp
 
 		public static GameObject [] g_SpawnPoints;
 
+		float[] dummyFitness;
+
+		public int numTestingRounds = 11;
+		public int testingRound = 0;
+
 		public void Start(){
-			UnityEngine.Random.InitState (5145636);
+			//UnityEngine.Random.InitState (5145636);
+
+
+
+			dummyFitness = new float[(int)((soldiers.Length>1f)?(Mathf.Pow(graphController.numGraphs,soldiers.Length)):((float)graphController.numGraphs))];
 
 			dateOfTestStart = DateTime.Now.Ticks.ToString();
 
@@ -37,6 +46,8 @@ namespace AssemblyCSharp
 			Debug.Log("Num combos: "+Mathf.Pow(graphController.numGraphs,soldiers.Length));
 			Logging.globalLogger.Log("Num combos: "+Mathf.Pow(graphController.numGraphs,soldiers.Length));
 			g_SpawnPoints = spawnPoints;
+
+			//Array.Sort (g_SpawnPoints,new GameObjectComparer());
 
 			for (int i = 0; i < soldiers.Length; ++i) {
 				//if (soldiers [(i) % graphController.numGraphs].Graph == null) {
@@ -64,16 +75,21 @@ namespace AssemblyCSharp
 
 				if (soldierUnderConsideration_j >= ((soldiers.Length>1f)?(Mathf.Pow(graphController.numGraphs,soldiers.Length)):((float)graphController.numGraphs))) {
 
+					++testingRound;
+					if (testingRound > numTestingRounds) {
+						UnityEditor.EditorApplication.isPlaying = false;
+					}
+
 					float average_evolving = 0;
 
 					float[] fitnessVals_evolving = new float[graphController.numGraphs];
 
 					float average_nonevolving = 0;
 
-					float[] fitnessVals_nonevolving = new float[dummySoldiers.Length];
+					float[] fitnessVals_nonevolving = new float[dummyFitness.Length];
 
 					Logging.globalLogger.Log ("Evolving enemies");
-
+					Logging.globalLogger.Log (dateOfTestStart + "_results.csv", "Evol,",false);
 					//for evolving enemies
 					for (int i = 0; i < graphController.numGraphs; ++i) {
 						Utils.SerializeFile<QGraph> ("Graph_"+dateOfTestStart+"_ID_"+ graphController.Graphs[i].ID +"_"+gameObject.transform.name+"_"+DateTime.Now.Ticks, ref graphController.Graphs[i]);
@@ -81,24 +97,34 @@ namespace AssemblyCSharp
 						Debug.Log ("Graph " + i + " ID: " + graphController.Graphs[i].ID + " has fitness: " + graphController.Graphs [i].TotalReward);
 						average_evolving += graphController.Graphs [i].TotalReward;
 						fitnessVals_evolving [i] = graphController.Graphs [i].TotalReward;
+
+						Logging.globalLogger.Log (dateOfTestStart + "_results.csv", graphController.Graphs [i].TotalReward+",",false);
+
 						Logging.globalLogger.Log("Graph " + i + " ID: " + graphController.Graphs[i].ID + " has fitness: " + graphController.Graphs [i].TotalReward);
 						Debug.Assert (numAssessments [graphController.Graphs [i]] == numAssessments [graphController.Graphs [(i + 1) % graphController.numGraphs]], "Graph " + i+ " tested "+numAssessments [graphController.Graphs [i]] + " times, graph " + ((i + 1) % graphController.numGraphs) + " tested "+numAssessments [graphController.Graphs [(i + 1) % graphController.numGraphs]]+ " times." );
 					}
 
 					Logging.globalLogger.Log ("Static enemies");
 
+					Logging.globalLogger.Log (dateOfTestStart + "_results.csv", "Static enemies,",false);
+
 					//for non-evolving enemies
-					for (int i = 0; i < dummySoldiers.Length; ++i) {
-						Debug.Log ("Graph " + i + " ID: " + dummySoldiers[i].Graph.ID + " has fitness: " + dummySoldiers[i].Graph.TotalReward);
-						average_nonevolving += dummySoldiers[i].Graph.TotalReward;
-						fitnessVals_nonevolving [i] = dummySoldiers[i].Graph.TotalReward;
-						Logging.globalLogger.Log("Graph " + i + " ID: " + dummySoldiers[i].Graph.ID + " has fitness: " + dummySoldiers[i].Graph.TotalReward);
+					for (int i = 0; i < dummyFitness.Length; ++i) {
+						Debug.Log ("For round " + i + " the fitness was " + dummyFitness[i]);
+						average_nonevolving += dummyFitness[i];
+						fitnessVals_nonevolving [i] = dummyFitness[i];
+
+						Logging.globalLogger.Log (dateOfTestStart + "_results.csv", dummyFitness[i]+",",false);
+
+						Logging.globalLogger.Log("For round " + i + " the fitness was " + dummyFitness[i]);
 
 					}
 
+					Logging.globalLogger.Log (dateOfTestStart + "_results.csv", Environment.NewLine,false);
+
 					average_evolving /= graphController.numGraphs;
 
-					average_nonevolving /= dummySoldiers.Length;
+					average_nonevolving /= dummyFitness.Length;
 
 					float stddev_evolving = Utils.StandardDeviation (fitnessVals_evolving);
 
@@ -132,10 +158,14 @@ namespace AssemblyCSharp
 
 					soldierUnderConsideration_j = 0;
 
-					spawnPoints = Utils.ShuffleArray (spawnPoints);
+					//UnityEngine.Random.InitState (5145636);
+
+					//Array.Sort (g_SpawnPoints,new GameObjectComparer());
+
+					//g_SpawnPoints = Utils.ShuffleArray (g_SpawnPoints);
 				}
 
-				spawnPoints = Utils.ShuffleArray (spawnPoints);
+				g_SpawnPoints = Utils.ShuffleArray (g_SpawnPoints);
 
 				for (int i = 0; i < dummySoldiers.Length; ++i) {
 					//dummySoldiers [i].Graph.ResetCurrentNodeToRoot ();
@@ -143,6 +173,8 @@ namespace AssemblyCSharp
 					qs.agent.Warp(spawnPoints [i % spawnPoints.Length].transform.position);
 					qs.Reset ();
 					dummySoldiers [i].Graph.ResetCurrentNodeToRoot ();
+					dummyFitness [soldierUnderConsideration_j] = dummySoldiers [i].Graph.TotalReward;
+					dummySoldiers [i].Graph.TotalReward = 0;
 				}
 
 				for (int i = 0; i < soldiers.Length; ++i) {
@@ -160,9 +192,10 @@ namespace AssemblyCSharp
 				for (int i = 0; i < activeFactions.Length; ++i) {
 					Debug.Log (activeFactions [i].ToString () + " : " + GameData.scores [activeFactions [i]]);
 					Logging.globalLogger.Log (activeFactions [i].ToString () + " : " + GameData.scores [activeFactions [i]]);
+					Logging.globalLogger.Log (dateOfTestStart + "_scores.csv", GameData.scores [activeFactions [i]]+",",false);
 					GameData.scores [activeFactions [i]] = 0;
 				}
-
+				Logging.globalLogger.Log (dateOfTestStart + "_scores.csv", "",true);
 				//GameData.scores.Clear ();
 
 				for (int i = 0; i < soldiers.Length; ++i) {

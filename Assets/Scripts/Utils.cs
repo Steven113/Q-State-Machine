@@ -13,12 +13,24 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System.Collections;
 
 
 namespace AssemblyCSharp
 {
 	public static class Utils
 	{
+		static Utils(){
+			//old seed: 5145636
+			//old seed: 758215
+			//old seed: 158215
+			//old seed: 3514852
+			//old seed: 845
+			//old seed: 12846
+			//old seed: 6845274
+			UnityEngine.Random.InitState (3354);
+		}
+
 		public static bool DeserializeFile<T> (string fileName, ref T objectToLoadDataInto) where T : class
 		{
 			if (File.Exists (fileName)) {//first confirm that the navmesh file exists
@@ -193,7 +205,7 @@ namespace AssemblyCSharp
 						//check for constraint
 						bool noCostraint = true;
 						for (int j = 0; j < result.Count; ++j) {
-							if (constraints.HasConstraint (result [j].ToString(), possibleAdditions_shuffled [i].ToString())) {
+							if (constraints.GetConstraint (result [j].ToString(), possibleAdditions_shuffled [i].ToString())) {
 								noCostraint = false;
 								break;
 							}
@@ -217,7 +229,7 @@ namespace AssemblyCSharp
 							if (j == node1) {
 								continue; //if the new item would conflict with the item it is going to replace, it doesn't matter
 							}
-							if (constraints.HasConstraint (result [j].ToString (), possibleAdditions_shuffled [i].ToString())) {
+							if (constraints.GetConstraint (result [j].ToString (), possibleAdditions_shuffled [i].ToString())) {
 								noCostraint = false;
 								break;
 							}
@@ -294,7 +306,21 @@ namespace AssemblyCSharp
 			return stdDev;
 		}
 
-
+		public static bool Compare(float a, float b, ComparisonOperator op){
+			if (op == ComparisonOperator.LT){
+				return a<b;
+			} else if (op == ComparisonOperator.LE){
+				return a<=b;
+			} else if (op == ComparisonOperator.EQ){
+				return a==b;
+			}else if (op == ComparisonOperator.NE){
+				return a!=b;
+			}else if (op == ComparisonOperator.GE){
+				return a>=b;
+			}else {
+				return a>b;
+			}
+		}
 	}
 
 	[Serializable]
@@ -347,6 +373,12 @@ namespace AssemblyCSharp
 			}
 
 			return result;
+		}
+	}
+
+	public class GameObjectComparer : IComparer<GameObject>{
+		int IComparer<GameObject>.Compare(GameObject a, GameObject b){
+			return a.ToString().CompareTo (b.ToString());
 		}
 	}
 }
