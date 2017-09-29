@@ -90,7 +90,7 @@ public class PlayerManager : MonoBehaviour {
 					meshRendererToEnableUponSelection.Add(temp.GetComponent<QSoldier>().suppressionSphere.GetComponent<MeshRenderer>());
 
 					QConjectureLearner tempQ = null;
-					Debug.Assert(Utils.DeserializeFile(AITextAssetLocations[i] + ".txt",ref tempQ));
+					Debug.Assert(Utils.DeserializeFromFile(AITextAssetLocations[i] + ".txt",ref tempQ));
 
 					qcA.learner = tempQ;
 

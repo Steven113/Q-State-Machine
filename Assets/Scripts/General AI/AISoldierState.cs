@@ -9,7 +9,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using System;
-namespace AssemblyCSharp
+namespace AI
 {
 	public enum AISoldierState
 	{

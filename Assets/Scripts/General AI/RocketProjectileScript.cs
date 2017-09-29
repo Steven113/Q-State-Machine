@@ -9,9 +9,10 @@
 //------------------------------------------------------------------------------
 using System;
 using UnityEngine;
+using Gameplay;
 
 
-namespace AssemblyCSharp
+namespace Weapons
 {
     public class RocketProjectileScript : ProjectileScript
     {

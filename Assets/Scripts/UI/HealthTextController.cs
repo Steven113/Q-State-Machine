@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using AssemblyCSharp;
+using Gameplay;
 
 
 	public class HealthTextController : MonoBehaviour

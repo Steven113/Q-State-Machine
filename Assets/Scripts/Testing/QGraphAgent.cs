@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using QGraphLearning;
 
 namespace AssemblyCSharp
 {
@@ -48,7 +49,7 @@ namespace AssemblyCSharp
 
 		public void OnDestroy(){
 			//if (File.Exists (fileSaveName)) {
-			Utils.SerializeFile<QGraph> (fileSaveName + "_ID_"+ graph.ID +"_"+gameObject.transform.name+"_"+DateTime.Now.Ticks, ref graph);
+			Utils.SerializeToFileJSON<QGraph> (ref graph, fileSaveName + "_ID_"+ graph.ID +"_"+gameObject.transform.name+"_"+DateTime.Now.Ticks + ".json");
 			//}
 		}
 	}

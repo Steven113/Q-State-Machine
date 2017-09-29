@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using AssemblyCSharp;
 
-namespace AssemblyCSharp
+namespace QGraphLearning
 {
 	[Serializable]
 	public class QGraphNode

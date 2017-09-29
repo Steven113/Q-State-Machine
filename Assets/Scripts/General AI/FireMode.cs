@@ -10,9 +10,10 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using AI;
 
 
-namespace AssemblyCSharp
+namespace Weapons
 {
 	[Serializable]
 	public class FireMode

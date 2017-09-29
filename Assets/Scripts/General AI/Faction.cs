@@ -16,25 +16,37 @@ using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using XnaGeometry;
+using Gameplay;
 
-namespace AssemblyCSharp
+namespace AI
 {
 	[Serializable]
-	public class Faction
+	public class Faction : MonoBehaviour
 	{
-		FactionName factionName = FactionName.QHeirarchyArmy;
-		List<SoldierEntity> soldiers = new List<SoldierEntity>();
-		List<SoldierIntel> soldierIntelData = new List<SoldierIntel>();
+		[SerializeField]FactionName factionName = FactionName.QHeirarchyArmy;
+		[SerializeField]List<SoldierEntity> soldiers = new List<SoldierEntity>();
+		[SerializeField]List<SoldierIntel> soldierIntelData = new List<SoldierIntel>();
 
 
 		//public List<SoldierEntity> entitiesFireTeamMembersCanSee = new List<SoldierEntity>();
 		
-		int numAssigns = 0;
+		[SerializeField]int numAssigns = 0;
 		
-		int numSoldiersToAssignToATask = 2;
+		[SerializeField]int numSoldiersToAssignToATask = 2;
 
 		public Faction(FactionName factionName = FactionName.QHeirarchyArmy){
 			this.factionName = factionName;
+		}
+
+		void Start(){
+			GameData.Factions.Add (this);
+			GameData.scores [factionName] = 0;
+		}
+
+		void OnDestroy(){
+			//GameData.Factions.Clear ();
+			GameData.RemoveFaction (this.factionName);
+			GameData.scores.Remove (factionName);
 		}
 
 		public FactionName FactionName {

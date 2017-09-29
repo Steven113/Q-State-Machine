@@ -8,12 +8,12 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using System;
-namespace AssemblyCSharp
+namespace AI
 {
 	[Serializable]
 	public enum FactionName
 	{
-		QConceptArmy,QHeirarchyArmy,NONE,SuicideFaction
+		QConceptArmy,QHeirarchyArmy,NONE,SuicideFaction,Dummy
 	}
 }
 

@@ -14,24 +14,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System.Collections;
+using Newtonsoft.Json;
 
 
 namespace AssemblyCSharp
 {
 	public static class Utils
 	{
-		static Utils(){
-			//old seed: 5145636
-			//old seed: 758215
-			//old seed: 158215
-			//old seed: 3514852
-			//old seed: 845
-			//old seed: 12846
-			//old seed: 6845274
-			UnityEngine.Random.InitState (3354);
-		}
+		
 
-		public static bool DeserializeFile<T> (string fileName, ref T objectToLoadDataInto) where T : class
+		public static bool DeserializeFromFile<T> (string fileName, ref T objectToLoadDataInto) where T : class
 		{
 			if (File.Exists (fileName)) {//first confirm that the navmesh file exists
 				using (Stream navmeshStream = File.OpenRead (fileName)) { //File.OpenRead opens the file with the read flag, rather than us having to set it. The using statement ensures that the created stream is cleaned up at the end of the block
@@ -45,7 +37,7 @@ namespace AssemblyCSharp
 			}
 		}
 
-		public static void SerializeFile<T> (string fileName, ref T objectToLoadDataInto) where T : class
+		public static void SerializeToFile<T> (string fileName, ref T objectToLoadDataInto) where T : class
 		{
 			using (Stream stream = File.OpenWrite (fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))+ ".qsf"*/)) { //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
 				//Debug.Log("Serializing tree!");
@@ -54,7 +46,7 @@ namespace AssemblyCSharp
 			}
 		}
 
-		public static void SerializeFile<T> (string fileName, ref T objectToLoadDataInto, string extension) where T : class
+		public static void SerializeToFile<T> (string fileName, ref T objectToLoadDataInto, string extension) where T : class
 		{
 			using (Stream stream = File.OpenWrite (fileName /*+ "_"+ ((int)(System.DateTime.Now.ToOADate()*1000))*/ + extension)) { //en sure that stream is cleaned up by creating it in a using statement - the stream will be cleaned up at the end of the using block
 				//Debug.Log("Serializing tree!");
@@ -63,6 +55,34 @@ namespace AssemblyCSharp
 			}
 		}
 
+		/// <summary>
+		/// Serializes given object to JSON and writes JSON to file at path
+		/// </summary>
+		/// <param name="obj">Object.</param>
+		/// <param name="path">Path.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
+		public static void SerializeToFileJSON<T>(ref T obj, string path){
+			string output = JsonConvert.SerializeObject(obj);
+			File.WriteAllText (path, output);
+		}
+
+		/// <summary>
+		/// Deserialize JSON in file at path and place the object
+		/// in the given obj instance
+		/// </summary>
+		/// <param name="obj">Object.</param>
+		/// <param name="path">Path.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
+		public static void DeserializeFromFileJSON<T>(out T obj, string path){
+			obj = JsonConvert.DeserializeObject<T>(File.ReadAllText(path));
+		}
+
+		/// <summary>
+		/// XOR two arrays of ints by XORing the corresponding items
+		/// </summary>
+		/// <returns>The r integer.</returns>
+		/// <param name="first">First.</param>
+		/// <param name="second">Second.</param>
 		public static int[] XOR_Integer (int[] first, int[] second)
 		{
 			int[] result = new int[first.Length];
@@ -75,6 +95,12 @@ namespace AssemblyCSharp
 
 		}
 
+		/// <summary>
+		/// AND two arrays of ints by ANDing the corresponding items
+		/// </summary>
+		/// <returns>The d integer.</returns>
+		/// <param name="first">First.</param>
+		/// <param name="second">Second.</param>
 		public static int[] AND_Integer (int[] first, int[] second)
 		{
 			int[] result = new int[first.Length];
@@ -87,6 +113,12 @@ namespace AssemblyCSharp
 			
 		}
 
+		/// <summary>
+		/// OR two arrays of ints by ORing the corresponding items
+		/// </summary>
+		/// <returns>The r integer.</returns>
+		/// <param name="first">First.</param>
+		/// <param name="second">Second.</param>
 		public static int[] OR_Integer (int[] first, int[] second)
 		{
 			int[] result = new int[first.Length];
@@ -99,6 +131,11 @@ namespace AssemblyCSharp
 			
 		}
 
+		/// <summary>
+		/// Get how many bits in the ints of the given array have value "1"
+		/// </summary>
+		/// <returns>The number of ones in binary string.</returns>
+		/// <param name="str">String.</param>
 		public static int GetNumberOfOnesInBinaryString (int[] str)
 		{
 			int result = 0;
@@ -116,6 +153,16 @@ namespace AssemblyCSharp
 
 		public delegate bool ConverterTU<T,U>(T input, out U output);
 
+		/// <summary>
+		/// Converts array of type T to array of type U, using the given
+		/// conversion function to produce a new item of type U corresponding to a given item 
+		/// of type T
+		/// </summary>
+		/// <returns>The array type.</returns>
+		/// <param name="original">Original.</param>
+		/// <param name="conversionFunc">Conversion func.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
+		/// <typeparam name="U">The 2nd type parameter.</typeparam>
 		public static U[] ConvertArrayType<T,U>(T [] original, ConverterTU<T,U> conversionFunc){
 			int o_c = original.Length;
 			U[] result = new U[o_c];
@@ -129,7 +176,14 @@ namespace AssemblyCSharp
 			return result;
 		}
 
-		public static bool TryParseR(string s, out float f){
+		/// <summary>
+		/// Tries to parse a string for a random float value.
+		/// If the string is "R" a random value will be generated
+		/// </summary>
+		/// <returns><c>true</c>, if parse random value was tryed, <c>false</c> otherwise.</returns>
+		/// <param name="s">S.</param>
+		/// <param name="f">F.</param>
+		public static bool TryParseRandomValue(string s, out float f){
 			if (s.Equals ("R")) {
 				f = UnityEngine.Random.value;
 				return true;
@@ -138,6 +192,16 @@ namespace AssemblyCSharp
 			}
 		}
 
+		/// <summary>
+		/// Randomly modifies a list in one of three ways:
+		/// Removes a item with probability 0.15
+		/// Adds a item with probability 0.66
+		/// Replaces a item with probability 0.19
+		/// </summary>
+		/// <returns>The modified list.</returns>
+		/// <param name="possibleAdditions">Possible additions.</param>
+		/// <param name="originalList">Original list.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
 		public static List<T> RandomlyModifyList<T> (List<T> possibleAdditions, List<T> originalList)
 		{
 			
@@ -173,6 +237,18 @@ namespace AssemblyCSharp
 			return result;
 		}
 
+		/// <summary>
+		/// Randomly modifies a list in one of three ways:
+		/// Removes a item with probability 0.15
+		/// Adds a item with probability 0.66
+		/// Replaces a item with probability 0.19
+		/// The constraint mapping defines what pairs of items cannot occur in the final list
+		/// </summary>
+		/// <returns>The modified list filter invalid lists.</returns>
+		/// <param name="possibleAdditions">Possible additions.</param>
+		/// <param name="originalList">Original list.</param>
+		/// <param name="constraints">Constraints.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
 		public static List<T> RandomlyModifyList_FilterInvalidLists<T> (List<T> possibleAdditions, List<T> originalList, ConstraintMapping constraints)
 		{
 			string debug = "debug";
@@ -247,6 +323,12 @@ namespace AssemblyCSharp
 			return result;
 		}
 
+		/// <summary>
+		/// Shuffles the given list
+		/// </summary>
+		/// <returns>A new, shuffled list.</returns>
+		/// <param name="input">Input.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
 		public static List<T> ShuffleList<T> (List<T> input)
 		{
 			List<T> result = new List<T> ();
@@ -260,6 +342,12 @@ namespace AssemblyCSharp
 			return result;
 		}
 
+		/// <summary>
+		/// Shuffles the array.
+		/// </summary>
+		/// <returns>A new, shuffled array</returns>
+		/// <param name="input">Input.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
 		public static T[] ShuffleArray<T> (T[] input)
 		{
 			int i_l = input.Length;
@@ -278,6 +366,11 @@ namespace AssemblyCSharp
 			return result;
 		}
 
+		/// <summary>
+		/// Get standard deviation of a set of float values
+		/// </summary>
+		/// <returns>The deviation.</returns>
+		/// <param name="data">Data.</param>
 		public static float StandardDeviation(float[] data)
 		{
 			float stdDev = 0;
@@ -306,6 +399,13 @@ namespace AssemblyCSharp
 			return stdDev;
 		}
 
+		/// <summary>
+		/// Compare two floats with the comparison depending
+		/// on the given operation
+		/// </summary>
+		/// <param name="a">The alpha component.</param>
+		/// <param name="b">The blue component.</param>
+		/// <param name="op">Op.</param>
 		public static bool Compare(float a, float b, ComparisonOperator op){
 			if (op == ComparisonOperator.LT){
 				return a<b;
@@ -341,6 +441,9 @@ namespace AssemblyCSharp
 	}
 
 	[Serializable]
+	/// <summary>
+	/// Represents mapping of a string to a float
+	/// </summary>
 	public class StringFloatMap : Pair<string,float>
 	{
 		public StringFloatMap (string s, float f) : base (s, f)

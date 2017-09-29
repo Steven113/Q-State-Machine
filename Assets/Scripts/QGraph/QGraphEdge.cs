@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using AssemblyCSharp;
 
-namespace AssemblyCSharp
+namespace QGraphLearning
 {
 	[Serializable]
 	public class QGraphEdge

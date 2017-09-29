@@ -22,7 +22,7 @@ namespace AssemblyCSharp
 		List<string> possibleStates = new List<string>();
 
 		public void Awake(){
-			Debug.Assert (Utils.DeserializeFile<QTree>(qFileName,ref tree));
+			Debug.Assert (Utils.DeserializeFromFile<QTree>(qFileName,ref tree));
 		}
 
 		// we use the list of strings as a return parameter as we want to facilitate concept-action-mapping

@@ -11,7 +11,7 @@ using System;
 using UnityEngine;
 
 
-namespace AssemblyCSharp
+namespace AI
 {
 	[Serializable]
 	public class SoldierIntel

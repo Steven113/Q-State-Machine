@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using System;
-namespace AssemblyCSharp
+namespace Weapons
 {
 	public enum WeaponFireTypes
 	{

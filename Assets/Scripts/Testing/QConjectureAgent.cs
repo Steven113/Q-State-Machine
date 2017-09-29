@@ -42,7 +42,7 @@ namespace AssemblyCSharp
 
 		public void Awake(){
 			if (loadLearnerFromFile) {
-				UnityEngine.Debug.Assert (Utils.DeserializeFile<QConjectureLearner> (qFileName, ref learner));
+				UnityEngine.Debug.Assert (Utils.DeserializeFromFile<QConjectureLearner> (qFileName, ref learner));
 			}
 		}
 

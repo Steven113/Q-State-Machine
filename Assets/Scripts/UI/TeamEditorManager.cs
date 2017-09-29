@@ -46,8 +46,8 @@ public class TeamEditorManager : MonoBehaviour
 			//TextAsset tempTAsset = Resources.Load(AITextAssetLocations[i]) as TextAsset;
 			//if (tempTAsset.text!=Environment.NewLine && tempTAsset.text!=""){
 			QConjectureLearner tempQ = null;
-			if (!Utils.DeserializeFile ("Assets/Resources/" + AITextAssetLocations [i], ref tempQ)) {
-				Debug.Assert (Utils.DeserializeFile ("Assets/Resources/" + qFileName, ref tempQ));
+			if (!Utils.DeserializeFromFile ("Assets/Resources/" + AITextAssetLocations [i], ref tempQ)) {
+				Debug.Assert (Utils.DeserializeFromFile ("Assets/Resources/" + qFileName, ref tempQ));
 			}
 			conjectureLearners.Add (tempQ);
 			//} else {
@@ -132,7 +132,7 @@ public class TeamEditorManager : MonoBehaviour
 	{
 		if (selected != -1) {
 			QConjectureLearner tempQ = null;
-			Debug.Assert (Utils.DeserializeFile ("Assets/Resources/" + qFileName, ref tempQ));
+			Debug.Assert (Utils.DeserializeFromFile ("Assets/Resources/" + qFileName, ref tempQ));
 			conjectureLearners [selected] = tempQ;
 		}
 	}
@@ -163,7 +163,7 @@ public class TeamEditorManager : MonoBehaviour
 //			streamForTextAssets.WriteLine(conjectureLearners[i].ToFileFormat());
 //			}
 			QConjectureLearner tempQ = conjectureLearners [i];
-			Utils.SerializeFile ("Assets/Resources/" + AITextAssetLocations [i], ref tempQ, ".txt");
+			Utils.SerializeToFile ("Assets/Resources/" + AITextAssetLocations [i], ref tempQ, ".txt");
 		}
 
 	}

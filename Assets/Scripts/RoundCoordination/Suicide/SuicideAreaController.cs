@@ -2,6 +2,8 @@
 using System.Collections;
 using AssemblyCSharp;
 using UnityEngine.UI;
+using Gameplay;
+using AI;
 
 public class SuicideAreaController : MonoBehaviour {
 

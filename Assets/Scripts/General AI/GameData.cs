@@ -11,9 +11,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Collections.ObjectModel;
+using Weapons;
+using AI;
 
 
-namespace AssemblyCSharp
+namespace Gameplay
 {
     [Serializable]
     public static class GameData
@@ -35,68 +37,26 @@ namespace AssemblyCSharp
        
         //add a entity to a faction. If a faction doesn't exist for the entity, the function creates one and returns true to indicate that a faction was created
         public static bool addEntity(SoldierEntity entity)
-        {
-            for (int i = 0; i < Factions.Count; i++)
-            {
-                if (Factions[i].FactionName == entity.faction)
-                {
-                    Factions[i].Soldiers.Add(entity);
-                    //for (int j = 0; j<FactionName[i].Soldiers.Count; j++){
-                    //	FactionName[i].Soldiers[j].knownPositionsOfOtherSoldiers.Add(new SoldierIntel(entity,Vector3.zero));
-                    //}
-                    for (int j = 0; j < Factions.Count; j++)
-                    {
-                        if (Factions[j].FactionName != entity.faction)
-                        {
-                            Factions[j].SoldierIntelData.Add(new SoldierIntel(entity));
-                        }
-                    }
-                    return true;
-                }// else {
+		{
+			for (int i = 0; i < Factions.Count; i++) {
+				if (Factions [i].FactionName == entity.faction) {
+					Factions [i].Soldiers.Add (entity);
+					//for (int j = 0; j<FactionName[i].Soldiers.Count; j++){
+					//	FactionName[i].Soldiers[j].knownPositionsOfOtherSoldiers.Add(new SoldierIntel(entity,Vector3.zero));
+					//}
+					for (int j = 0; j < Factions.Count; j++) {
+						if (Factions [j].FactionName != entity.faction) {
+							Factions [j].SoldierIntelData.Add (new SoldierIntel (entity));
+						}
+					}
+					return true;
+				}// else {
 
-                //}
-            }
-            Factions.Add(new Faction(entity.faction));
-            Factions[Factions.Count - 1].Soldiers.Add(entity);
-            //	for (int j = 0; j<FactionName[FactionName.Count - 1].Soldiers.Count; j++){
-            //		FactionName[FactionName.Count - 1].Soldiers[j].knownPositionsOfOtherSoldiers.Add(new SoldierIntel(entity,Vector3.zero));
-            //}
-            for (int j = 0; j < Factions.Count - 1; j++)
-            {
-                Factions[j].SoldierIntelData.Add(new SoldierIntel(entity));
-            }
+				//}
+			}
 
-            for (int i = 0; i < Factions.Count; i++)
-            {
-
-                for (int k = 0; k < Factions[i].Soldiers.Count; k++)
-                {
-                    for (int j = 0; j < Factions.Count; j++)
-                    {
-                        if (Factions[i] != Factions[j])
-                        {
-                            bool hasIntel = false;
-                            for (int l = 0; l < Factions[j].SoldierIntelData.Count; l++)
-                            {
-                                if (Factions[j].SoldierIntelData[l].soldierEntityToTrack == Factions[i].Soldiers[k])
-                                {
-                                    hasIntel = true;
-                                    break;
-                                }
-                            }
-                            if (!hasIntel)
-                            {
-                                Factions[j].SoldierIntelData.Add(new SoldierIntel(Factions[i].Soldiers[k]));
-                            }
-                        }
-                    }
-                    Factions[Factions.Count - 1].SoldierIntelData.Add(new SoldierIntel(Factions[i].Soldiers[k]));
-                }
-                //}
-            }
-
-            return true;
-        }
+			return false;
+		}
 
         public static Collection<Faction> GetFactionName
         {
@@ -128,7 +88,7 @@ namespace AssemblyCSharp
                     return Factions[i];
                 }
             }
-            Factions.Add(new Faction(factionToGet));
+            //Factions.Add(new Faction(factionToGet));
             return Factions[Factions.Count - 1];
         }
 
@@ -155,6 +115,15 @@ namespace AssemblyCSharp
 				activeFactions [i] = Factions [i].FactionName;
 			}
 			return activeFactions;
+		}
+			
+		public static void RemoveFaction(FactionName factionName){
+			for (int i = 0; i < Factions.Count; ++i) {
+				if (Factions [i].FactionName == factionName) {
+					Factions.RemoveAt (i);
+					--i;
+				}
+			}
 		}
     }
 }

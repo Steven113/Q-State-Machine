@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using System;
-namespace AssemblyCSharp
+namespace AI
 {
 	//Types of results that LOS tests can return
 	public enum LOSResult

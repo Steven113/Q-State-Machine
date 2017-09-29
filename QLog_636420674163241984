@@ -1,0 +1,101 @@
+Num combos: 10
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 3
+Soldier 0 given graph 0 1
+===============================================================================
+QHeirarchyArmy : 4
+Dummy : 3
+Soldier 0 given graph 1 3
+===============================================================================
+QHeirarchyArmy : 0
+Dummy : 1
+Soldier 0 given graph 2 5
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 2
+Soldier 0 given graph 3 7
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 2
+Soldier 0 given graph 4 9
+===============================================================================
+QHeirarchyArmy : 2
+Dummy : 1
+Soldier 0 given graph 5 11
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 2
+Soldier 0 given graph 6 13
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 4
+Soldier 0 given graph 7 15
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 1
+Soldier 0 given graph 8 17
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 2
+Soldier 0 given graph 9 19
+===============================================================================
+Evolving enemies
+Graph 0 ID: 1 has fitness: -126.5078
+Graph 1 ID: 3 has fitness: -28.33957
+Graph 2 ID: 5 has fitness: 117.5221
+Graph 3 ID: 7 has fitness: 106.2358
+Graph 4 ID: 9 has fitness: 78.0405
+Graph 5 ID: 11 has fitness: 68.60245
+Graph 6 ID: 13 has fitness: -16.97639
+Graph 7 ID: 15 has fitness: 143.9022
+Graph 8 ID: 17 has fitness: 107.4809
+Graph 9 ID: 19 has fitness: 145.787
+Static enemies
+For round 0 the fitness was 115.8995
+For round 1 the fitness was 32.71867
+For round 2 the fitness was 97.08484
+For round 3 the fitness was -84.45163
+For round 4 the fitness was -87.98551
+For round 5 the fitness was -36.50165
+For round 6 the fitness was -55.39461
+For round 7 the fitness was 34.97871
+For round 8 the fitness was -100.496
+For round 9 the fitness was -99.35841
+Evolving enemies
+Average Fitness of evolving enemy 59.57473
+StdDev of Fitness of evolving enemy 88.82693
+Static enemies
+Average Fitness of non-evolving enemy -18.35061
+StdDev of Fitness of non-evolving enemy 82.34799
+===============================================================================
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+===============================================================================
+Evolving.
+QHeirarchyArmy : 4
+Dummy : 2
+Soldier 0 given graph 0 19
+===============================================================================
+QHeirarchyArmy : 5
+Dummy : 2
+Soldier 0 given graph 1 15
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 3
+Soldier 0 given graph 2 5
+===============================================================================
+QHeirarchyArmy : 4
+Dummy : 1
+Soldier 0 given graph 3 17
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 2
+Soldier 0 given graph 4 7
+===============================================================================
+QHeirarchyArmy : 3
+Dummy : 2
+Soldier 0 given graph 5 9
+===============================================================================
+QHeirarchyArmy : 1
+Dummy : 2
+Soldier 0 given graph 6 11

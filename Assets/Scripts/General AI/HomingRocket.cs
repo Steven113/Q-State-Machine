@@ -11,7 +11,7 @@ using System;
 using UnityEngine;
 
 
-namespace AssemblyCSharp
+namespace Weapons
 {
 	public class HomingRocket : RocketProjectileScript
 	{

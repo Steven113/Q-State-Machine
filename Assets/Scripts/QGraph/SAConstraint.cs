@@ -1,9 +1,12 @@
 ﻿using System;
 using UnityEngine;
 
-namespace AssemblyCSharp
+namespace QGraphLearning
 {
 	[Serializable]
+	/// <summary>
+	/// Represents a constraint that two actions cannot happen at the same time
+	/// </summary>
 	public class SAConstraint
 	{
 		public string action1;

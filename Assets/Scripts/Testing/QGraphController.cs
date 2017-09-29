@@ -3,43 +3,46 @@ using UnityEngine;
 using System.Collections.Generic;
 
 using AssemblyCSharp;
+using QGraphLearning;
 
 
 namespace AssemblyCSharp
 {
 	public class QGraphController : MonoBehaviour
 	{
-		public string [] possibleStates;
-		public string [] possibleActions;
+		[SerializeField]string [] possibleStates;
+		[SerializeField]string [] possibleActions;
 
 		//public StringFloatMap [] floatRestrictions;
 
-		float edgeMutationChance = 0.1f;
-		float actionMutationChance = 0.1f;
-		float addNodeChance = 0.8f;
-		float changeInterruptWeightChance = 0.01f;
-		float numNodesToConnectToNewNode = 0.5f;
-		float numNodesToConnectNewNodeTo = 0.5f;
+		[SerializeField]float edgeMutationChance = 0.1f;
+		[SerializeField]float actionMutationChance = 0.1f;
+		[SerializeField]float addNodeChance = 0.8f;
+		[SerializeField]float changeInterruptWeightChance = 0.01f;
+		[SerializeField]float numNodesToConnectToNewNode = 0.5f;
+		[SerializeField]float numNodesToConnectNewNodeTo = 0.5f;
 
-		public StringFloatMap [] floatMult;
+		[SerializeField]StringFloatMap [] floatMult;
 
-		public FloatRange [] float_restriction_range;
+		[SerializeField]FloatRange [] float_restriction_range;
 
-		public List<SAConstraint> stateConstraints;
-		public List<SAConstraint> actionConstraints;
-		public List<ComparisonOperator> comparisonOperators;
+		[SerializeField]List<SAConstraint> stateConstraints;
+		[SerializeField]List<SAConstraint> actionConstraints;
+		[SerializeField]List<ComparisonOperator> comparisonOperators;
 
 		QGraph [] graphs;
 
-		public int numGraphs = 5;
+		[SerializeField]int numGraphs = 5;
 
-		public float mutationIncrement = 0.01f;
+		[SerializeField]float mutationIncrement = 0.01f;
 
-		public TextAsset heuristicInitFile;
+		[SerializeField]TextAsset heuristicInitFile;
 
-		public int windowSize;
+		[SerializeField]int windowSize;
 
-		public float timeCostDiscount;
+		[SerializeField]float timeCostDiscount;
+
+		[SerializeField]bool useSmartMutation = false;
 
 		public void Awake(){
 			int f_l = float_restriction_range.Length;
@@ -56,13 +59,19 @@ namespace AssemblyCSharp
 
 			for (int i = 0; i < numGraphs; ++i) {
 				if (heuristicInitFile == null || string.IsNullOrEmpty(heuristicInitFile.text)) {
+					/*
+					 * Generate random graph
+					 */
 					graphs [i] = new QGraph (possibleStates, possibleActions, float_m, float_r, stateConstraints,actionConstraints,edgeMutationChance, actionMutationChance,addNodeChance, changeInterruptWeightChance,numNodesToConnectToNewNode,numNodesToConnectNewNodeTo,comparisonOperators,this.windowSize,this.timeCostDiscount);
 					graphs [i].MutationIncrement = mutationIncrement;
 				} else {
+					/*
+					 * Parse QGraph from file
+					 */
 					graphs [i] = new QGraph (heuristicInitFile);
 					graphs [i].MutationIncrement = mutationIncrement;
 					if (i > 0) {
-						graphs [i] = QGraph.Mutate (graphs [i]);
+						graphs [i] = QGraph.Mutate (graphs [i],false);
 					}
 				}
 
@@ -74,8 +83,14 @@ namespace AssemblyCSharp
 
 		}
 
-		public void Evolve(){
-			graphs = QGraph.Evolve (graphs);
+		public void Evolve(bool reinjectOriginal){
+			graphs = QGraph.Evolve (graphs,useSmartMutation);
+			if (reinjectOriginal) {
+				Array.Sort(graphs);
+				Array.Reverse(graphs);
+				graphs[graphs.Length-1] = new QGraph (heuristicInitFile);
+				graphs = Utils.ShuffleArray(graphs);
+			}
 		}
 
 		public QGraph[] Graphs {
@@ -84,6 +99,15 @@ namespace AssemblyCSharp
 			}
 			set {
 				graphs = value;
+			}
+		}
+
+		public int NumGraphs {
+			get {
+				return numGraphs;
+			}
+			set {
+				numGraphs = value;
 			}
 		}
 	}

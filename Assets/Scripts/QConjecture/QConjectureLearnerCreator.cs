@@ -45,7 +45,7 @@ namespace AssemblyCSharp
 			
 			if (GUILayout.Button ("Save Conjecture Learner")) {
 				if (conjectureLearner != null) {
-					Utils.SerializeFile (fileToSaveTreeTo, ref conjectureLearner);
+					Utils.SerializeToFileJSON (ref conjectureLearner, fileToSaveTreeTo);
 					String saveData = "";
 					for (int i = 0; i<conjectureLearner.possibleStates.Count; ++i){
 						saveData = saveData + conjectureLearner.possibleStates[i] + " ";
@@ -64,7 +64,7 @@ namespace AssemblyCSharp
 			
 			if (GUILayout.Button ("Load Conjecture Learner")) {
 				QConjectureLearner tempCL = null;
-				if (Utils.DeserializeFile<QConjectureLearner> (fileToLoadTreeFrom, ref tempCL) && tempCL != null) {
+				if (Utils.DeserializeFromFile<QConjectureLearner> (fileToLoadTreeFrom, ref tempCL) && tempCL != null) {
 					conjectureLearner = tempCL;
 				} else {
 					Debug.Log ("File could not load!");

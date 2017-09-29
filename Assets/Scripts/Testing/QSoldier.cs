@@ -13,6 +13,9 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.AI;
+using Weapons;
+using Gameplay;
+using AI;
 
 namespace AssemblyCSharp
 {
@@ -20,8 +23,8 @@ namespace AssemblyCSharp
 	public class QSoldier : QSensor
 	{
 
-		public static List<QSensor> allQSensors = new List<QSensor> ();
-		//public static List<Camera> sensorCameras = new List<Camera>(); //we want to be able to switch between agents and cameras
+
+
 		public static int currentAgent = 0;
 
 		//public Transform transformToDoLosChecksFrom;
@@ -57,7 +60,7 @@ namespace AssemblyCSharp
 		public int bigFoundCount = 1;
 		//for big heals
 
-		public float ActionUpdateInterval = 0.5f;
+		public float actionUpdateInterval = 0.5f;
 		public float timeSinceLastActionUpdate = 1000f;
 
 		[Header("AI Update Rate")]
@@ -103,7 +106,7 @@ namespace AssemblyCSharp
 		public bool enableDebugVisualizations = false;
 		public List<SoldierEntity> currentlyVisibleEnemies = new List<SoldierEntity> ();
 		//public FactionName thisEntity.faction = FactionName.QHeirarchyArmy;
-		public bool currentTargetHasChanged;
+		//public bool currentTargetHasChanged;
 		public AISoldierState soldierState;
 		public Vector3 previousEnemyPos;
 		public LayerMask LOSCheckLayers;
@@ -128,7 +131,7 @@ namespace AssemblyCSharp
 
 		public Collider suppressionSphere;
 
-		double shuffleIndex = 0;
+
 
 		[SerializeField]int numActionsBusyWith = 0;
 
@@ -139,6 +142,10 @@ namespace AssemblyCSharp
 
 		//float [] expectedScores = new float[]{0,0};
 
+		/// <summary>
+		/// Reward agent with given reward value
+		/// </summary>
+		/// <param name="reward">Reward.</param>
 		public override void Reward (float reward)
 		{
 			qAgent.RewardAgent (reward);
@@ -152,9 +159,9 @@ namespace AssemblyCSharp
 		public void Awake ()
 		{
 			lookDirection = gameObject.transform.forward;
-			agent = gameObject.GetComponent<UnityEngine.AI.NavMeshAgent> ();
-			agent.updateRotation = false;
-			allQSensors.Add (this);
+			agent = gameObject.GetComponent<UnityEngine.AI.NavMeshAgent> (); //get navmesh agent
+			agent.updateRotation = false; //disable automatic rotation of agent so that it won't automatically look in the direction it is moving
+
 			if (suppressionSphere != null) {
 				GameData.SuppressionSphereDictionary.Add (suppressionSphere, healthController);
 			}
@@ -186,6 +193,9 @@ namespace AssemblyCSharp
 //				expectedScores [1] = GameData.scores [1];
 //			}
 
+			/*
+			 * This code runs unless we have set up the system to give reward based on the reward the player gives
+			 */
 			if (autoSetReward) {
 				reward += healthRewardMultiplier*(healthController.health / healthController.maxhealth) * (Time.deltaTime);
 				if (Vector3.SqrMagnitude (gameObject.transform.position - previousPos) > posRewardThreshold * posRewardThreshold) {
@@ -219,27 +229,41 @@ namespace AssemblyCSharp
 				}
 			}
 
+			/*
+			 * This code makes the agent more efficient by making it not update on every frame
+			 */
 			if (timeSinceLastUpdate > AIUpdateInterval) {
 				timeSinceLastUpdate %= AIUpdateInterval;
 				UpdateLOSInfo ();
 
 			}
 
-			if (timeSinceLastActionUpdate > ActionUpdateInterval) {
+			/*
+			 * Get a new action, if an appropriate interval has passed after getting the last action
+			 */
+			if (timeSinceLastActionUpdate > actionUpdateInterval) {
 
 				//if (!(weapon.stateOfWeapon == WeaponState.Reloading)) {
-					timeSinceLastActionUpdate %= ActionUpdateInterval; // this statement gets moved here so that only if the next action is requested do we restart the timer before requesting an action
+					timeSinceLastActionUpdate %= actionUpdateInterval; // this statement gets moved here so that only if the next action is requested do we restart the timer before requesting an action
 					if (autoSetReward) {
 						qAgent.RewardAgent (reward); //we call the q agent reward directly, as we don't want to pointlessly add another function call to the stack by calling the reward method of this class
 						reward = 0;
 					}
 
 					currentActionSet = qAgent.GetAction (getState (), getStateValues ());
-					++shuffleIndex;
-
+					
+				/*
+				 * We immediately apply the action of turning 180 degrees
+				 */
 				if (currentActionSet.Contains ("Turn180")){
 					Vector3 c_dest = agent.destination;
 					gameObject.transform.Rotate (new Vector3 (0, 180, 0));
+
+					/*
+					 * we need to put the agent back on the navmesh in case rotating
+					 * it put the agent off the navmesh. This can happen if the navmesh
+					 * modek has a different centre to the agent
+					 */
 					agent.SetDestination (c_dest);
 				}
 				//}
@@ -247,12 +271,24 @@ namespace AssemblyCSharp
 			//thisEntity.faction
 			//if (shuffleIndex % 2 == 0) {
 			if (currentActionSet.Contains ("Shoot") && weapon.stateOfWeapon == WeaponState.Ready && (!useCheatConditions || (weapon.magazines.Count > 0 && weapon.magazines [weapon.currentMag] > 0))) {
+				/*
+				 *  Punish agent if it tries to shoot while having no ammo. This is meant to encourage it to reload
+				 */
 				if (autoSetReward && (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] == 0)) {
 					reward -= Time.deltaTime;
 				} else if ((currentTarget != null && currentTarget.mainLOSCollider != null)) {
 					reward += Time.deltaTime;
 				}
 
+				/*
+				 * If a enemy is in sight we point bullets towards the enemy even
+				 * if the barrel doesn't face the enemy, assuming that the angle
+				 * that the bullet is adjusted by
+				 * (the angle between the barrel and the line from this agent to the enemy)
+				 * isn't too large.
+				 * If the angle is too large or if there is no opponent, the bullet follows the 
+				 * direction of the gun barrel
+				 */
 				if (CurrentTarget == null || Vector3.Angle(gameObject.transform.forward,(currentTarget.mainLOSCollider.gameObject.transform.position-weapon.barrelStart.position))>maxAngleOffsetForFiringShotsNotLinedUpWithBarrel) {
 					weapon.fire (weapon.barrelEnd.position, weapon.barrelStart.position, thisEntity.faction, false);
 				} else {
@@ -260,7 +296,11 @@ namespace AssemblyCSharp
 				}
 
 
-			} else if (currentActionSet.Contains ("Reload") && weapon.stateOfWeapon != WeaponState.Reloading && (!useCheatConditions || (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] < weapon.magSize * 0.5f))) {
+			} else 
+				/*
+				 * If out of ammo, reload
+				 */
+			if (currentActionSet.Contains ("Reload") && weapon.stateOfWeapon != WeaponState.Reloading && (!useCheatConditions || (weapon.magazines.Count == 0 || weapon.magazines [weapon.currentMag] < weapon.magSize * 0.5f))) {
 				StartCoroutine (Reload ());
 			}
 
@@ -273,6 +313,7 @@ namespace AssemblyCSharp
 //				}
 //			}
 
+			/* apply action for healing */
 			if (currentActionSet.Contains ("BigHeal")) {
 				heal (false);
 			} else if (currentActionSet.Contains ("Heal")) {
@@ -281,21 +322,17 @@ namespace AssemblyCSharp
 
 
 
-			//AttackTarget ();
 
-//			List<string> state = getState ();
-//			String str = "";
-//			for (int i = 0; i<state.Count; ++i) {
-//				str = str + state[i] +" ";
-//			}
-//			Debug.Log(str);
-			//}
 		}
 
+		/// <summary>
+		/// Get continuous state variables of agent e.g. health
+		/// </summary>
+		/// <returns>The state values.</returns>
 		public override List<float> getStateValues ()
 		{
 			List<float> data = new List<float> ();
-			data.Add (healthController.health / healthController.maxhealth);
+			data.Add (healthController.health / healthController.maxhealth); //we normalize the health
 			data.Add ((weapon.magazines.Count>0)?(weapon.magazines [weapon.currentMag] / weapon.magSize):0);
 			data.Add (currentlyVisibleEnemies.Count);
 			data.Add (healthController.suppressionLevel);
@@ -305,6 +342,10 @@ namespace AssemblyCSharp
 			return data;
 		}
 
+		/// <summary>
+		/// Does nothing since we have no enumerable state variables
+		/// </summary>
+		/// <returns>The state.</returns>
 		public override List<string> getState ()
 		{
 			List<string> result = new List<string> ();
@@ -328,6 +369,11 @@ namespace AssemblyCSharp
 			return result;
 		}
 
+		/// <summary>
+		/// This messy piece of code updates what enemies are in line of sight and 
+		/// what enemy is the current target. It is so messy since it is compact
+		/// for efficiency.
+		/// </summary>
 		public virtual void UpdateLOSInfo ()
 		{
 			currentlyVisibleEnemies.Clear ();
@@ -385,6 +431,12 @@ namespace AssemblyCSharp
 //			}
 		}
 
+		/// <summary>
+		/// Checks whether the given agent is in line of sight.
+		/// Again, the code is compact and messy for efficiency purposes
+		/// </summary>
+		/// <returns>The in line of sight.</returns>
+		/// <param name="entity">Entity.</param>
 		public virtual LOSResult isInLineOfSight (SoldierEntity entity)
 		{
 
@@ -445,20 +497,36 @@ namespace AssemblyCSharp
 			}
 		}
 
+		/// <summary>
+		/// Update direction agent is facing
+		/// </summary>
 		public virtual void UpdateOrientation ()
 		{
 			Vector3 temp = Vector3.zero;
+			/*
+			 * If there is a current target which is visible, look towards that target
+			 */
 			if (currentTarget != null && currentTarget.mainLOSCollider != null && amountOfTimeCurrentTargetHasBeenInLOS > 0 /*&& (currentTarget.centreOfMass.position-transformToDoLOSChecksFrom.position).magnitude<lookDirection.magnitude*/) {
 				temp = currentTarget.mainLOSCollider.transform.position;
 				temp.y = gameObject.transform.position.y;
 				Quaternion tempQ = Quaternion.LookRotation (temp - gameObject.transform.position);
 				gameObject.transform.rotation = Quaternion.RotateTowards (gameObject.transform.rotation, tempQ, Time.deltaTime * horizontalRotationRate);
-			} else if (currentlyVisibleEnemies.Count > 0 && currentlyVisibleEnemies [0].mainLOSCollider != null && (currentlyVisibleEnemies [0].centreOfMass.position - transformToDoLOSChecksFrom.position).magnitude < lookDirection.magnitude) {
+			} else
+				/*
+				 * If there is no current target or the current target is not visible, look towards a arbitrary currently visible enemy
+				 */
+			if (currentlyVisibleEnemies.Count > 0 && currentlyVisibleEnemies [0].mainLOSCollider != null && (currentlyVisibleEnemies [0].centreOfMass.position - transformToDoLOSChecksFrom.position).magnitude < lookDirection.magnitude) {
 				temp = currentlyVisibleEnemies [0].mainLOSCollider.transform.position;
 				temp.y = gameObject.transform.position.y;
 				Quaternion tempQ = Quaternion.LookRotation (temp - gameObject.transform.position);
 				gameObject.transform.rotation = Quaternion.RotateTowards (gameObject.transform.rotation, tempQ, Time.deltaTime * horizontalRotationRate);
-			} else { /*if (agent.hasPath)*/
+			} 
+			/*
+			 * if no currently visible enemies, look towards "lookForward" direction.
+			 * lookfoward will either face the direction the agent is moving 
+			 * or in the direction enemy fire is coming from
+			 */
+				else { /*if (agent.hasPath)*/
 				if ((Time.time - timeOfLastSuppression) > timeBeforeForgettingSuppression) {
 					if (agent.hasPath) {
 						lookDirection = weightingWhenMovingBackOntoPath * Time.deltaTime * (
@@ -476,6 +544,10 @@ namespace AssemblyCSharp
 
 		}
 
+		/// <summary>
+		/// This property updates the current target based on whether it actually changed.
+		/// </summary>
+		/// <value>The current target.</value>
 		public SoldierEntity CurrentTarget {
 			get {
 				if (currentTarget != null && currentTarget.mainLOSCollider == null) {
@@ -483,6 +555,7 @@ namespace AssemblyCSharp
 				}
 				return currentTarget;
 			}
+
 			set {
 				//rotationAmountWhenSearching *= -1;
 				//pointToDoRandomizationFrom = UnityEngine.Random.Range (0, 1000);
@@ -504,12 +577,15 @@ namespace AssemblyCSharp
 //				if (fireTeamController!=null && !radioSilence && !currentlyVisibleEnemies.Contains(value) && Vector3.Distance(value.centreOfMass.position,gameObject.transform.position)<maxRangeForEngagement){
 //					fireTeamController.PlayEventSound(RadioEventType.PlayerSpotted,soldierAudioSource);
 //				}
-					currentTargetHasChanged = true;
+					//currentTargetHasChanged = true;
 					previousTargetHealth = value.controlHealth.health;
 				}
 			
 				currentTarget = value;
 			
+				/*
+				 * If the current target is changed, reset var
+				 */
 				if (currentTarget != null && currentTarget.mainLOSCollider != null) {
 					if (enableDebugPrint)
 						Debug.Log ("Setting target to " + currentTarget.mainLOSCollider.gameObject.name + " for " + gameObject.transform.position);
@@ -529,6 +605,9 @@ namespace AssemblyCSharp
 			}
 		}
 
+		/// <summary>
+		/// Updates movement based on movement action given to agent
+		/// </summary>
 		public void UpdateMovement ()
 		{
 			
@@ -536,6 +615,10 @@ namespace AssemblyCSharp
 				timeSinceLastUpdatingCurrentPath %= intervalForUpdatingPath;
 				if (currentActionSet != null) {
 					if (currentTarget == null || currentTarget.mainLOSCollider == null) {
+						/*
+						 * If exploring, find random point in world bounds and move to whatever point on the navmesh
+						 * is nearest that point
+						 */
 						if (currentActionSet.Contains ("Explore") && (!exploring || (exploring && agent.remainingDistance == 0))) {
 							exploring = true;
 							//origin for search
@@ -548,12 +631,21 @@ namespace AssemblyCSharp
 
 							agent.SetDestination (nav_hit.position);
 
-						} else if (currentActionSet.Contains ("GoToCover")) {
+						} else
+							/*
+							 * If seeking cover, find nearest edge. The nearest edge will be near a wall usually,
+							 * hence this hack normally works
+							 */
+						if (currentActionSet.Contains ("GoToCover")) {
 							exploring = false;
 							NavMesh.FindClosestEdge (agent.transform.position, out nav_hit, agent.areaMask);
 							agent.SetDestination (nav_hit.position);
 						}
 					} else {
+						/*
+						 * If fleeing, estimate place in world bounds that is furtherest from enemy and move towards
+						 * point on navmesh that is the closest to that fleeing point
+						 */
 						if (currentActionSet.Contains ("Flee")) {
 							exploring = false;
 							//if (currentTarget != null) {
@@ -566,7 +658,11 @@ namespace AssemblyCSharp
 								NavMesh.SamplePosition (searchPoint, out nav_hit, float.PositiveInfinity, agent.areaMask);
 
 								agent.SetDestination (nav_hit.position);
-						} else if (currentActionSet.Contains ("MoveTo") && currentTarget != null && currentTarget.centreOfMass != null) {
+						} else 
+							/*
+							 * If moving to enemy, try to move to the enemy, if there is one
+							 */
+							if (currentActionSet.Contains ("MoveTo") && currentTarget != null && currentTarget.centreOfMass != null) {
 							exploring = false;
 							agent.SetDestination (currentTarget.centreOfMass.position);
 							//AIGrid.findPath (this, gameObject.transform.position, currentTarget.centreOfMass.position, out path, false, false);
@@ -587,6 +683,9 @@ namespace AssemblyCSharp
 
 		}
 
+		/// <summary>
+		/// Make weapon ready to fire one reload interval has elapsed
+		/// </summary>
 		public IEnumerator Reload ()
 		{
 //			if (autoSetReward) {
@@ -604,6 +703,10 @@ namespace AssemblyCSharp
 			//animationObject.CrossFade(avatarAlias+"|"+weaponName.ToString()+" Idle");
 		}
 
+		[Obsolete]
+		/// <summary>
+		/// Makes agent fire at the current target if possible
+		/// </summary>
 		public virtual void AttackTarget ()
 		{
 			
@@ -643,6 +746,9 @@ namespace AssemblyCSharp
 			}
 		}
 
+		/// <summary>
+		/// Checks whether agent can shoot without hitting a friendly soldier
+		/// </summary>
 		protected virtual void UpdateFriendlyFireFlag ()
 		{
 			friendlySoldierInLineOfFire = false;
@@ -679,6 +785,10 @@ namespace AssemblyCSharp
 			
 		}
 
+		/// <summary>
+		/// Heals the soldier if the appropriate healing item is available
+		/// </summary>
+		/// <param name="useSmallHeal">If set to <c>true</c> use small heal.</param>
 		public void heal (bool useSmallHeal)
 		{
 			float initialHealth = healthController.health;
@@ -695,13 +805,19 @@ namespace AssemblyCSharp
 				reward += ((healthController.health - initialHealth) / healthController.maxhealth); //give reward based on change in health
 		}
 
+		/// <summary>
+		/// Equivalent of destructor for Unity Engine. Cleans up agent data.
+		/// </summary>
 		public virtual void OnDestroy ()
 		{
-			allQSensors.Remove (this); //we can be sure that this is in the list, since we add it to the list upon initialisation
+			
 			healthController.RemoveOnDamageEvent (this.OnDamage);
 			GameData.SuppressionSphereDictionary.Remove (suppressionSphere);
 		}
 
+		/// <summary>
+		/// Respawn agent data
+		/// </summary>
 		public void Respawn ()
 		{
 			//qAgent.RewardAgent (-10);
@@ -725,6 +841,10 @@ namespace AssemblyCSharp
 				float t_dist = 0;
 				int numEnemies = 0;
 
+				/*
+				 * Get average dist between spawn points and enemy soldiers
+				 */
+
 				for (int j = 0; j < GameData.Factions.Count; ++j) {
 					if (GameData.Factions [j].FactionName == thisEntity.faction) {
 						continue;
@@ -738,6 +858,7 @@ namespace AssemblyCSharp
 					}
 				}
 
+
 				t_dist /= numEnemies;
 
 				if (t_dist > maxDist) {
@@ -749,9 +870,16 @@ namespace AssemblyCSharp
 
 			agent.Warp ((QTournamentController.g_SpawnPoints[index].transform.position));
 
-			this.Reset ();
+			this.ResetSoldier ();
 		}
 
+		/// <summary>
+		/// Method to be used as event for when agent is damaged
+		/// </summary>
+		/// <param name="healthController">Health controller.</param>
+		/// <param name="damage">Damage.</param>
+		/// <param name="factionThatFiredShot">Faction that fired shot.</param>
+		/// <param name="shotDirection">Shot direction.</param>
 		public bool OnDamage(ControlHealth healthController, float damage, FactionName factionThatFiredShot, Vector3 shotDirection){
 			if (healthController.health <= 0) {
 				Debug.Assert (GameData.scores.ContainsKey (factionThatFiredShot));
@@ -761,12 +889,20 @@ namespace AssemblyCSharp
 			return false;
 		}
 
+		/// <summary>
+		/// Get number of ongoing actions e.g. reloading
+		/// </summary>
+		/// <returns>number of actions soldier is busy with</returns>
 		public override int GetBusyWithAction ()
 		{
 			return numActionsBusyWith;
 		}
 
-		public void Reset(){
+		/// <summary>
+		/// Resets state of soldier
+		/// of the script
+		/// </summary>
+		public void ResetSoldier(){
 			previousPos = gameObject.transform.position;
 			healthController.health = healthController.maxhealth;
 			this.CurrentTarget = null;

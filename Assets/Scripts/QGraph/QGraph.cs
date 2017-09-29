@@ -2,56 +2,66 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using AssemblyCSharp;
 
-namespace AssemblyCSharp
+namespace QGraphLearning
 {
 	[Serializable]
+	/// <summary>
+	/// Represents a QGraph, a state matchine allowing varying numbers of constraints
+	/// for edge transitions, and variable numbers of actions to take upon transitioning.
+	/// A QGraph can also be mutated
+	/// </summary>
 	public class QGraph : IComparable<QGraph>
 	{
 
 		static int numGraphs;
-
 		public int ID;
-
 		float totalReward = 0;
-
 		public List<QGraphNode> nodes = new List<QGraphNode> ();
-
 		QGraphNode currentNode;
-
 		QGraphNode root;
 		//this node is the "default" node - if the current node has no edge for the current state, this is the selected node
 
-		ConstraintMapping actionConstraints = new ConstraintMapping();
-		ConstraintMapping stateConstraints = new ConstraintMapping();
-
+		ConstraintMapping actionConstraints = new ConstraintMapping ();
+		ConstraintMapping stateConstraints = new ConstraintMapping ();
 		int numActions = 0;
-
 		float mutationIncrement = 0.001f;
-
 		float edgeMutationChance = 0.1f;
 		float actionMutationChance = 0.1f;
 		float addNodeChance = 0.8f;
 		float changeInterruptWeightChance = 0.01f;
 		float numNodesToConnectToNewNode = 0.5f;
 		float numNodesToConnectNewNodeTo = 0.5f;
-
 		List<string> possibleStates;
 		List<string> possibleActions;
 		List<FloatRange> float_restriction_range;
 		List<float> float_mult;
-
-		List<ComparisonOperator> comparison_operators = new List<ComparisonOperator>();
-
-		List<QGraphNode> memoryWindow;
-
-		int windowSize = 20;
-
-		int windowIndex = 0;
-
+		List<ComparisonOperator> comparison_operators = new List<ComparisonOperator> ();
+		List<QGraphNode> memoryWindow; //a sequence of the previously taken action
+		int windowSize = 20; //max number of items in memoryWindow
+		int windowIndex = 0; //index of latest action previously taken
 		float timeCostDiscount = 0.5f;
 
-		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_mult, IEnumerable<FloatRange> default_restriction_range, IEnumerable<SAConstraint> stateConstraints, IEnumerable<SAConstraint> actionConstraints,float edgeMutationChance, float actionMutationChance,float addNodeChance, float changeInterruptWeightChance,float numNodesToConnectToNewNode,float numNodesToConnectNewNodeTo, IEnumerable<ComparisonOperator> comparison_ops, int windowSize, float timeCostDiscount)
+		/// <summary>
+		/// Generate a random QGraph using the given info
+		/// </summary>
+		/// <param name="possibleStates">Possible states.</param>
+		/// <param name="possibleActions">Possible actions.</param>
+		/// <param name="default_float_mult">Default float mult.</param>
+		/// <param name="default_restriction_range">Default restriction range.</param>
+		/// <param name="stateConstraints">State constraints.</param>
+		/// <param name="actionConstraints">Action constraints.</param>
+		/// <param name="edgeMutationChance">Edge mutation chance.</param>
+		/// <param name="actionMutationChance">Action mutation chance.</param>
+		/// <param name="addNodeChance">Add node chance.</param>
+		/// <param name="changeInterruptWeightChance">Change interrupt weight chance.</param>
+		/// <param name="numNodesToConnectToNewNode">Number nodes to connect to new node.</param>
+		/// <param name="numNodesToConnectNewNodeTo">Number nodes to connect new node to.</param>
+		/// <param name="comparison_ops">Comparison ops.</param>
+		/// <param name="windowSize">Window size.</param>
+		/// <param name="timeCostDiscount">Time cost discount.</param>
+		public QGraph (IEnumerable<string> possibleStates, IEnumerable<string> possibleActions, IEnumerable<float> default_float_mult, IEnumerable<FloatRange> default_restriction_range, IEnumerable<SAConstraint> stateConstraints, IEnumerable<SAConstraint> actionConstraints, float edgeMutationChance, float actionMutationChance, float addNodeChance, float changeInterruptWeightChance, float numNodesToConnectToNewNode, float numNodesToConnectNewNodeTo, IEnumerable<ComparisonOperator> comparison_ops, int windowSize, float timeCostDiscount)
 		{
 
 			this.stateConstraints = new ConstraintMapping (stateConstraints.ToList ());
@@ -77,7 +87,7 @@ namespace AssemblyCSharp
 			this.possibleStates = new List<string> (states);
 			this.possibleActions = new List<string> (actions);
 			this.float_mult = new List<float> (default_float_mult.ToArray ());
-			this.float_restriction_range = new List<FloatRange>(default_restriction_range.ToArray ());
+			this.float_restriction_range = new List<FloatRange> (default_restriction_range.ToArray ());
 
 			this.edgeMutationChance = edgeMutationChance;
 			this.actionMutationChance = actionMutationChance;
@@ -116,7 +126,7 @@ namespace AssemblyCSharp
 					//temp_edge.Float_restrictions [j] = Mathf.ac
 				}
 				temp_edge.Float_mult = new List<float> (default_float_mult.ToArray ());
-				temp_edge.Comparison_operators = new List<ComparisonOperator>(this.comparison_operators);
+				temp_edge.Comparison_operators = new List<ComparisonOperator> (this.comparison_operators);
 				root.AddEdge (temp_edge);
 			}
 
@@ -142,11 +152,11 @@ namespace AssemblyCSharp
 						temp_edge.RequiredStates = new List<string>{ states [stateIndex] };
 					}
 					temp_edge.Float_restrictions = new List<float> (float_restriction_range.Count);
-					for (int k = 0; k<float_restriction_range.Count; ++k){
+					for (int k = 0; k<float_restriction_range.Count; ++k) {
 						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (float_restriction_range [k].min, float_restriction_range [k].max));
 					}
 					temp_edge.Float_mult = new List<float> (default_float_mult.ToArray ());
-					temp_edge.Comparison_operators = new List<ComparisonOperator>(this.comparison_operators);
+					temp_edge.Comparison_operators = new List<ComparisonOperator> (this.comparison_operators);
 					nodes [i].AddEdge (temp_edge);
 
 				}
@@ -159,15 +169,19 @@ namespace AssemblyCSharp
 
 		}
 
-		//load QGraph from file, for heuristic init
-		public QGraph (TextAsset asset){
+		/// <summary>
+		/// Load QGraph from given text file, for heuristic initialization
+		/// </summary>
+		/// <param name="asset">Asset.</param>
+		public QGraph (TextAsset asset)
+		{
 			ID = numGraphs;
 
 			++numGraphs;
 
-			List<string> lines = new List<string>(asset.text.Split (Environment.NewLine.ToCharArray ()));
+			List<string> lines = new List<string> (asset.text.Split (Environment.NewLine.ToCharArray ()));
 			for (int i = 0; i < lines.Count; ++i) {
-				if (lines [i].Contains ("//") || string.IsNullOrEmpty(lines[i])) {
+				if (lines [i].Contains ("//") || string.IsNullOrEmpty (lines [i])) {
 					Debug.Log ("Removing: " + lines [i]);
 					lines.RemoveAt (i);
 					--i;
@@ -178,32 +192,32 @@ namespace AssemblyCSharp
 
 			Debug.Assert (lines.Count > 7);
 
-			Utils.ConverterTU<string, float> f_conv = Utils.TryParseR;
+			Utils.ConverterTU<string, float> f_conv = Utils.TryParseRandomValue;
 
 			Debug.Log (lines [0]);
-			possibleStates = new List<string> (lines [0].Split (" ".ToCharArray()));
+			possibleStates = new List<string> (lines [0].Split (" ".ToCharArray ()));
 			Debug.Log (lines [1]);
-			possibleActions = new List<string> (lines [1].Split (" ".ToCharArray()));
+			possibleActions = new List<string> (lines [1].Split (" ".ToCharArray ()));
 			Debug.Log (lines [2]);
 			Debug.Log (lines [3]);
-			float_restriction_range = new List<FloatRange>(FloatRange.ToFloatRange(new List<float> (Utils.ConvertArrayType<string, float> (lines [2].Split(" ".ToCharArray()), f_conv)),new List<float> (Utils.ConvertArrayType<string, float> (lines [3].Split(" ".ToCharArray()), f_conv))));
+			float_restriction_range = new List<FloatRange> (FloatRange.ToFloatRange (new List<float> (Utils.ConvertArrayType<string, float> (lines [2].Split (" ".ToCharArray ()), f_conv)), new List<float> (Utils.ConvertArrayType<string, float> (lines [3].Split (" ".ToCharArray ()), f_conv))));
 			float_mult = new List<float> (Utils.ConvertArrayType<string, float> (lines [4].Split (" ".ToCharArray ()), f_conv));
 			List<float> evol_values = new List<float> (Utils.ConvertArrayType<string, float> (lines [5].Split (" ".ToCharArray ()), f_conv));
 
 			string [] comparisonLine = lines [6].Split (" ".ToCharArray ());
 
 			for (int i = 0; i<comparisonLine.Length; ++i) {
-				this.comparison_operators.Add((ComparisonOperator)Enum.Parse(typeof(ComparisonOperator),comparisonLine[i]));
+				this.comparison_operators.Add ((ComparisonOperator)Enum.Parse (typeof(ComparisonOperator), comparisonLine [i]));
 			}
 
 			Debug.Assert (evol_values.Count == 6);
 
-			this.edgeMutationChance = evol_values[0];
-			this.actionMutationChance = evol_values[1];
-			this.addNodeChance = evol_values[2];
-			this.changeInterruptWeightChance = evol_values[3];
-			this.numNodesToConnectToNewNode = evol_values[4];
-			this.numNodesToConnectNewNodeTo = evol_values[5];
+			this.edgeMutationChance = evol_values [0];
+			this.actionMutationChance = evol_values [1];
+			this.addNodeChance = evol_values [2];
+			this.changeInterruptWeightChance = evol_values [3];
+			this.numNodesToConnectToNewNode = evol_values [4];
+			this.numNodesToConnectNewNodeTo = evol_values [5];
 
 			Debug.Assert (int.TryParse (lines [7], out this.windowSize));
 
@@ -248,20 +262,20 @@ namespace AssemblyCSharp
 //						restrictions.Add (f);
 //					}
 
-					comparisonLine = lineSegs[4].Split (" ".ToCharArray ());
+					comparisonLine = lineSegs [4].Split (" ".ToCharArray ());
 
-					List<ComparisonOperator> comp_ops = new List<ComparisonOperator>(comparisonLine.Length);
+					List<ComparisonOperator> comp_ops = new List<ComparisonOperator> (comparisonLine.Length);
 
-					for (int j = 0; j<comparisonLine.Length; ++j){
-						comp_ops.Add((ComparisonOperator)Enum.Parse(typeof(ComparisonOperator),comparisonLine[j]));
+					for (int j = 0; j<comparisonLine.Length; ++j) {
+						comp_ops.Add ((ComparisonOperator)Enum.Parse (typeof(ComparisonOperator), comparisonLine [j]));
 					}
 
 					float interruptChance = 0;
 
-					Debug.Assert (Utils.TryParseR (lineSegs [5], out interruptChance));
+					Debug.Assert (Utils.TryParseRandomValue (lineSegs [5], out interruptChance));
 
 
-					QGraphEdge edge = new QGraphEdge (new List<string> (lineSegs [1].Split (" ".ToCharArray ())), Utils.ConvertArrayType<string,float> (lineSegs [2].Split (" ".ToCharArray ()), f_conv), Utils.ConvertArrayType<string,float> (lineSegs [3].Split (" ".ToCharArray ()), f_conv), nodes.IndexOf (neuronDict [edgeNodes [2]]),comp_ops);
+					QGraphEdge edge = new QGraphEdge (new List<string> (lineSegs [1].Split (" ".ToCharArray ())), Utils.ConvertArrayType<string,float> (lineSegs [2].Split (" ".ToCharArray ()), f_conv), Utils.ConvertArrayType<string,float> (lineSegs [3].Split (" ".ToCharArray ()), f_conv), nodes.IndexOf (neuronDict [edgeNodes [2]]), comp_ops);
 
 					edge.InterruptThreshold = interruptChance;
 
@@ -278,18 +292,24 @@ namespace AssemblyCSharp
 					Debug.Assert (neuronDict.ContainsKey (vals [1]));
 					root = neuronDict [vals [1]];
 				} else {
-					throw new Exception ("Line definition format could not be determined: "+i+ " " + lines [i]);
+					throw new Exception ("Line definition format could not be determined: " + i + " " + lines [i]);
 				}
 			}
 
 			memoryWindow.Add (currentNode);
 		}
 
-		public void ResetCurrentNodeToRoot(){
+		public void ResetCurrentNodeToRoot ()
+		{
 			currentNode = root;
 		}
 
-		public QGraph (QGraph other){
+		/// <summary>
+		/// Copy constructor of QGraph
+		/// </summary>
+		/// <param name="other">Other.</param>
+		public QGraph (ref QGraph other)
+		{
 
 			this.actionConstraints = new ConstraintMapping (actionConstraints);
 			this.stateConstraints = new ConstraintMapping (stateConstraints);
@@ -329,6 +349,12 @@ namespace AssemblyCSharp
 			this.float_mult = new List<float> (other.float_mult);
 		}
 
+		/// <summary>
+		/// Determine actions to take, based on the given enumerable and continuous states.
+		/// </summary>
+		/// <returns>The actions to take.</returns>
+		/// <param name="states">States.</param>
+		/// <param name="values">Values.</param>
 		public List<string> GetActionsToTake (IEnumerable<string> states, IEnumerable<float> values)
 		{
 			//List<string> actions = new List<string> ();
@@ -361,15 +387,15 @@ namespace AssemblyCSharp
 
 
 
-			if (numActions ==0 || UnityEngine.Random.value > currentNode.outgoingEdges [edgeToUse].InterruptThreshold) {
+			if (numActions == 0 || UnityEngine.Random.value > currentNode.outgoingEdges [edgeToUse].InterruptThreshold) {
 				currentNode = nodes [currentNode.outgoingEdges [edgeToUse].targetNode];
 
 				++windowIndex;
-				windowIndex%=windowSize;
-				if (windowIndex>=memoryWindow.Count){
-					memoryWindow.Add(currentNode);
+				windowIndex %= windowSize;
+				if (windowIndex >= memoryWindow.Count) {
+					memoryWindow.Add (currentNode);
 				} else {
-					memoryWindow[windowIndex] = currentNode;
+					memoryWindow [windowIndex] = currentNode;
 				}
 
 				return new List<string> (currentNode.Actions);
@@ -377,8 +403,8 @@ namespace AssemblyCSharp
 				currentNode = nodes [currentNode.outgoingEdges [edgeToUse].targetNode];
 
 				++windowIndex;
-				windowIndex%=windowSize;
-				memoryWindow[windowIndex] = currentNode;
+				windowIndex %= windowSize;
+				memoryWindow [windowIndex] = currentNode;
 
 				return new List<string> ();
 			}
@@ -402,180 +428,274 @@ namespace AssemblyCSharp
 			}
 		}
 
-		public static QGraph Mutate(QGraph graph){
-			QGraph mutant = new QGraph (graph);
-
-
-
-			mutant.edgeMutationChance += mutant.mutationIncrement*(0.5f-UnityEngine.Random.value);
-			mutant.actionMutationChance += mutant.mutationIncrement*(0.5f-UnityEngine.Random.value);
-			mutant.addNodeChance += mutant.mutationIncrement*(0.5f-UnityEngine.Random.value);
-			mutant.changeInterruptWeightChance += mutant.mutationIncrement*(0.5f-UnityEngine.Random.value);
-
-//			float mutationIncrement = 0.001f;
-//
-//			float edgeMutationChance = 0.1f;
-//			float actionMutationChance = 0.1f;
-//			float addNodeChance = 0.8f;
-//			float changeInterruptWeightChance = 0.01f;
-
-			//mutate edges
-
-			List<QGraphNode> t_nodes = new List<QGraphNode> (mutant.nodes);
-
-			float numChanges = mutant.nodes.Count * mutant.edgeMutationChance;
-
-			float n_c = t_nodes.Count;
-
-			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
-
-			for (int i = 0; i < numChanges; ++i) {
-				int nodeToChange = UnityEngine.Random.Range(0,t_nodes.Count);
-				int edgeToChange = UnityEngine.Random.Range(0,t_nodes[nodeToChange].outgoingEdges.Count);
-
-//				if (nodeToChange >= t_nodes.Count || edgeToChange>=t_nodes[nodeToChange].outgoingEdges.Count) {
-//					break;
-//				}
-
-				t_nodes [nodeToChange].outgoingEdges [edgeToChange] = QGraphEdge.MutateEdge (t_nodes [nodeToChange].outgoingEdges [edgeToChange], mutant.possibleStates, mutant.mutationIncrement, mutant.stateConstraints);
-
+		public static QGraph Mutate (QGraph graph, bool useSmartMutation)
+		{
+			if (useSmartMutation) {
+				return SmartMutateQGraph (graph);
+			} else {
+				return BasicMutateQGraph (graph);
 			}
+		}
 
+		static QGraph BasicMutateQGraph (QGraph graph)
+		{
+			QGraph mutant = new QGraph (ref graph);
+			mutant.edgeMutationChance += mutant.mutationIncrement * (0.5f - UnityEngine.Random.value);
+			mutant.actionMutationChance += mutant.mutationIncrement * (0.5f - UnityEngine.Random.value);
+			mutant.addNodeChance += mutant.mutationIncrement * (0.5f - UnityEngine.Random.value);
+			mutant.changeInterruptWeightChance += mutant.mutationIncrement * (0.5f - UnityEngine.Random.value);
+			//			float mutationIncrement = 0.001f;
+			//
+			//			float edgeMutationChance = 0.1f;
+			//			float actionMutationChance = 0.1f;
+			//			float addNodeChance = 0.8f;
+			//			float changeInterruptWeightChance = 0.01f;
+			//mutate edges
+			List<QGraphNode> t_nodes = new List<QGraphNode> (mutant.nodes);
+			float numChanges = mutant.nodes.Count * mutant.edgeMutationChance;
+			float n_c = t_nodes.Count;
+			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
+			for (int i = 0; i < numChanges; ++i) {
+				int nodeToChange = UnityEngine.Random.Range (0, t_nodes.Count);
+				int edgeToChange = UnityEngine.Random.Range (0, t_nodes [nodeToChange].outgoingEdges.Count);
+				//				if (nodeToChange >= t_nodes.Count || edgeToChange>=t_nodes[nodeToChange].outgoingEdges.Count) {
+				//					break;
+				//				}
+				t_nodes [nodeToChange].outgoingEdges [edgeToChange] = QGraphEdge.MutateEdge (t_nodes [nodeToChange].outgoingEdges [edgeToChange], mutant.possibleStates, mutant.mutationIncrement, mutant.stateConstraints);
+			}
 			//mutate nodes
 			numChanges = mutant.nodes.Count * mutant.actionMutationChance;
-
 			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
-
 			for (int i = 0; i < numChanges; ++i) {
-				int nodeToChange = UnityEngine.Random.Range(0,t_nodes.Count);
-
-				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange],mutant.possibleActions, mutant.actionConstraints);
-
+				int nodeToChange = UnityEngine.Random.Range (0, t_nodes.Count);
+				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange], mutant.possibleActions, mutant.actionConstraints);
 			}
-
 			//add nodes
 			numChanges = mutant.nodes.Count * mutant.addNodeChance;
-
 			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
-
 			if (numChanges < 1) {
 				numChanges = 1f;
 			}
-
 			for (int i = 0; i < numChanges; ++i) {
-				QGraphNode newNode = new QGraphNode (t_nodes[UnityEngine.Random.Range(0,t_nodes.Count-1)]);
-
+				QGraphNode newNode = new QGraphNode (t_nodes [UnityEngine.Random.Range (0, t_nodes.Count - 1)]);
 				newNode = QGraphNode.MutateNode (newNode, mutant.possibleActions, mutant.actionConstraints);
-
 				int numNodesToConnectTo = (int)(n_c * mutant.numNodesToConnectToNewNode);
-
 				if (numNodesToConnectTo < 1) {
 					numNodesToConnectTo = 1;
 				}
-
 				List<QGraphNode> nodesToRandomlyConnectToTemp = new List<QGraphNode> (mutant.nodes);
-
 				nodesToRandomlyConnectToTemp = Utils.ShuffleList (nodesToRandomlyConnectToTemp);
-
 				//connect nodes to the new node
 				for (int j = 0; j < numNodesToConnectTo; ++j) {
 					QGraphEdge temp_edge = new QGraphEdge (mutant.nodes.Count);
 					if (mutant.possibleStates.Count > 0) {
-						temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
+						temp_edge.RequiredStates = new List<string> {
+							mutant.possibleStates [j % mutant.possibleStates.Count]
+						};
 					}
 					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction_range.Count);
-
-					for (int k = 0; k<temp_edge.Float_restrictions.Count; ++k){
+					for (int k = 0; k < temp_edge.Float_restrictions.Count; ++k) {
 						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (mutant.float_restriction_range [k].min, mutant.float_restriction_range [k].max));
 					}
-
 					temp_edge.Float_mult = new List<float> (mutant.float_mult);
-					temp_edge.Comparison_operators = new List<ComparisonOperator>(mutant.comparison_operators);
-					nodesToRandomlyConnectToTemp[j].AddEdge (temp_edge);
+					temp_edge.Comparison_operators = new List<ComparisonOperator> (mutant.comparison_operators);
+					nodesToRandomlyConnectToTemp [j].AddEdge (temp_edge);
 				}
-
-
 				numNodesToConnectTo = (int)(n_c * mutant.numNodesToConnectNewNodeTo);
-
 				if (numNodesToConnectTo < 1) {
 					numNodesToConnectTo = 1;
 				}
-
 				//connect the new node to other nodes;
-
 				nodesToRandomlyConnectToTemp = Utils.ShuffleList (nodesToRandomlyConnectToTemp);
-
 				for (int j = 0; j < numNodesToConnectTo; ++j) {
-					QGraphEdge temp_edge = new QGraphEdge (mutant.nodes.IndexOf(nodesToRandomlyConnectToTemp[j]));
+					QGraphEdge temp_edge = new QGraphEdge (mutant.nodes.IndexOf (nodesToRandomlyConnectToTemp [j]));
 					if (mutant.possibleStates.Count > 0) {
-						temp_edge.RequiredStates = new List<string>{ mutant.possibleStates [j % mutant.possibleStates.Count] };
+						temp_edge.RequiredStates = new List<string> {
+							mutant.possibleStates [j % mutant.possibleStates.Count]
+						};
 					}
 					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction_range.Count);
-
-					for (int k = 0; k<temp_edge.Float_restrictions.Count; ++k){
+					for (int k = 0; k < temp_edge.Float_restrictions.Count; ++k) {
 						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (mutant.float_restriction_range [k].min, mutant.float_restriction_range [k].max));
 					}
-
 					temp_edge.Float_mult = new List<float> (mutant.float_mult);
-					temp_edge.Comparison_operators = new List<ComparisonOperator>(mutant.comparison_operators);
+					temp_edge.Comparison_operators = new List<ComparisonOperator> (mutant.comparison_operators);
 					newNode.AddEdge (temp_edge);
 				}
-
-
 				mutant.nodes.Add (newNode);
-
 			}
-
 			mutant.ResetCurrentNodeToRoot ();
-
 			mutant.memoryWindow = new List<QGraphNode> (graph.memoryWindow.Count);
-			
 			mutant.windowSize = graph.windowSize;
 			mutant.windowIndex = 0;
-
 			mutant.memoryWindow.Add (mutant.currentNode);
-
 			return mutant;
 		}
 
-		public void Reward(float reward){
+		static QGraph SmartMutateQGraph (QGraph graph)
+		{
+			QGraph mutant = new QGraph (ref graph);
+			mutant.edgeMutationChance += mutant.mutationIncrement * (0.5f - UnityEngine.Random.value);
+			mutant.actionMutationChance += mutant.mutationIncrement * (0.5f - UnityEngine.Random.value);
+			mutant.addNodeChance += mutant.mutationIncrement * (0.5f - UnityEngine.Random.value);
+			mutant.changeInterruptWeightChance += mutant.mutationIncrement * (0.5f - UnityEngine.Random.value);
+			//			float mutationIncrement = 0.001f;
+			//
+			//			float edgeMutationChance = 0.1f;
+			//			float actionMutationChance = 0.1f;
+			//			float addNodeChance = 0.8f;
+			//			float changeInterruptWeightChance = 0.01f;
+			//mutate edges
+			List<QGraphNode> t_nodes = new List<QGraphNode> (mutant.nodes);
+			float n_c = t_nodes.Count;
+			float numChanges = n_c;
+			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
+			float max_delta_reward = 0;
+			float min_delta_reward = 0;
+			//calculate max and min change in reward between two nodes
+			for (int i = 0; i < n_c; ++i) {
+				for (int j = 0; j < mutant.nodes [i].outgoingEdges.Count; ++j) {
+					float delta = (mutant.nodes [mutant.nodes [i].outgoingEdges [j].targetNode].Reward - mutant.nodes [i].Reward);
+					if (max_delta_reward < delta) {
+						max_delta_reward = delta;
+					}
+					if (min_delta_reward > delta) {
+						min_delta_reward = delta;
+					}
+				}
+			}
+			for (int i = 0; i < numChanges; ++i) {
+				for (int j = 0; j < mutant.nodes [i].outgoingEdges.Count; ++j) {
+					float mutationChance = (mutant.nodes [mutant.nodes [i].outgoingEdges [j].targetNode].Reward - mutant.nodes [i].Reward) / (max_delta_reward - min_delta_reward);
+					if (UnityEngine.Random.value > mutationChance * 0.8f) {
+						mutant.nodes [i].outgoingEdges [j] = QGraphEdge.MutateEdge (mutant.nodes [i].outgoingEdges [j], mutant.possibleStates, mutant.mutationIncrement, mutant.stateConstraints);
+					}
+				}
+			}
+			//mutate nodes
+			//numChanges = mutant.nodes.Count * mutant.actionMutationChance;
+			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
+			for (int i = 0; i < numChanges; ++i) {
+				int nodeToChange = UnityEngine.Random.Range (0, t_nodes.Count);
+				t_nodes [nodeToChange] = QGraphNode.MutateNode (t_nodes [nodeToChange], mutant.possibleActions, mutant.actionConstraints);
+			}
+			//add nodes
+			numChanges = mutant.nodes.Count * mutant.addNodeChance;
+			t_nodes = Utils.ShuffleList<QGraphNode> (t_nodes);
+			if (numChanges < 1) {
+				numChanges = 1f;
+			}
+			for (int i = 0; i < numChanges; ++i) {
+				QGraphNode newNode = new QGraphNode (t_nodes [UnityEngine.Random.Range (0, t_nodes.Count - 1)]);
+				newNode = QGraphNode.MutateNode (newNode, mutant.possibleActions, mutant.actionConstraints);
+				int numNodesToConnectTo = (int)(n_c * mutant.numNodesToConnectToNewNode);
+				if (numNodesToConnectTo < 1) {
+					numNodesToConnectTo = 1;
+				}
+				List<QGraphNode> nodesToRandomlyConnectToTemp = new List<QGraphNode> (mutant.nodes);
+				nodesToRandomlyConnectToTemp = Utils.ShuffleList (nodesToRandomlyConnectToTemp);
+				//connect nodes to the new node
+				for (int j = 0; j < numNodesToConnectTo; ++j) {
+					QGraphEdge temp_edge = new QGraphEdge (mutant.nodes.Count);
+					if (mutant.possibleStates.Count > 0) {
+						temp_edge.RequiredStates = new List<string> {
+							mutant.possibleStates [j % mutant.possibleStates.Count]
+						};
+					}
+					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction_range.Count);
+					for (int k = 0; k < temp_edge.Float_restrictions.Count; ++k) {
+						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (mutant.float_restriction_range [k].min, mutant.float_restriction_range [k].max));
+					}
+					temp_edge.Float_mult = new List<float> (mutant.float_mult);
+					temp_edge.Comparison_operators = new List<ComparisonOperator> (mutant.comparison_operators);
+					nodesToRandomlyConnectToTemp [j].AddEdge (temp_edge);
+				}
+				numNodesToConnectTo = (int)(n_c * mutant.numNodesToConnectNewNodeTo);
+				if (numNodesToConnectTo < 1) {
+					numNodesToConnectTo = 1;
+				}
+				//connect the new node to other nodes;
+				nodesToRandomlyConnectToTemp = Utils.ShuffleList (nodesToRandomlyConnectToTemp);
+				for (int j = 0; j < numNodesToConnectTo; ++j) {
+					QGraphEdge temp_edge = new QGraphEdge (mutant.nodes.IndexOf (nodesToRandomlyConnectToTemp [j]));
+					if (mutant.possibleStates.Count > 0) {
+						temp_edge.RequiredStates = new List<string> {
+							mutant.possibleStates [j % mutant.possibleStates.Count]
+						};
+					}
+					temp_edge.Float_restrictions = new List<float> (mutant.float_restriction_range.Count);
+					for (int k = 0; k < temp_edge.Float_restrictions.Count; ++k) {
+						temp_edge.Float_restrictions.Add (UnityEngine.Random.Range (mutant.float_restriction_range [k].min, mutant.float_restriction_range [k].max));
+					}
+					temp_edge.Float_mult = new List<float> (mutant.float_mult);
+					temp_edge.Comparison_operators = new List<ComparisonOperator> (mutant.comparison_operators);
+					newNode.AddEdge (temp_edge);
+				}
+				mutant.nodes.Add (newNode);
+			}
+			mutant.ResetCurrentNodeToRoot ();
+			mutant.memoryWindow = new List<QGraphNode> (graph.memoryWindow.Count);
+			mutant.windowSize = graph.windowSize;
+			mutant.windowIndex = 0;
+			mutant.memoryWindow.Add (mutant.currentNode);
+			return mutant;
+		}
+
+		/// <summary>
+		/// Add reward to QGraph instance
+		/// </summary>
+		/// <param name="reward">Reward.</param>
+		public void Reward (float reward)
+		{
 			totalReward += reward;
 
 			float t_reward = reward;
 
 			for (int i = 0; i<windowSize; ++i) {
-				if ((i+windowIndex)%windowSize >= memoryWindow.Count || memoryWindow[(i+windowIndex)%windowSize]==null){
+				if ((i + windowIndex) % windowSize >= memoryWindow.Count || memoryWindow [(i + windowIndex) % windowSize] == null) {
 					break;
 				} else {
-					memoryWindow[(i+windowIndex)%windowSize].Reward+=(t_reward*timeCostDiscount);
-					t_reward-=(t_reward*timeCostDiscount);
+					memoryWindow [(i + windowIndex) % windowSize].Reward += (t_reward * timeCostDiscount);
+					t_reward -= (t_reward * timeCostDiscount);
 				}
 			}
 
 		}
 
-		public void ClearNodeRewards(){
+		/// <summary>
+		/// Clear record of reward accumulated for each node
+		/// </summary>
+		public void ClearNodeRewards ()
+		{
 			for (int i = 0; i<nodes.Count; ++i) {
-				nodes[i].Reward = 0;
+				nodes [i].Reward = 0;
 			}
 		}
 
-		public int CompareTo(QGraph other){
+		public int CompareTo (QGraph other)
+		{
 			return totalReward.CompareTo (other.totalReward);
 		}
 
-		public static QGraph [] Evolve(QGraph [] population){
+		/// <summary>
+		/// Generates a population evolved from a given population of QGraph instances.
+		/// Replace worst in population with mutated version of best in population.
+		/// </summary>
+		/// <param name="population">Population.</param>
+		/// <param name="useSmartMutation">If set to <c>true</c> use smart mutation.</param>
+		public static QGraph [] Evolve (QGraph[] population, bool useSmartMutation)
+		{
 			Array.Sort (population);
 			Array.Reverse (population);
 
 			int p_c = population.Length;
 
 			//for (int i = 1; i < p_c; ++i) {
-			population [population.Length-1] = QGraph.Mutate (population [0]);
+			population [population.Length - 1] = QGraph.Mutate (population [0],useSmartMutation);
 			//}
 
 			for (int i = 0; i < p_c; ++i) {
-				population[i].totalReward = 0;
+				population [i].totalReward = 0;
 			}
 
 			return population;
@@ -591,7 +711,6 @@ namespace AssemblyCSharp
 				totalReward = value;
 			}
 		}
-
 
 		public ConstraintMapping ActionConstraints {
 			get {

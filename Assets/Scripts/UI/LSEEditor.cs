@@ -32,7 +32,7 @@ namespace AssemblyCSharp
 			fileToLoadTreeFrom = EditorGUILayout.TextField ("File name:", fileToLoadTreeFrom);
 			if (GUILayout.Button ("Load")) {
 				T tempCL = null;
-				if (Utils.DeserializeFile<T> (fileToLoadTreeFrom, ref tempCL) && tempCL != null) {
+				if (Utils.DeserializeFromFile<T> (fileToLoadTreeFrom, ref tempCL) && tempCL != null) {
 					instanceToEdit = tempCL;
 				} else {
 					Debug.Log ("File could not load!");
@@ -44,7 +44,7 @@ namespace AssemblyCSharp
 			fileToSaveTreeTo = EditorGUILayout.TextField ("File name:", fileToSaveTreeTo);
 			if (GUILayout.Button ("Save")) {
 				if (instanceToEdit != null) {
-					Utils.SerializeFile (fileToSaveTreeTo, ref instanceToEdit);
+					Utils.SerializeToFileJSON (ref instanceToEdit, fileToSaveTreeTo);
 				} else {
 					Debug.Log ("No instance to save!");
 				}

@@ -10,9 +10,10 @@
 using System;
 using UnityEngine;
 using System.Collections.ObjectModel;
+using Gameplay;
 
 
-namespace AssemblyCSharp
+namespace AI
 {
 	[Serializable]
 	public class SoldierEntity
@@ -53,7 +54,7 @@ namespace AssemblyCSharp
 		}
 
 		~SoldierEntity(){
-			GameData.RemoveSoldier (this);
+			//GameData.RemoveSoldier (this);
 		}
 	}
 }

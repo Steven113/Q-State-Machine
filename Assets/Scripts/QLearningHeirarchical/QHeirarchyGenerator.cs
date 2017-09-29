@@ -47,14 +47,14 @@ namespace AssemblyCSharp
 			fileToSaveTreeTo = EditorGUILayout.TextField ("Save: Q Tree File Location", fileToSaveTreeTo);
 			
 			if (GUILayout.Button("Save QTree")){
-				Utils.SerializeFile(fileToSaveTreeTo,ref qTree);
+				Utils.SerializeToFileJSON(ref qTree, fileToSaveTreeTo);
 			}
 			
 			fileToLoadTreeFrom = EditorGUILayout.TextField ("Load: Q Tree File Location", fileToLoadTreeFrom);
 			
 			if (GUILayout.Button("Load QTree")){
 				QTree tempQ = null;
-				if (Utils.DeserializeFile<QTree>(fileToLoadTreeFrom,ref tempQ) && tempQ != null){
+				if (Utils.DeserializeFromFile<QTree>(fileToLoadTreeFrom,ref tempQ) && tempQ != null){
 					qTree = tempQ;
 				} else {
 					Debug.Log("File could not load!");

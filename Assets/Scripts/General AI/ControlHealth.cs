@@ -10,9 +10,10 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using AI;
 
 
-namespace AssemblyCSharp
+namespace Gameplay
 {
 	public class ControlHealth : MonoBehaviour
 	{

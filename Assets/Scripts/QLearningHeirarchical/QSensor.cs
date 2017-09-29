@@ -16,18 +16,35 @@ namespace AssemblyCSharp
 {
 
 
-	//Base class for all agents that can detect and provide their state to a q learner
+	/// <summary>
+	/// Base class for all agents that can detect and provide their state to a q learner
+	/// </summary>
 	public abstract class QSensor : MonoBehaviour
 	{
 
-
+		/// <summary>
+		/// Get enumerable states of agent
+		/// </summary>
+		/// <returns>The state.</returns>
 		public abstract List<string> getState();
 
+		/// <summary>
+		/// Get continuous state variables of agent
+		/// </summary>
+		/// <returns>The state values.</returns>
 		public abstract List<float> getStateValues ();
 
-		public abstract int GetBusyWithAction(); //return number of actions soldier is busy with
+		/// <summary>
+		/// return number of actions soldier is busy with
+		/// </summary>
+		/// <returns>number of actions soldier is busy with</returns>
+		public abstract int GetBusyWithAction();
 
-		public abstract void Reward(float reward); //need this method to support manual rewards and punishments by the user
+		/// <summary>
+		/// Need this method to support manual rewards and punishments by the user
+		/// </summary>
+		/// <param name="reward">Reward.</param>
+		public abstract void Reward(float reward);
 	}
 }
 
