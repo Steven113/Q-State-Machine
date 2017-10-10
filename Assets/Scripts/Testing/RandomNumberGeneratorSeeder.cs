@@ -10,7 +10,10 @@ namespace AssemblyCSharp
 		static RandomNumberGeneratorSeeder ()
 		{
 			//UnityEngine.Random.InitState (3354);
-			UnityEngine.Random.InitState (200);
+			//UnityEngine.Random.InitState (200);
+			//UnityEngine.Random.InitState (9131548);
+			//UnityEngine.Random.InitState (746453);
+			UnityEngine.Random.InitState (23248427);
 		}
 	}
 }
