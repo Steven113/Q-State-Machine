@@ -3,7 +3,7 @@
 namespace AssemblyCSharp
 {
 	/// <summary>
-	/// User to seed the random number generator to allow consistent experiment results
+	/// User to seed the random number generator to allow repitition of an experiment by using the same seed again
 	/// </summary>
 	public static class RandomNumberGeneratorSeeder
 	{
@@ -13,7 +13,7 @@ namespace AssemblyCSharp
 			//UnityEngine.Random.InitState (200);
 			//UnityEngine.Random.InitState (9131548);
 			//UnityEngine.Random.InitState (746453);
-			UnityEngine.Random.InitState (23248427);
+			UnityEngine.Random.InitState (5646464);
 		}
 	}
 }
