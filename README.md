@@ -3,13 +3,13 @@ Implementation of Evolving State Machine Based on Q-Learning
 
 ##Usage
 This AI must be run in the editor for now until I've tested that the executable version works.
-Open Assets/Seed Menu.unity. Run the scene, enter the seed and then the experiment will begin with the given seed value for the random number generator. Using the seed, you can repeat an experiment run.
-The scene camera can only be controlled when the RMB is held down. The controls are:
-* Move the mouse to change where the camera is looking.
-* WASD to move forward, right, left, backwards and right, respectively.
-* E to move up, F to move down
-* Hold MMB or space while moving the mouse to orbit the camera around the centre of the scene
-* Pressing J resets the camera to where it was facing when the experiment started.
+Open "**Assets/Seed Menu**".unity. Run the scene, enter the seed and then the experiment will begin with the given seed value for the random number generator. Using the seed, you can repeat an experiment run.
+The scene camera can only be controlled when the **RMB** is held down. The controls are:
+* **Move the mouse** to change where the camera is looking.
+* **WASD** to move forward, right, left, backwards and right, respectively.
+* **E** to move up, **F** to move down
+* Hold **MMB** or **space** while moving the mouse to orbit the camera around the centre of the scene
+* Pressing **J** resets the camera to where it was facing when the experiment started.
 
 ## The AI
 This AI is only referred to as the Q-State-Machine since it was inspired by Q-Learning. However, with Q-Learning we have the AI state as nodes and the actions as transitions (and the AI tries to learn the transition that yields the greatest reward, for every state). With this AI, the actions are the nodes and the states are transitions. The AI seeks to evolve it's transitions and nodes to maximise the reward the AI gets over time. The AI evolves by:
