@@ -13,7 +13,7 @@ namespace AssemblyCSharp
 			//UnityEngine.Random.InitState (200);
 			//UnityEngine.Random.InitState (9131548);
 			//UnityEngine.Random.InitState (746453);
-			UnityEngine.Random.InitState (5646464);
+			//UnityEngine.Random.InitState (5646464);
 		}
 	}
 }

@@ -34,6 +34,7 @@ namespace Gameplay
 		public static Dictionary<FactionName,float> armourMultipliers = new Dictionary<FactionName,float >();
 		public static Dictionary<FactionName,float> factionSpreadMultipliers = new Dictionary<FactionName,float >();
 
+		static float experimentSeed = 0;
        
         //add a entity to a faction. If a faction doesn't exist for the entity, the function creates one and returns true to indicate that a faction was created
         public static bool addEntity(SoldierEntity entity)
@@ -123,6 +124,15 @@ namespace Gameplay
 					Factions.RemoveAt (i);
 					--i;
 				}
+			}
+		}
+
+		public static float ExperimentSeed {
+			get {
+				return experimentSeed;
+			}
+			set {
+				experimentSeed = value;
 			}
 		}
     }
