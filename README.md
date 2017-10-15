@@ -1,7 +1,7 @@
 # Q-State-Machine
 Implementation of Evolving State Machine Based on Q-Learning
 
-##Usage
+## Usage
 This AI must be run in the editor for now until I've tested that the executable version works.
 Open "**Assets/Seed Menu.unity**". Run the scene, enter the seed and then the experiment will begin with the given seed value for the random number generator. Using the seed, you can repeat an experiment run.
 The scene camera can only be controlled when the **RMB** is held down. The controls are:
